@@ -240,10 +240,11 @@ end
 local options = {}
 
 local function start(on_vimenter, opts)
+    if vim.fn.argc() ~= 0 then return end
+
     -- Handle vim -y, vim -M.
-    if on_vimenter and (vim.opt.insertmode:get() or (not vim.opt.modifiable:get())) then
-        return
-    end
+    if on_vimenter and (vim.opt.insertmode:get() or (not vim.opt.modifiable:get()))
+    then return end
 
     if not vim.opt.hidden:get() and vim.opt.modified:get() then
         vim.api.nvim_err_writeln("Save your changes first.")
@@ -296,7 +297,7 @@ local function setup(opts)
     vim.cmd([[augroup alpha]])
     vim.cmd([[au!]])
     vim.cmd([[autocmd VimResized * if &filetype ==# 'alpha' | call v:lua.alpha_redraw() | endif]])
-    vim.cmd([[autocmd VimEnter * nested lua require'alpha'.start(true)]])
+    vim.cmd([[autocmd VimEnter * nested lua require'alpha'.start(true) ]])
     vim.cmd([[augroup END]])
     if type(opts) == "table" then
         options = opts

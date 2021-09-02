@@ -46,13 +46,14 @@ local opts = {
         {
             type = "button_group",
             val = {
-                button("e"      , "  New file"              , ":ene <CR>"),
-                button("SPC s l", "  Open last session"                  ),
-                button("SPC f h", "  Recently opened files"              ),
-                button("SPC f r", "  Frecency/MRU"                       ),
-                button("SPC f f", "  Find file"                          ),
-                button("SPC f g", "  Find word"                          ),
-                button("SPC f m", "  Jump to bookmarks"                  ),
+                button( "e"      , "  New file"
+                      , ":ene <BAR> startinsert <CR>"),
+                button("SPC s l", "  Open last session"     ),
+                button("SPC f h", "  Recently opened files" ),
+                button("SPC f r", "  Frecency/MRU"          ),
+                button("SPC f f", "  Find file"             ),
+                button("SPC f g", "  Find word"             ),
+                button("SPC f m", "  Jump to bookmarks"     ),
             },
             opts = {
                 spacing = 1

@@ -8,7 +8,7 @@ fast!
 ### Quick Start
 ```lua
 use {
-    "goolord/alpha-nvim",
+    'goolord/alpha-nvim',
     config = function ()
         require'alpha'.setup(require'alpha.themes.dashboard'.opts)
     end
