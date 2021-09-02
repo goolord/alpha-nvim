@@ -15,25 +15,41 @@ local default_header = {
     };
 }
 
+local function default_button(sc, txt)
+    return {
+        type = "button";
+        val = {
+            shortcut = sc;
+            text = txt;
+            on_press = function ()
+                vim.api.nvim_feedkeys(sc, 'n', false)
+            end
+        };
+        opts = {
+            position = center
+        };
+    }
+end
+
 local default_opts = {
     layout = {
         { type = "padding"; val = 2 };
         default_header;
         { type = "padding"; val = 5 };
-        {
-            type = "text";
-            val = "foo";
-            opts = {
-                -- position = "center"
-            };
-        };
+        default_button("e"      , "  New file"             );
+        default_button("SPC s l", "  Open last session"    );
+        default_button("SPC f h", "  Recently opened files");
+        default_button("SPC f r", "  Frecency/MRU"         );
+        default_button("SPC f r", "  Find file"            );
+        default_button("SPC f w", "  Find word"            );
+        default_button("SPC f m", "  Jump to bookmarks"    );
     };
     margin = 5;
 }
 
 local options = default_opts
 
-function longest_line(tbl)
+local function longest_line(tbl)
     local longest = 0
     for _,v in pairs(tbl) do
         if #v > longest then longest = #v end
@@ -41,7 +57,7 @@ function longest_line(tbl)
     return longest
 end
 
-function center(tbl, state)
+local function center(tbl, state)
     local longest = longest_line(tbl)
     local win_width = vim.api.nvim_win_get_width(state.window)
     local left = (win_width / 2) - (longest / 2)
@@ -53,11 +69,11 @@ function center(tbl, state)
     return centered
 end
 
-function pad_margin(tbl, state, margin)
+local function pad_margin(tbl, state, margin)
     local longest = longest_line(tbl)
     local pot_width = margin + margin + longest
     local win_width = vim.api.nvim_win_get_width(state.window)
-    local left 
+    local left
     if pot_width > win_width then
         left = (win_width - pot_width) + margin
     else
@@ -80,7 +96,7 @@ end
 --     return trimmed
 -- end
 
-function layout(opts, state)
+local function layout(opts, state)
     local layout_element = {
         ["text"] = function (el)
             if type(el.val) == "table" then
@@ -125,7 +141,6 @@ function layout(opts, state)
         end,
     }
 
-    local line_state = 0
     for _,el in pairs(opts.layout) do
         layout_element[el.type](el, state)
     end
@@ -133,7 +148,27 @@ end
 
 function _G.alpha_redraw() end
 
-function start(opts)
+local function enable_alpha()
+    vim.opt_local.bufhidden      = 'wipe'
+    vim.opt_local.colorcolumn    = ""
+    vim.opt_local.foldcolumn     = "0"
+    vim.opt_local.matchpairs     = ""
+    vim.opt_local.buflisted      = false
+    vim.opt_local.cursorcolumn   = false
+    vim.opt_local.cursorline     = false
+    vim.opt_local.list           = false
+    vim.opt_local.number         = false
+    vim.opt_local.relativenumber = false
+    vim.opt_local.spell          = false
+    vim.opt_local.swapfile       = false
+    vim.opt_local.signcolumn     = 'no'
+    vim.opt_local.synmaxcol      = vim.api.nvim_get_option_info('synmaxcol').default
+    vim.opt_local.wrap           = false
+
+    vim.opt_local.ft = 'alpha'
+end
+
+local function start(opts)
     opts = opts or options
 
     local buffer = vim.api.nvim_create_buf(true, true)
@@ -157,27 +192,7 @@ function start(opts)
     draw()
 end
 
-function enable_alpha()
-    vim.opt_local.bufhidden      = 'wipe'
-    vim.opt_local.colorcolumn    = ""
-    vim.opt_local.foldcolumn     = "0"
-    vim.opt_local.matchpairs     = ""
-    vim.opt_local.buflisted      = false
-    vim.opt_local.cursorcolumn   = false
-    vim.opt_local.cursorline     = false
-    vim.opt_local.list           = false
-    vim.opt_local.number         = false
-    vim.opt_local.relativenumber = false
-    vim.opt_local.spell          = false
-    vim.opt_local.swapfile       = false
-    vim.opt_local.signcolumn     = 'no'
-    vim.opt_local.synmaxcol      = vim.api.nvim_get_option_info('synmaxcol').default
-    vim.opt_local.wrap           = false
-
-    vim.opt_local.ft = 'alpha'
-end
-
-function setup(opts)
+local function setup(opts)
     vim.cmd("command Alpha lua require'alpha'.start()")
     vim.cmd([[augroup alpha]])
     vim.cmd([[au!]])
