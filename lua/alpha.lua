@@ -323,6 +323,7 @@ local function start(on_vimenter, opts)
         _G.alpha_cursor_jumps = {}
         _G.alpha_cursor_jumps_press = {}
         _G.alpha_keymaps = {}
+        local ix = _G.alpha_cursor_ix -- this is for redraws.
         vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
         vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
         state.line = 0
@@ -335,13 +336,13 @@ local function start(on_vimenter, opts)
             ":call v:lua.alpha_press()<CR>",
             {noremap = false, silent = true}
         )
+        vim.api.nvim_win_set_cursor(0, _G.alpha_cursor_jumps[ix])
     end
     _G.alpha_redraw = draw
     for _, map in pairs(_G.alpha_keymaps) do
         vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
     end
     draw()
-    vim.api.nvim_win_set_cursor(0, _G.alpha_cursor_jumps[1])
 end
 
 local function setup(opts)
