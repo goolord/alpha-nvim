@@ -1,20 +1,3 @@
-local default_header = {
-    type = "text",
-    val = {
-        [[                               __                ]],
-        [[  ___     ___    ___   __  __ /\_\    ___ ___    ]],
-        [[ / _ `\  / __`\ / __`\/\ \/\ \\/\ \  / __` __`\  ]],
-        [[/\ \/\ \/\  __//\ \_\ \ \ \_/ |\ \ \/\ \/\ \/\ \ ]],
-        [[\ \_\ \_\ \____\ \____/\ \___/  \ \_\ \_\ \_\ \_\]],
-        [[ \/_/\/_/\/____/\/___/  \/__/    \/_/\/_/\/_/\/_/]],
-    },
-    opts = {
-        position = "center",
-        hl = "Type"
-        -- wrap = "overflow";
-    }
-}
-
 _G.alpha_redraw = function() end
 _G.alpha_cursor_ix = 1
 _G.alpha_cursor_jumps = {}
@@ -24,55 +7,6 @@ _G.alpha_keymaps = {}
 function _G.alpha_press()
     _G.alpha_cursor_jumps_press[_G.alpha_cursor_ix]()
 end
-
-local function default_button(sc, txt, keybind)
-    local sc_ = sc:gsub("%s", ""):gsub("SPC", "<leader>")
-    if keybind then
-        table.insert(_G.alpha_keymaps, {"n", sc_, keybind, {noremap = false, silent = true}})
-    end
-    return {
-        type = "button",
-        val = txt,
-        on_press = function()
-            local key = vim.api.nvim_replace_termcodes(sc_, true, false, true)
-            vim.api.nvim_feedkeys(key, "normal", false)
-        end,
-        opts = {
-            position = "center",
-            shortcut = sc,
-            cursor = 5,
-            width = 50,
-            align_shortcut = "right",
-            hl_shortcut = "Keyword",
-        }
-    }
-end
-
-local default_opts = {
-    layout = {
-        {type = "padding", val = 2},
-        default_header,
-        {type = "padding", val = 2},
-        {
-            type = "button_group",
-            val = {
-                default_button("e"      , "  New file"              , ":ene <CR>"),
-                default_button("SPC s l", "  Open last session"                  ),
-                default_button("SPC f h", "  Recently opened files"              ),
-                default_button("SPC f r", "  Frecency/MRU"                       ),
-                default_button("SPC f f", "  Find file"                          ),
-                default_button("SPC f g", "  Find word"                          ),
-                default_button("SPC f m", "  Jump to bookmarks"                  ),
-            },
-            opts = {
-                spacing = 1
-            }
-        }
-    },
-    margin = 5
-}
-
-local options = default_opts
 
 local function longest_line(tbl)
     local longest = 0
@@ -189,7 +123,14 @@ local function layout(opts, state)
         local val
         local center_pad
         if el.opts and el.opts.shortcut then
-            center_pad = (el.opts.width or 0) - (#el.val + #el.opts.shortcut)
+            local win_width = vim.api.nvim_win_get_width(state.window)
+            -- this min lets the center padding resize when the window gets smaller
+            if el.opts.width then
+                local max_width = math.min(el.opts.width , win_width)
+                center_pad = max_width - (#el.val + #el.opts.shortcut)
+            else
+                center_pad = 0
+            end
             val = {el.val .. string.rep(" ", center_pad) .. el.opts.shortcut}
         else
             val = {el.val}
@@ -290,11 +231,13 @@ local function enable_alpha()
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
     vim.cmd(
-        [[silent! setlocal bufhidden=wipe colorcolumn= foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha]]
+        [[silent! setlocal bufhidden=wipe colorcolumn= foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap]]
     )
 
     vim.cmd("autocmd alpha CursorMoved <buffer> call v:lua.alpha_set_cursor()")
 end
+
+local options = {}
 
 local function start(on_vimenter, opts)
     -- Handle vim -y, vim -M.
@@ -323,7 +266,10 @@ local function start(on_vimenter, opts)
         _G.alpha_cursor_jumps = {}
         _G.alpha_cursor_jumps_press = {}
         _G.alpha_keymaps = {}
-        local ix = _G.alpha_cursor_ix -- this is for redraws.
+        -- this is for redraws. i guess the cursor 'moves'
+        -- when the screen is cleared and then redrawn
+        -- so we save the index before that happens
+        local ix = _G.alpha_cursor_ix
         vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
         vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
         state.line = 0
