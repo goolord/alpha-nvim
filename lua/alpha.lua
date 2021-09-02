@@ -20,12 +20,17 @@ local function default_button(sc, txt)
         type = "button";
         val = txt;
         on_press = function ()
-            vim.api.nvim_feedkeys(sc, 'n', false)
+            local sc_ = sc:gsub("%s", ""):gsub("SPC", "<leader>")
+            local key = vim.api.nvim_replace_termcodes(sc_, true, false, true)
+            vim.api.nvim_feedkeys(key, 'normal', false)
         end;
         opts = {
             position = "center";
             shortcut = sc;
             cursor = 5;
+            width = 52;
+            align_shortcut = "right";
+            hl_shortcut = "Keyword";
         };
     }
 end
@@ -35,19 +40,21 @@ local default_opts = {
         { type = "padding"; val = 2 };
         default_header;
         { type = "padding"; val = 2 };
-        default_button("e"      , "  New file"             );
-        { type = "padding"; val = 1 };
-        default_button("SPC s l", "  Open last session"    );
-        { type = "padding"; val = 1 };
-        default_button("SPC f h", "  Recently opened files");
-        { type = "padding"; val = 1 };
-        default_button("SPC f r", "  Frecency/MRU"         );
-        { type = "padding"; val = 1 };
-        default_button("SPC f r", "  Find file"            );
-        { type = "padding"; val = 1 };
-        default_button("SPC f w", "  Find word"            );
-        { type = "padding"; val = 1 };
-        default_button("SPC f m", "  Jump to bookmarks"    );
+        { 
+            type = "button_group";
+            val = {
+                default_button("e"      , "  New file"             );
+                default_button("SPC s l", "  Open last session"    );
+                default_button("SPC f h", "  Recently opened files");
+                default_button("SPC f r", "  Frecency/MRU"         );
+                default_button("SPC f f", "  Find file"            );
+                default_button("SPC f w", "  Find word"            );
+                default_button("SPC f m", "  Jump to bookmarks"    );
+            };
+            opts = {
+                spacing = 1;
+            };
+        }
     };
     margin = 5;
 }
@@ -65,13 +72,13 @@ end
 local function center(tbl, state)
     local longest = longest_line(tbl)
     local win_width = vim.api.nvim_win_get_width(state.window)
-    local left = (win_width / 2) - (longest / 2)
+    local left = math.floor((win_width / 2) - (longest / 2))
     local padding = string.rep(" ", left)
     local centered = {}
     for k,v in pairs(tbl) do
         centered[k] = padding..v
     end
-    return centered
+    return centered, left
 end
 
 local function pad_margin(tbl, state, margin)
@@ -102,73 +109,101 @@ end
 -- end
 
 local function layout(opts, state)
-    local layout_element = {
-        ["text"] = function (el)
-            if type(el.val) == "table" then
-                local end_ln = state.line + #el.val
-                local val = el.val
-                if opts.margin then val = pad_margin(val, state, opts.margin) end
-                if el.opts then
-                    if el.opts.position == "center" then val = center(val, state) end
-                    -- if el.opts.wrap == "overflow" then
-                    --     val = trim(val, state)
-                    -- end
+    local layout_element = {}
+    layout_element.text = function (el)
+        if type(el.val) == "table" then
+            local end_ln = state.line + #el.val
+            local val = el.val
+            if opts.margin then
+                if el.opts and el.opts.position ~= "center" then
+                    val = pad_margin(val, state, opts.margin) 
                 end
-                vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, true, val)
-                if el.opts and el.opts.hl then
-                    for i = state.line, end_ln do
-                        vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, i , 0 , -1)
-                    end
-                end
-                state.line = end_ln
             end
-            if type(el.val) == "string" then
-                local val = { el.val }
-                if opts.margin then val = pad_margin(val, state, opts.margin) end
-                if el.opts then
-                    if el.opts.position == "center" then val = center(val, state) end
-                end
-                vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, true, val)
-                if el.opts and el.opts.hl then
-                    vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, state.line , 0 , -1)
-                end
-                state.line = state.line + 1
-            end
-        end,
-
-        ["padding"] = function (el)
-            local end_ln = state.line + el.val
-            local val = { }
-            for i = 1, el.val + 1 do
-                val[i] = ""
+            if el.opts then
+                if el.opts.position == "center" then val, _ = center(val, state) end
+                -- if el.opts.wrap == "overflow" then
+                --     val = trim(val, state)
+                -- end
             end
             vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, true, val)
+            if el.opts and el.opts.hl then
+                for i = state.line, end_ln do
+                    vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, i , 0 , -1)
+                end
+            end
             state.line = end_ln
-        end,
-
-        ["button"] = function (el)
-            local val
-            if el.opts and el.opts.shortcut then
-                val = { el.val .."    ".. el.opts.shortcut }
-            else
-                val = { el.val }
+        end
+        if type(el.val) == "string" then
+            local val = { el.val }
+            if opts.margin then
+                if el.opts and el.opts.position ~= "center" then
+                    val = pad_margin(val, state, opts.margin) 
+                end
             end
-
-            if opts.margin then val = pad_margin(val, state, opts.margin) end
             if el.opts then
-                if el.opts.position == "center" then val = center(val, state) end
+                if el.opts.position == "center" then val, _ = center(val, state) end
             end
-            local row = state.line + 1
-            local  _, count_spaces = string.find(val[1], "%s*")
-            local col = ((el.opts and el.opts.cursor) or 0) + count_spaces
-            table.insert(_G.alpha_cursor_jumps, { row, col })
             vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, true, val)
             if el.opts and el.opts.hl then
                 vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, state.line , 0 , -1)
             end
             state.line = state.line + 1
-        end,
-    }
+        end
+    end
+    layout_element.padding = function (el)
+        local end_ln = state.line + el.val
+        local val = { }
+        for i = 1, el.val + 1 do
+            val[i] = ""
+        end
+        vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, true, val)
+        state.line = end_ln
+    end
+    layout_element.button = function (el)
+        local val
+        local center_pad
+        if el.opts and el.opts.shortcut then
+            center_pad = (el.opts.width or 0) - (#el.val + #el.opts.shortcut)
+            val = { el.val .. string.rep(" ", center_pad) .. el.opts.shortcut }
+        else
+            val = { el.val }
+        end
+
+        if opts.margin then
+            if el.opts and el.opts.position ~= "center" then
+                val = pad_margin(val, state, opts.margin) 
+                if center_pad then center_pad = center_pad + opts.margin end
+            end
+        end
+        if el.opts then
+            if el.opts.position == "center" 
+                then val, left = center(val, state) 
+                if center_pad then center_pad = center_pad + left end
+            end
+        end
+        local row = state.line + 1
+        local  _, count_spaces = string.find(val[1], "%s*")
+        local col = ((el.opts and el.opts.cursor) or 0) + count_spaces
+        table.insert(_G.alpha_cursor_jumps, { row, col })
+        table.insert(_G.alpha_cursor_jumps_press, el.on_press)
+        vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, true, val)
+        if el.opts and el.opts.hl then
+            vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, state.line , 0 , -1)
+        end
+        if el.opts and el.opts.hl_shortcut and center_pad then
+            vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, state.line , #el.val + center_pad , -1)
+        end
+        state.line = state.line + 1
+    end
+    layout_element.button_group = function (el)
+        for _,v in pairs(el.val) do
+            layout_element[v.type](v)
+            if el.opts and el.opts.spacing then
+                local padding = { type = "padding", val = el.opts.spacing }
+                layout_element[padding.type](padding)
+            end
+        end
+    end
 
     for _,el in pairs(opts.layout) do
         layout_element[el.type](el, state)
@@ -179,6 +214,11 @@ function _G.alpha_redraw() end
 
 _G.alpha_cursor_ix = 1
 _G.alpha_cursor_jumps = {}
+_G.alpha_cursor_jumps_press = {}
+
+function _G.alpha_press()
+    _G.alpha_cursor_jumps_press[_G.alpha_cursor_ix]()
+end
 
 local function closest_cursor_jump(cursor, cursors, prev_cursor)
     local closest 
@@ -249,12 +289,14 @@ local function start(opts)
     enable_alpha()
     local draw = function ()
         _G.alpha_cursor_jumps = {}
+        _G.alpha_cursor_jumps_press = {}
         vim.api.nvim_buf_set_option(state.buffer, 'modifiable', true)
         vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
         state.line = 0
         layout(opts, state)
         vim.api.nvim_buf_set_option(state.buffer, 'modifiable', false)
         vim.api.nvim_buf_set_option(state.buffer, 'modified', false)
+        vim.api.nvim_buf_set_keymap(state.buffer, 'n', '<CR>', ':call v:lua.alpha_press()<CR>', {noremap = false, silent = true})
     end
     vim.api.nvim_win_set_cursor(state.window, _G.alpha_cursor_jumps[1] or {1, 1})
     _G.alpha_redraw = draw
