@@ -18,15 +18,14 @@ local default_header = {
 local function default_button(sc, txt)
     return {
         type = "button";
-        val = {
-            shortcut = sc;
-            text = txt;
-            on_press = function ()
-                vim.api.nvim_feedkeys(sc, 'n', false)
-            end
-        };
+        val = txt;
+        on_press = function ()
+            vim.api.nvim_feedkeys(sc, 'n', false)
+        end;
         opts = {
-            position = center
+            position = "center";
+            shortcut = sc;
+            cursor = 5;
         };
     }
 end
@@ -35,13 +34,19 @@ local default_opts = {
     layout = {
         { type = "padding"; val = 2 };
         default_header;
-        { type = "padding"; val = 5 };
+        { type = "padding"; val = 2 };
         default_button("e"      , "  New file"             );
+        { type = "padding"; val = 1 };
         default_button("SPC s l", "  Open last session"    );
+        { type = "padding"; val = 1 };
         default_button("SPC f h", "  Recently opened files");
+        { type = "padding"; val = 1 };
         default_button("SPC f r", "  Frecency/MRU"         );
+        { type = "padding"; val = 1 };
         default_button("SPC f r", "  Find file"            );
+        { type = "padding"; val = 1 };
         default_button("SPC f w", "  Find word"            );
+        { type = "padding"; val = 1 };
         default_button("SPC f m", "  Jump to bookmarks"    );
     };
     margin = 5;
@@ -103,12 +108,14 @@ local function layout(opts, state)
                 local end_ln = state.line + #el.val
                 local val = el.val
                 if opts.margin then val = pad_margin(val, state, opts.margin) end
-                if el.opts.position == "center" then val = center(val, state) end
-                -- if el.opts.wrap == "overflow" then
-                --     val = trim(val, state)
-                -- end
+                if el.opts then
+                    if el.opts.position == "center" then val = center(val, state) end
+                    -- if el.opts.wrap == "overflow" then
+                    --     val = trim(val, state)
+                    -- end
+                end
                 vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, true, val)
-                if el.opts.hl then
+                if el.opts and el.opts.hl then
                     for i = state.line, end_ln do
                         vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, i , 0 , -1)
                     end
@@ -118,9 +125,11 @@ local function layout(opts, state)
             if type(el.val) == "string" then
                 local val = { el.val }
                 if opts.margin then val = pad_margin(val, state, opts.margin) end
-                if el.opts.position == "center" then val = center(val, state) end
+                if el.opts then
+                    if el.opts.position == "center" then val = center(val, state) end
+                end
                 vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, true, val)
-                if el.opts.hl then
+                if el.opts and el.opts.hl then
                     vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, state.line , 0 , -1)
                 end
                 state.line = state.line + 1
@@ -138,6 +147,26 @@ local function layout(opts, state)
         end,
 
         ["button"] = function (el)
+            local val
+            if el.opts and el.opts.shortcut then
+                val = { el.val .."    ".. el.opts.shortcut }
+            else
+                val = { el.val }
+            end
+
+            if opts.margin then val = pad_margin(val, state, opts.margin) end
+            if el.opts then
+                if el.opts.position == "center" then val = center(val, state) end
+            end
+            local row = state.line + 1
+            local  _, count_spaces = string.find(val[1], "%s*")
+            local col = ((el.opts and el.opts.cursor) or 0) + count_spaces
+            table.insert(_G.alpha_cursor_jumps, { row, col })
+            vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, true, val)
+            if el.opts and el.opts.hl then
+                vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, state.line , 0 , -1)
+            end
+            state.line = state.line + 1
         end,
     }
 
@@ -147,6 +176,41 @@ local function layout(opts, state)
 end
 
 function _G.alpha_redraw() end
+
+_G.alpha_cursor_ix = 1
+_G.alpha_cursor_jumps = {}
+
+local function closest_cursor_jump(cursor, cursors, prev_cursor)
+    local closest 
+    if cursors
+        then closest = { 1, cursors[1] }
+        else closest = { 1, { 1, 1 } }
+    end
+    local distances = {}
+    for k,v in pairs(cursors) do
+        local distance = math.abs(v[1] - cursor[1])
+        table.insert(distances, k, { distance, k })
+    end
+    table.sort(distances, function (l, r) return l[1] < r[1] end)
+    if distances[1][1] == distances[2][1] then
+        local index
+        if prev_cursor[1] > cursor[1] 
+            then index = math.min(distances[1][2],distances[2][2]) -- up
+            else index = math.max(distances[1][2],distances[2][2]) -- down
+        end
+        closest = { index, cursors[index] }
+    else
+        closest = { distances[1][2], cursors[distances[1][2]] }
+    end
+    return closest
+end
+
+function _G.alpha_set_cursor()
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local closest = closest_cursor_jump(cursor, _G.alpha_cursor_jumps, _G.alpha_cursor_jumps[_G.alpha_cursor_ix])
+    _G.alpha_cursor_ix = closest[1]
+    vim.api.nvim_win_set_cursor(0, closest[2])
+end
 
 local function enable_alpha()
     vim.opt_local.bufhidden      = 'wipe'
@@ -166,6 +230,8 @@ local function enable_alpha()
     vim.opt_local.wrap           = false
 
     vim.opt_local.ft = 'alpha'
+
+    vim.cmd("autocmd alpha CursorMoved <buffer> call v:lua.alpha_set_cursor()")
 end
 
 local function start(opts)
@@ -182,12 +248,15 @@ local function start(opts)
 
     enable_alpha()
     local draw = function ()
+        _G.alpha_cursor_jumps = {}
         vim.api.nvim_buf_set_option(state.buffer, 'modifiable', true)
-        vim.api.nvim_buf_set_lines(state.buffer, 0, state.line, false, {})
+        vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
         state.line = 0
         layout(opts, state)
         vim.api.nvim_buf_set_option(state.buffer, 'modifiable', false)
+        vim.api.nvim_buf_set_option(state.buffer, 'modified', false)
     end
+    vim.api.nvim_win_set_cursor(state.window, _G.alpha_cursor_jumps[1] or {1, 1})
     _G.alpha_redraw = draw
     draw()
 end
