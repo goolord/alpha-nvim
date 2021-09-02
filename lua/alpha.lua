@@ -15,12 +15,17 @@ local default_header = {
     };
 }
 
-local function default_button(sc, txt)
+_G.alpha_keymaps = {}
+
+local function default_button(sc, txt, keybind)
+    local sc_ = sc:gsub("%s", ""):gsub("SPC", "<leader>")
+    if keybind then
+        table.insert(_G.alpha_keymaps, {'n', sc_, keybind, {noremap = false, silent = true}})
+    end
     return {
         type = "button";
         val = txt;
         on_press = function ()
-            local sc_ = sc:gsub("%s", ""):gsub("SPC", "<leader>")
             local key = vim.api.nvim_replace_termcodes(sc_, true, false, true)
             vim.api.nvim_feedkeys(key, 'normal', false)
         end;
@@ -43,13 +48,13 @@ local default_opts = {
         { 
             type = "button_group";
             val = {
-                default_button("e"      , "  New file"             );
-                default_button("SPC s l", "  Open last session"    );
-                default_button("SPC f h", "  Recently opened files");
-                default_button("SPC f r", "  Frecency/MRU"         );
-                default_button("SPC f f", "  Find file"            );
-                default_button("SPC f g", "  Find word"            );
-                default_button("SPC f m", "  Jump to bookmarks"    );
+                default_button("e"      , "  New file"             , ":ene <CR>");
+                default_button("SPC s l", "  Open last session"             );
+                default_button("SPC f h", "  Recently opened files"         );
+                default_button("SPC f r", "  Frecency/MRU"                  );
+                default_button("SPC f f", "  Find file"                     );
+                default_button("SPC f g", "  Find word"                     );
+                default_button("SPC f m", "  Jump to bookmarks"             );
             };
             opts = {
                 spacing = 1;
@@ -288,6 +293,7 @@ local function start(on_vimenter, opts)
     local draw = function ()
         _G.alpha_cursor_jumps = {}
         _G.alpha_cursor_jumps_press = {}
+        _G.alpha_keymaps = {}
         vim.api.nvim_buf_set_option(state.buffer, 'modifiable', true)
         vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
         state.line = 0
@@ -297,6 +303,9 @@ local function start(on_vimenter, opts)
         vim.api.nvim_buf_set_keymap(state.buffer, 'n', '<CR>', ':call v:lua.alpha_press()<CR>', {noremap = false, silent = true})
     end
     _G.alpha_redraw = draw
+    for _, map in pairs(_G.alpha_keymaps) do
+        vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+    end
     draw()
     vim.api.nvim_win_set_cursor(0, _G.alpha_cursor_jumps[1])
 end
