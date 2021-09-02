@@ -262,7 +262,7 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
             return l[1] < r[1]
         end
     )
-    if distances[1][1] == distances[2][1] then -- tie breaker
+    if distances[1] and distances[2] and distances[1][1] == distances[2][1] then -- tie breaker
         local index
         if prev_cursor[1] > cursor[1] then -- we use the velocity as a tie breaker
             index = math.min(distances[1][2], distances[2][2]) -- up
@@ -278,7 +278,7 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
     return closest
 end
 
-function _G.alpha_set_cursor()
+_G.alpha_set_cursor = function ()
     local cursor = vim.api.nvim_win_get_cursor(0)
     local closest = closest_cursor_jump(cursor, _G.alpha_cursor_jumps, _G.alpha_cursor_jumps[_G.alpha_cursor_ix])
     _G.alpha_cursor_ix = closest[1]
@@ -323,6 +323,7 @@ local function start(on_vimenter, opts)
         _G.alpha_cursor_jumps = {}
         _G.alpha_cursor_jumps_press = {}
         _G.alpha_keymaps = {}
+        vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
         vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
         state.line = 0
         layout(opts, state)
