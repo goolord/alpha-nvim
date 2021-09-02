@@ -262,7 +262,7 @@ local function enable_alpha()
     -- vim.opt_local behaves inconsistently for window options, it seems.
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
-    vim.cmd([[silent! setlocal bufhidden=wipe colorcolumn= foldcolumn=0 matchpairs= nobuflisted nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha]])
+    vim.cmd([[silent! setlocal bufhidden=wipe colorcolumn= foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha]])
 
     vim.cmd("autocmd alpha CursorMoved <buffer> call v:lua.alpha_set_cursor()")
 end
@@ -280,26 +280,24 @@ local function start(on_vimenter, opts)
 
     opts = opts or options
 
-    local buffer = vim.api.nvim_create_buf(true, true)
-    vim.api.nvim_set_current_buf(buffer)
+    local buffer = vim.api.nvim_create_buf(false, true)
     local window = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_set_buf(window, buffer)
+    enable_alpha()
+
     local state = {
         line = 0;
         buffer = buffer;
         window = window;
     }
-
-    enable_alpha()
     local draw = function ()
         _G.alpha_cursor_jumps = {}
         _G.alpha_cursor_jumps_press = {}
         _G.alpha_keymaps = {}
-        vim.api.nvim_buf_set_option(state.buffer, 'modifiable', true)
         vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
         state.line = 0
         layout(opts, state)
         vim.api.nvim_buf_set_option(state.buffer, 'modifiable', false)
-        vim.api.nvim_buf_set_option(state.buffer, 'modified', false)
         vim.api.nvim_buf_set_keymap(state.buffer, 'n', '<CR>', ':call v:lua.alpha_press()<CR>', {noremap = false, silent = true})
     end
     _G.alpha_redraw = draw
