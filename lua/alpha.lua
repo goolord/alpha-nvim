@@ -240,13 +240,15 @@ end
 local options = {}
 
 local function start(on_vimenter, opts)
-    if vim.fn.argc() ~= 0 then return end
+    if on_vimenter then
+        if     vim.opt.insertmode:get()       -- Handle vim -y
+            or (not vim.opt.modifiable:get()) -- Handle vim -M
+            or vim.fn.argc() ~= 0 -- should probably figure out
+                                  -- how to be smarter than this
+        then return end
+     end
 
-    -- Handle vim -y, vim -M.
-    if on_vimenter and (vim.opt.insertmode:get() or (not vim.opt.modifiable:get()))
-    then return end
-
-    if not vim.opt.hidden:get() and vim.opt.modified:get() then
+    if not vim.opt.hidden:get() and vim.opt_local.modified:get() then
         vim.api.nvim_err_writeln("Save your changes first.")
         return
     end
