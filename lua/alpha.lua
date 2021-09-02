@@ -28,7 +28,7 @@ local function default_button(sc, txt)
             position = "center";
             shortcut = sc;
             cursor = 5;
-            width = 52;
+            width = 50;
             align_shortcut = "right";
             hl_shortcut = "Keyword";
         };
@@ -48,7 +48,7 @@ local default_opts = {
                 default_button("SPC f h", "  Recently opened files");
                 default_button("SPC f r", "  Frecency/MRU"         );
                 default_button("SPC f f", "  Find file"            );
-                default_button("SPC f w", "  Find word"            );
+                default_button("SPC f g", "  Find word"            );
                 default_button("SPC f m", "  Jump to bookmarks"    );
             };
             opts = {
@@ -72,7 +72,7 @@ end
 local function center(tbl, state)
     local longest = longest_line(tbl)
     local win_width = vim.api.nvim_win_get_width(state.window)
-    local left = math.floor((win_width / 2) - (longest / 2))
+    local left = math.ceil((win_width / 2) - (longest / 2))
     local padding = string.rep(" ", left)
     local centered = {}
     for k,v in pairs(tbl) do
@@ -176,8 +176,9 @@ local function layout(opts, state)
             end
         end
         if el.opts then
-            if el.opts.position == "center" 
-                then val, left = center(val, state) 
+            if el.opts.position == "center" then 
+                local left
+                val, left = center(val, state) 
                 if center_pad then center_pad = center_pad + left end
             end
         end
@@ -253,28 +254,25 @@ function _G.alpha_set_cursor()
 end
 
 local function enable_alpha()
-    vim.opt_local.bufhidden      = 'wipe'
-    vim.opt_local.colorcolumn    = ""
-    vim.opt_local.foldcolumn     = "0"
-    vim.opt_local.matchpairs     = ""
-    vim.opt_local.buflisted      = false
-    vim.opt_local.cursorcolumn   = false
-    vim.opt_local.cursorline     = false
-    vim.opt_local.list           = false
-    vim.opt_local.number         = false
-    vim.opt_local.relativenumber = false
-    vim.opt_local.spell          = false
-    vim.opt_local.swapfile       = false
-    vim.opt_local.signcolumn     = 'no'
-    vim.opt_local.synmaxcol      = vim.api.nvim_get_option_info('synmaxcol').default
-    vim.opt_local.wrap           = false
-
-    vim.opt_local.ft = 'alpha'
+    -- vim.opt_local behaves inconsistently for window options, it seems.
+    -- I don't have the patience to sort out a better way to do this
+    -- or seperate out the buffer local options.
+    vim.cmd([[silent! setlocal bufhidden=wipe colorcolumn= foldcolumn=0 matchpairs= nobuflisted nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha]])
 
     vim.cmd("autocmd alpha CursorMoved <buffer> call v:lua.alpha_set_cursor()")
 end
 
-local function start(opts)
+local function start(on_vimenter, opts)
+    -- Handle vim -y, vim -M.
+    if on_vimenter and (vim.opt.insertmode:get() or (not vim.opt.modifiable:get())) then
+        return
+    end
+
+    if not vim.opt.hidden:get() and vim.opt.modified:get() then
+        vim.api.nvim_err_writeln("Save your changes first.")
+        return
+    end
+
     opts = opts or options
 
     local buffer = vim.api.nvim_create_buf(true, true)
@@ -298,16 +296,17 @@ local function start(opts)
         vim.api.nvim_buf_set_option(state.buffer, 'modified', false)
         vim.api.nvim_buf_set_keymap(state.buffer, 'n', '<CR>', ':call v:lua.alpha_press()<CR>', {noremap = false, silent = true})
     end
-    vim.api.nvim_win_set_cursor(state.window, _G.alpha_cursor_jumps[1] or {1, 1})
     _G.alpha_redraw = draw
     draw()
+    vim.api.nvim_win_set_cursor(0, _G.alpha_cursor_jumps[1])
 end
 
 local function setup(opts)
-    vim.cmd("command Alpha lua require'alpha'.start()")
+    vim.cmd("command Alpha lua require'alpha'.start(false)")
     vim.cmd([[augroup alpha]])
     vim.cmd([[au!]])
     vim.cmd([[autocmd VimResized * if &filetype ==# 'alpha' | call v:lua.alpha_redraw() | endif]])
+    vim.cmd([[autocmd VimEnter * nested lua require'alpha'.start(true)]])
     vim.cmd([[augroup END]])
     if type(opts) == "table" then
         options = opts
