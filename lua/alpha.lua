@@ -121,38 +121,52 @@ local function layout(opts, state)
 
     layout_element.button = function(el)
         local val
-        local center_pad
+        local padding = {
+            left   = 0,
+            center = 0,
+            right  = 0,
+        }
         if el.opts and el.opts.shortcut then
             local win_width = vim.api.nvim_win_get_width(state.window)
-            -- this min lets the center padding resize when the window gets smaller
+            -- this min lets the padding resize when the window gets smaller
             if el.opts.width then
                 local max_width = math.min(el.opts.width , win_width)
-                center_pad = max_width - (#el.val + #el.opts.shortcut)
-            else
-                center_pad = 0
+                if el.opts.align_shortcut == "right"
+                    then padding.center = max_width - (#el.val + #el.opts.shortcut)
+                    else padding.right = max_width - (#el.val + #el.opts.shortcut)
+                end
             end
-            val = {el.val .. string.rep(" ", center_pad) .. el.opts.shortcut}
+            if el.opts.align_shortcut == "right"
+                then val = {el.val .. string.rep(" ", padding.center) .. el.opts.shortcut}
+                else val = {el.opts.shortcut .. " " .. el.val .. string.rep(" ", padding.right)}
+            end
         else
             val = {el.val}
         end
 
+        -- margin
         if opts.margin then
             if el.opts and el.opts.position ~= "center" then
                 val = pad_margin(val, state, opts.margin)
-                if center_pad then
-                    center_pad = center_pad + opts.margin
+                if el.opts.align_shortcut == "right"
+                    then padding.center = padding.center + opts.margin
+                    else padding.left = padding.left + opts.margin
                 end
             end
         end
+
+        -- center
         if el.opts then
             if el.opts.position == "center" then
                 local left
                 val, left = center(val, state)
-                if center_pad then
-                    center_pad = center_pad + left
+                if el.opts.align_shortcut == "right"
+                    then padding.center = padding.center + left
+                    else padding.left = padding.left + left
                 end
             end
         end
+
         local row = state.line + 1
         local _, count_spaces = string.find(val[1], "%s*")
         local col = ((el.opts and el.opts.cursor) or 0) + count_spaces
@@ -162,8 +176,11 @@ local function layout(opts, state)
         if el.opts and el.opts.hl then
             vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, state.line, 0, -1)
         end
-        if el.opts and el.opts.hl_shortcut and center_pad then
-            vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, state.line, #el.val + center_pad, -1)
+        if el.opts and el.opts.hl_shortcut then
+            if el.opts.align_shortcut == "right"
+                then vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, state.line, #el.val + padding.center, -1)
+                else vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, state.line, padding.left, padding.left + #el.opts.shortcut)
+            end
         end
         state.line = state.line + 1
     end
@@ -172,8 +189,8 @@ local function layout(opts, state)
         for _, v in pairs(el.val) do
             layout_element[v.type](v)
             if el.opts and el.opts.spacing then
-                local padding = {type = "padding", val = el.opts.spacing}
-                layout_element[padding.type](padding)
+                local padding_el = {type = "padding", val = el.opts.spacing}
+                layout_element[padding_el.type](padding_el)
             end
         end
     end
@@ -183,47 +200,55 @@ local function layout(opts, state)
     end
 end
 
+function dump(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dump(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
+
 -- dragons
 local function closest_cursor_jump(cursor, cursors, prev_cursor)
-    -- accumulator
-    local closest
-    if cursors then
-        closest = {1, cursors[1]} -- base case
-    else
-        closest = {1, {1, 1}} -- shouldn't happen
-    end
-    local distances = {}
+    local direction = prev_cursor[1] > cursor[1] -- true = UP, false = DOWN
+    local min
     for k, v in pairs(cursors) do
-        local distance = math.abs(v[1] - cursor[1]) -- new cursor position's distance
-        table.insert(distances, k, {distance, k}) -- from each jump
-    end
-    table.sort(
-        distances,
-        function(l, r)
-            return l[1] < r[1]
+        local distance = v[1] - cursor[1] -- new cursor distance from old cursor
+        if direction and (distance <= 0) then
+            distance = math.abs(distance)
+            local res = {distance, k}
+            if not min then min = res end
+            if min[1] > res[1] then min = res end
         end
-    )
-    if distances[1] and distances[2] and distances[1][1] == distances[2][1] then -- tie breaker
-        local index
-        if prev_cursor[1] > cursor[1] then -- we use the velocity as a tie breaker
-            index = math.min(distances[1][2], distances[2][2]) -- up
+        if (not direction) and (distance >= 0) then
+            local res = {distance, k}
+            if not min then min = res end
+            if min[1] > res[1] then min = res end
+        end
+    end
+    if not min
+        then
+            if direction
+                then return 1, cursors[1]
+                else return #cursors, cursors[#cursors]
+            end
         else
-            index = math.max(distances[1][2], distances[2][2]) -- down
-        end
-        closest = {index, cursors[index]}
-    else
-        -- returns the key (stored in a jank way so we can sort the table)
-        -- and the {row, col} tuple
-        closest = {distances[1][2], cursors[distances[1][2]]}
+            -- returns the key (stored in a jank way so we can sort the table)
+            -- and the {row, col} tuple
+            return min[2], cursors[min[2]]
     end
-    return closest
 end
 
 _G.alpha_set_cursor = function ()
     local cursor = vim.api.nvim_win_get_cursor(0)
-    local closest = closest_cursor_jump(cursor, _G.alpha_cursor_jumps, _G.alpha_cursor_jumps[_G.alpha_cursor_ix])
-    _G.alpha_cursor_ix = closest[1]
-    vim.api.nvim_win_set_cursor(0, closest[2])
+    local closest_ix, closest_pt = closest_cursor_jump(cursor, _G.alpha_cursor_jumps, _G.alpha_cursor_jumps[_G.alpha_cursor_ix])
+    _G.alpha_cursor_ix = closest_ix
+    vim.api.nvim_win_set_cursor(0, closest_pt)
 end
 
 local function enable_alpha()
@@ -309,5 +334,4 @@ end
 return {
     setup = setup,
     start = start,
-    default_opts = default_opts
 }
