@@ -6,11 +6,23 @@ sexy! wow!
 fast!
 
 ### Quick Start
+#### dashboard-nvim theme
 ```lua
 use {
     'goolord/alpha-nvim',
     config = function ()
         require'alpha'.setup(require'alpha.themes.dashboard'.opts)
+    end
+}
+```
+
+#### vim-startify theme
+```lua
+use {
+    'goolord/alpha-nvim',
+    requires = { 'kyazdani42/nvim-web-devicons' },
+    config = function ()
+        require'alpha'.setup(require'alpha.themes.startify'.opts)
     end
 }
 ```

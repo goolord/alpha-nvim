@@ -60,7 +60,9 @@ local opts = {
             }
         }
     },
-    margin = 5
+    opts = {
+        margin = 5
+    },
 }
 
 return {

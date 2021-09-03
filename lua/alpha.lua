@@ -4,6 +4,13 @@ _G.alpha_cursor_jumps = {}
 _G.alpha_cursor_jumps_press = {}
 _G.alpha_keymaps = {}
 
+local function from_nil(x, nil_case)
+    if x == nil
+        then return nil_case
+        else return x
+    end
+end
+
 function _G.alpha_press()
     _G.alpha_cursor_jumps_press[_G.alpha_cursor_ix]()
 end
@@ -32,12 +39,12 @@ local function center(tbl, state)
     return centered, left
 end
 
-local function pad_margin(tbl, state, margin)
+local function pad_margin(tbl, state, margin, shrink)
     local longest = longest_line(tbl)
     local pot_width = margin + margin + longest
     local win_width = vim.api.nvim_win_get_width(state.window)
     local left
-    if pot_width > win_width then
+    if shrink and (pot_width > win_width) then
         left = (win_width - pot_width) + margin
     else
         left = margin
@@ -68,10 +75,8 @@ local function layout(opts, state)
         if type(el.val) == "table" then
             local end_ln = state.line + #el.val
             local val = el.val
-            if opts.margin then
-                if el.opts and el.opts.position ~= "center" then
-                    val = pad_margin(val, state, opts.margin)
-                end
+            if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
+                val = pad_margin(val, state, opts.opts.margin, from_nil(el.opts.shrink_margin, true))
             end
             if el.opts then
                 if el.opts.position == "center" then
@@ -91,10 +96,8 @@ local function layout(opts, state)
         end
         if type(el.val) == "string" then
             local val = {el.val}
-            if opts.margin then
-                if el.opts and el.opts.position ~= "center" then
-                    val = pad_margin(val, state, opts.margin)
-                end
+            if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
+                val = pad_margin(val, state, opts.opts.margin, from_nil(el.opts.shrink_margin, true))
             end
             if el.opts then
                 if el.opts.position == "center" then
@@ -145,13 +148,11 @@ local function layout(opts, state)
         end
 
         -- margin
-        if opts.margin then
-            if el.opts and el.opts.position ~= "center" then
-                val = pad_margin(val, state, opts.margin)
-                if el.opts.align_shortcut == "right"
-                    then padding.center = padding.center + opts.margin
-                    else padding.left = padding.left + opts.margin
-                end
+        if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
+            val = pad_margin(val, state, opts.opts.margin, from_nil(el.opts.shrink_margin, true))
+            if el.opts.align_shortcut == "right"
+                then padding.center = padding.center + opts.opts.margin
+                else padding.left = padding.left + opts.opts.margin
             end
         end
 
@@ -173,13 +174,25 @@ local function layout(opts, state)
         table.insert(_G.alpha_cursor_jumps, {row, col})
         table.insert(_G.alpha_cursor_jumps_press, el.on_press)
         vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, true, val)
-        if el.opts and el.opts.hl then
-            vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, state.line, 0, -1)
-        end
         if el.opts and el.opts.hl_shortcut then
             if el.opts.align_shortcut == "right"
                 then vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, state.line, #el.val + padding.center, -1)
                 else vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, state.line, padding.left, padding.left + #el.opts.shortcut)
+            end
+        end
+
+        if el.opts and el.opts.hl then
+            local left = padding.left
+            if el.opts.align_shortcut == "left" then left = left + #el.opts.shortcut + 3 end
+            for _, hl in pairs(el.opts.hl) do
+                vim.api.nvim_buf_add_highlight(
+                    state.buffer,
+                    -1,
+                    hl[1],
+                    state.line,
+                    left + hl[2],
+                    left + hl[3]
+                )
             end
         end
         state.line = state.line + 1
@@ -216,6 +229,8 @@ end
 -- dragons
 local function closest_cursor_jump(cursor, cursors, prev_cursor)
     local direction = prev_cursor[1] > cursor[1] -- true = UP, false = DOWN
+    -- minimum distance key from jump point
+    -- excluding jumps in opposite direction
     local min
     for k, v in pairs(cursors) do
         local distance = v[1] - cursor[1] -- new cursor distance from old cursor
@@ -231,7 +246,7 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
             if min[1] > res[1] then min = res end
         end
     end
-    if not min
+    if not min -- top or bottom
         then
             if direction
                 then return 1, cursors[1]
@@ -320,7 +335,7 @@ local function start(on_vimenter, opts)
 end
 
 local function setup(opts)
-    vim.cmd("command Alpha lua require'alpha'.start(false)")
+    vim.cmd("command! Alpha lua require'alpha'.start(false)")
     vim.cmd([[augroup alpha]])
     vim.cmd([[au!]])
     vim.cmd([[autocmd VimResized * if &filetype ==# 'alpha' | call v:lua.alpha_redraw() | endif]])
