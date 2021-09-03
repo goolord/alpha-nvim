@@ -1,12 +1,11 @@
 # alpha-nvim
-![glamor shot](https://user-images.githubusercontent.com/24906808/131895631-96810a64-b528-430d-b08b-6542c2dededa.png)
-sexy! wow!
+`alpha` is a fast and highly customizable greeter for neovim.
 
-![benchmark](https://user-images.githubusercontent.com/24906808/131830001-31523c86-fee2-4f90-b23d-4bd1e152a385.png)
-fast!
+See [Quick Start](#quick-start) for screenshots of the `dashboard-nvim` and `vim-startify` themes
 
-### Quick Start
+## Quick Start
 #### dashboard-nvim theme
+![glamor shot](https://user-images.githubusercontent.com/24906808/131895631-96810a64-b528-430d-b08b-6542c2dededa.png)
 ```lua
 use {
     'goolord/alpha-nvim',
@@ -17,6 +16,7 @@ use {
 ```
 
 #### vim-startify theme
+![glamor shot](https://user-images.githubusercontent.com/24906808/132074699-a837806e-f845-4779-8e82-5bd9b535b979.png)
 ```lua
 use {
     'goolord/alpha-nvim',
@@ -26,6 +26,8 @@ use {
     end
 }
 ```
+## Profiling Results
+![benchmark](https://user-images.githubusercontent.com/24906808/131830001-31523c86-fee2-4f90-b23d-4bd1e152a385.png)
 
 ## TODO
 - maybe center however something like Goyo does it
