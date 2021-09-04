@@ -43,8 +43,8 @@ local opts = {
         {type = "padding", val = 2},
         header,
         {type = "padding", val = 2},
-        {
-            type = "button_group",
+        buttons = {
+            type = "group",
             val = {
                 button( "e"      , "  New file"
                       , ":ene <BAR> startinsert <CR>"),

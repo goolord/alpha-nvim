@@ -38,9 +38,6 @@ local function button(sc, txt, keybind)
     }
 end
 
-local function mru_common(start, oldfiles)
-end
-
 local function mru(start, cwd)
     vim.cmd("rshada")
     local oldfiles = {}
@@ -79,7 +76,7 @@ local function mru(start, cwd)
         table.insert(tbl, file_button)
     end
     return {
-        type = "button_group",
+        type = "group",
         val = tbl,
         opts = {
         }

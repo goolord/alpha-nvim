@@ -198,7 +198,7 @@ local function layout(opts, state)
         state.line = state.line + 1
     end
 
-    layout_element.button_group = function(el)
+    layout_element.group = function(el)
         for _, v in pairs(el.val) do
             layout_element[v.type](v)
             if el.opts and el.opts.spacing then
@@ -211,19 +211,6 @@ local function layout(opts, state)
     for _, el in pairs(opts.layout) do
         layout_element[el.type](el, state)
     end
-end
-
-function dump(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. dump(v) .. ','
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
 end
 
 -- dragons

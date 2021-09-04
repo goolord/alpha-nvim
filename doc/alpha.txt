@@ -1,0 +1,194 @@
+*alpha.txt*  The fancier start screen.
+*alpha*
+==============================================================================
+CONTENTS                                                     *alpha-contents*
+
+    INTRO .......................................... |alpha-intro|
+    COMMANDS ....................................... |alpha-commands|
+    OPTIONS ........................................ |alpha-options|
+    AUTOCMD ........................................ |alpha-autocmd|
+    COLORS ......................................... |alpha-colors|
+    EXAMPLE ........................................ |alpha-example|
+
+==============================================================================
+INTRO                                                           *alpha-intro*
+
+alpha is a plugin that shows a customizable greeter screen win neovim is
+launched.
+
+==============================================================================
+COMMANDS                                                     *alpha-commands*
+
+>
+    :Alpha
+<
+Open the alpha buffer.
+
+==============================================================================
+
+CONFIGURATION                                                 *alpha-configuration*
+
+the following is documentation for the types alpha uses for configuration
+
+opts: 
+>
+ opts = {
+    -- required
+
+    -- table of elements from top to bottom
+    -- key is arbitrary, so you can use lua's array syntax
+    layout = {},
+
+    -- optional
+    opts = {
+        -- number: how much space to pad on the sides of the screen
+        margin = 0 
+    }
+ }
+<
+button:
+>
+ { 
+    -- required
+
+    -- element type
+    type = "button",
+    -- the text to display
+    val = "string",
+    -- what to do when the button is pressed
+    -- useful functions:
+    -- local key = vim.api.nvim_replace_termcodes(shortcut, true, false, true)
+    -- vim.api.nvim_feedkeys(key, "normal", false)
+    on_press = function() end,
+
+    -- optional
+    opts = {
+        position = "left" | "center" | "right",
+
+        shortcut = "string",
+        align_shortcut = "left" | "right",
+        hl_shortcut = "hl_group",
+
+        -- starting at the first character,
+        -- from 0 to #shortcut + #val,
+        -- place the cursor on this row
+        cursor = 0,
+        -- how wide to pad the button.
+        -- useful if position = "center"
+        width = 50,
+    }
+ }
+<
+
+text:
+>
+
+ { 
+    -- required
+
+    -- element type
+    type = "text",
+    -- the text to display
+    -- when it's an array, each element is placed
+    -- on a different line
+    val = "string" | "array",
+
+    -- optional
+    opts = {
+        position = "left" | "center" | "right",
+        hl = "hl_group" | {{"hl_group", 0, -1}}
+    }
+ }
+<
+padding:
+>
+ {
+    type = "padding",
+    val = 0 -- number
+ }
+<
+
+group:
+>
+ {
+    -- required
+    type = "group"
+    val = {} -- table of elements
+
+    -- optional
+    opts = {
+        -- number of newlines inbetween each element
+        spacing = 1
+    }
+ }
+<
+
+A theme may supply predefined widgets like buttons, headers, etc that
+you can use to customize the theme by updating its opts table
+
+==============================================================================
+AUTOCMD                                                       *alpha-autocmd*
+
+In certain situations alpha emits events which can be hooked into via
+|autocmd|s. Those can be used for further customization.
+
+alphaReady~
+
+  When the alpha buffer is ready.
+
+Example:
+>
+    autocmd User AlphaReady let &l:stl = ' This statusline rocks!'
+<
+==============================================================================
+COLORS                                                         *alpha-colors*
+
+Highlighting is handled internally by the neovim api.
+
+You can highlight a button shortcut by supplying a highlight group to the 
+button option x.opt.hl_shortcut
+
+You can highlight most element by supplying an array of
+{'hl_group', start_col, end_col}
+
+for multiline elements, you supply an array of an array of
+{'hl_group', start_col, end_col}
+
+==============================================================================
+Example                                                          *alpha-example*
+
+For the default configuration, see the Quick Start guide in the README.md
+>
+ use {
+     "~/Dev/alpha-nvim",
+     config = function ()
+         local alpha = require'alpha'
+         local dashboard = require'alpha.themes.dashboard'
+         local opts = dashboard.opts
+         opts.layout.buttons.val = {
+             dashboard.button( "e", "  New file" , ":ene <BAR> startinsert <CR>"),
+             dashboard.button( "q", "  Quit NVIM" , ":qa"),
+         }
+         alpha.setup(opts)
+     end
+ }
+<
+==============================================================================
+FAQ                                                          *alpha-faq*
+
+
+How to work with indentLine plugin?
+
+  Disable the plugin while in alpha:
+
+  >
+  let g:indentLine_fileTypeExclude = ['alpha']
+
+How to disable the tabline in alpha buffer?
+
+  >
+  autocmd FileType alpha set showtabline=0 | autocmd WinLeave <buffer> set showtabline=2
+
+==============================================================================
+
+vim:tw=78:sw=4:ts=8:ft=help:norl:
