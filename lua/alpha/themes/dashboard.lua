@@ -17,9 +17,19 @@ local header = {
 
 local function button(sc, txt, keybind)
     local sc_ = sc:gsub("%s", ""):gsub("SPC", "<leader>")
+
+    local opts = {
+        position = "center",
+        shortcut = sc,
+        cursor = 5,
+        width = 50,
+        align_shortcut = "right",
+        hl_shortcut = "Keyword",
+    }
     if keybind then
-        table.insert(_G.alpha_keymaps, {"n", sc_, keybind, {noremap = false, silent = true}})
+        opts.keymap = {"n", sc_, keybind, {noremap = true, silent = true}}
     end
+
     return {
         type = "button",
         val = txt,
@@ -27,14 +37,7 @@ local function button(sc, txt, keybind)
             local key = vim.api.nvim_replace_termcodes(sc_, true, false, true)
             vim.api.nvim_feedkeys(key, "normal", false)
         end,
-        opts = {
-            position = "center",
-            shortcut = sc,
-            cursor = 5,
-            width = 50,
-            align_shortcut = "right",
-            hl_shortcut = "Keyword",
-        }
+        opts = opts,
     }
 end
 

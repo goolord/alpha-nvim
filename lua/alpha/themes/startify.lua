@@ -16,9 +16,20 @@ local header = {
 
 local function button(sc, txt, keybind)
     local sc_ = sc:gsub("%s", ""):gsub("SPC", "<leader>")
+
+    local opts = {
+        position = "left",
+        shortcut = "["..sc.."] ",
+        cursor = 1,
+        -- width = 50,
+        align_shortcut = "left",
+        hl_shortcut = "Number",
+        shrink_margin = false,
+    }
     if keybind then
-        table.insert(_G.alpha_keymaps, {"n", sc_, keybind, {noremap = false, silent = true}})
+        opts.keymap = {"n", sc_, keybind, {noremap = false, silent = true}}
     end
+
     return {
         type = "button",
         val = txt,
@@ -26,15 +37,7 @@ local function button(sc, txt, keybind)
             local key = vim.api.nvim_replace_termcodes(sc_, true, false, true)
             vim.api.nvim_feedkeys(key, "normal", false)
         end,
-        opts = {
-            position = "left",
-            shortcut = "["..sc.."] ",
-            cursor = 1,
-            -- width = 50,
-            align_shortcut = "left",
-            hl_shortcut = "Number",
-            shrink_margin = false,
-        }
+        opts = opts
     }
 end
 
@@ -49,7 +52,7 @@ local function mru(start, cwd)
             else cwd_cond = vim.fn.filereadable(v) == 1
         end
         if (vim.fn.filereadable(v) == 1) and cwd_cond then
-            table.insert(oldfiles, v)
+            oldfiles[#oldfiles+1] = v
         end
     end
 
@@ -73,7 +76,7 @@ local function mru(start, cwd)
         end
         local file_button = button(tostring(i+start-1), ico .. '  ' .. short_fn , ":e " .. fn .. " <CR>")
         if hl then file_button.opts.hl = { { hl, 0, 1 } } end -- starts at val and not shortcut
-        table.insert(tbl, file_button)
+        tbl[#tbl+1] = file_button
     end
     return {
         type = "group",
