@@ -28,6 +28,7 @@ use {
 ```
 ## Profiling Results
 ![benchmark](https://user-images.githubusercontent.com/24906808/131830001-31523c86-fee2-4f90-b23d-4bd1e152a385.png)
+*using https://github.com/lewis6991/impatient.nvim*
 
 ## TODO
 - maybe center however something like Goyo does it
