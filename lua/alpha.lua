@@ -40,12 +40,20 @@ local function longest_line(tbl)
     return longest
 end
 
+longest_line = memoize(longest_line)
+
+local function spaces(n)
+    return string.rep(" ", n)
+end
+
+spaces = memoize(spaces)
+
 local function center(tbl, state)
     -- longest line used to calculate the center.
     -- which doesn't quite give a 'justfieid' look, but w.e
     local longest = longest_line(tbl)
     local left = math.ceil((state.win_width - longest) / 2)
-    local padding = string.rep(" ", left)
+    local padding = spaces(left)
     local centered = {}
     for k, v in pairs(tbl) do
         centered[k] = padding .. v
@@ -62,7 +70,7 @@ local function pad_margin(tbl, state, margin, shrink)
     else
         left = margin
     end
-    local padding = string.rep(" ", left)
+    local padding = spaces(left)
     local padded = {}
     for k, v in pairs(tbl) do
         padded[k] = padding .. v .. padding
@@ -151,8 +159,8 @@ layout_element.button = function(el, opts, state)
             end
         end
         if el.opts.align_shortcut == "right"
-            then val = {el.val .. string.rep(" ", padding.center) .. el.opts.shortcut}
-            else val = {el.opts.shortcut .. " " .. el.val .. string.rep(" ", padding.right)}
+            then val = {el.val .. spaces(padding.center) .. el.opts.shortcut}
+            else val = {el.opts.shortcut .. " " .. el.val .. spaces(padding.right)}
         end
     else
         val = {el.val}
@@ -258,10 +266,11 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
     -- excluding jumps in opposite direction
     local min
     local cursor_row = cursor[1]
+    local abs = math.abs
     for k, v in pairs(cursors) do
         local distance = v[1] - cursor_row -- new cursor distance from old cursor
         if direction and (distance <= 0) then
-            distance = math.abs(distance)
+            distance = abs(distance)
             local res = {distance, k}
             if not min then min = res end
             if min[1] > res[1] then min = res end
@@ -361,6 +370,7 @@ end
 
 local function setup(opts)
     vim.cmd("command! Alpha lua require'alpha'.start(false)")
+    vim.cmd("command! AlphaRedraw lua v:lua.alpha_redraw()")
     vim.cmd([[
         augroup alpha
         au!
