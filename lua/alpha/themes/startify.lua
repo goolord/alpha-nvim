@@ -86,10 +86,15 @@ local function mru(start, cwd)
     }
 end
 
+
+local section = {
+    header = header,
+}
+
 local opts = {
     layout = {
         {type = "padding", val = 2},
-        header,
+        section.header,
         {type = "padding", val = 2},
         button("e", "New file", ":ene <BAR> startinsert <CR>"),
         {type = "padding", val = 1},
@@ -111,5 +116,6 @@ local opts = {
 return {
     button = button,
     header = header,
+    scection = section,
     opts = opts,
 }

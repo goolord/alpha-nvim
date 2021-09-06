@@ -159,17 +159,22 @@ Example                                                          *alpha-example*
 
 For the default configuration, see the Quick Start guide in the README.md
 >
+>
  use {
-     "~/Dev/alpha-nvim",
+     "goolord/alpha-nvim",
      config = function ()
          local alpha = require'alpha'
          local dashboard = require'alpha.themes.dashboard'
-         local opts = dashboard.opts
-         opts.layout.buttons.val = {
+         dashboard.section.header.val = 'foo'
+         dashboard.section.buttons.val = {
              dashboard.button( "e", "  New file" , ":ene <BAR> startinsert <CR>"),
-             dashboard.button( "q", "  Quit NVIM" , ":qa"),
+             dashboard.button( "q", "  Quit NVIM" , ":qa<CR>"),
          }
-         alpha.setup(opts)
+         local handle = io.popen('fortune')
+         local fortune = handle:read("*a")
+         handle:close()
+         dashboard.section.footer.val = fortune
+         alpha.setup(dashboard.opts)
      end
  }
 <

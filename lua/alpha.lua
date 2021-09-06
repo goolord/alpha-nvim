@@ -115,7 +115,11 @@ layout_element.text = function(el, opts, state)
     end
 
     if type(el.val) == "string" then
-        local val = {el.val}
+        local val = {}
+        val = {}
+        for s in el.val:gmatch("[^\r\n]+") do
+            table.insert(val, s)
+        end
         if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
             val = pad_margin(val, state, opts.opts.margin, from_nil(el.opts.shrink_margin, true))
         end
@@ -125,10 +129,13 @@ layout_element.text = function(el, opts, state)
             end
         end
         vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, false, val)
+        local end_ln = state.line + #val
         if el.opts and el.opts.hl then
-            vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, state.line, 0, -1)
+            for i = state.line, end_ln do
+                vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, i, 0, -1)
+            end
         end
-        state.line = state.line + 1
+        state.line = end_ln
     end
 end
 

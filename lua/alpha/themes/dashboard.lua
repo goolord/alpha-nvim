@@ -15,6 +15,15 @@ local header = {
     }
 }
 
+local footer = {
+    type = "text",
+    val = '',
+    opts = {
+        position = "center",
+        hl = "Number",
+    }
+}
+
 local function button(sc, txt, keybind)
     local sc_ = sc:gsub("%s", ""):gsub("SPC", "<leader>")
 
@@ -41,27 +50,36 @@ local function button(sc, txt, keybind)
     }
 end
 
+local buttons = {
+    type = "group",
+    val = {
+        button( "e"      , "  New file"
+        , ":ene <BAR> startinsert <CR>"),
+        button("SPC s l", "  Open last session"     ),
+        button("SPC f h", "  Recently opened files" ),
+        button("SPC f r", "  Frecency/MRU"          ),
+        button("SPC f f", "  Find file"             ),
+        button("SPC f g", "  Find word"             ),
+        button("SPC f m", "  Jump to bookmarks"     ),
+    },
+    opts = {
+        spacing = 1
+    }
+}
+
+local section = {
+    header = header,
+    buttons = buttons,
+    footer = footer,
+}
+
 local opts = {
     layout = {
         {type = "padding", val = 2},
-        header,
+        section.header,
         {type = "padding", val = 2},
-        buttons = {
-            type = "group",
-            val = {
-                button( "e"      , "  New file"
-                      , ":ene <BAR> startinsert <CR>"),
-                button("SPC s l", "  Open last session"     ),
-                button("SPC f h", "  Recently opened files" ),
-                button("SPC f r", "  Frecency/MRU"          ),
-                button("SPC f f", "  Find file"             ),
-                button("SPC f g", "  Find word"             ),
-                button("SPC f m", "  Jump to bookmarks"     ),
-            },
-            opts = {
-                spacing = 1
-            }
-        }
+        section.buttons,
+        section.footer,
     },
     opts = {
         margin = 5
@@ -71,5 +89,6 @@ local opts = {
 return {
     button = button,
     header = header,
+    section = section,
     opts = opts,
 }
