@@ -127,20 +127,6 @@ A theme may supply predefined widgets like buttons, headers, etc that
 you can use to customize the theme by updating its opts table
 
 ==============================================================================
-AUTOCMD                                                       *alpha-autocmd*
-
-In certain situations alpha emits events which can be hooked into via
-|autocmd|s. Those can be used for further customization.
-
-alphaReady~
-
-  When the alpha buffer is ready.
-
-Example:
->
-    autocmd User AlphaReady let &l:stl = ' This statusline rocks!'
-<
-==============================================================================
 COLORS                                                         *alpha-colors*
 
 Highlighting is handled internally by the neovim api.
@@ -178,6 +164,21 @@ For the default configuration, see the Quick Start guide in the README.md
      end
  }
 <
+
+Example with the startify theme:
+>
+    use {
+        "goolord/alpha-nvim",
+        requires = { 'kyazdani42/nvim-web-devicons' },
+        config = function ()
+            local alpha = require'alpha'
+            local dashboard = require'alpha.themes.startify'
+            dashboard.section.header.val = 'foo'
+            alpha.setup(dashboard.opts)
+        end
+    }
+<
+
 ==============================================================================
 FAQ                                                          *alpha-faq*
 
