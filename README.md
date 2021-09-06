@@ -15,7 +15,7 @@ use {
 }
 ```
 if you want sessions, see 
-- [](https://github.com/folke/persistence.nvim#-installation)
+- https://github.com/folke/persistence.nvim#-installation
 - :h :mks
 
 #### vim-startify theme
