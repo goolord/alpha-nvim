@@ -1,3 +1,7 @@
+-- business logic
+
+local utils = require'alpha.utils'
+
 local cursor_ix = 1
 local cursor_jumps = {}
 local cursor_jumps_press = {}
@@ -8,45 +12,25 @@ function _G.alpha_press()
     cursor_jumps_press[cursor_ix]()
 end
 
--- usage:
--- loadstring = memoize(loadstring)
-local function memoize (f)
-    local mem = {} -- memoizing table
-    setmetatable(mem, {__mode = "kv"}) -- make it weak
-    return function (x) -- new version of ’f’, with memoizing
-        local r = mem[x]
-        if r == nil then -- no previous result?
-            r = f(x) -- calls original function
-            mem[x] = r -- store result for reuse
-        end
-        return r
-    end
-end
-
-local function from_nil(x, nil_case)
-    if x == nil
-        then return nil_case
-        else return x
-    end
-end
-
 local function longest_line(tbl)
     local longest = 0
+    local strdisplaywidth = vim.fn.strdisplaywidth
     for _, v in pairs(tbl) do
-        if #v > longest then
-            longest = #v
+        local width = strdisplaywidth(v)
+        if width > longest then
+            longest = width
         end
     end
     return longest
 end
 
-longest_line = memoize(longest_line)
+longest_line = utils.memoize(longest_line)
 
 local function spaces(n)
     return string.rep(" ", n)
 end
 
-spaces = memoize(spaces)
+spaces = utils.memoize(spaces)
 
 local function center(tbl, state)
     -- longest line used to calculate the center.
