@@ -79,7 +79,7 @@ layout_element.text = function(el, opts, state)
         local end_ln = state.line + #el.val
         local val = el.val
         if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
-            val = pad_margin(val, state, opts.opts.margin, utils.from_nil(el.opts.shrink_margin, true))
+            val = pad_margin(val, state, opts.opts.margin, vim.F.if_nil(el.opts.shrink_margin, true))
         end
         if el.opts then
             if el.opts.position == "center" then
@@ -105,7 +105,7 @@ layout_element.text = function(el, opts, state)
             table.insert(val, s)
         end
         if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
-            val = pad_margin(val, state, opts.opts.margin, utils.from_nil(el.opts.shrink_margin, true))
+            val = pad_margin(val, state, opts.opts.margin, vim.F.if_nil(el.opts.shrink_margin, true))
         end
         if el.opts then
             if el.opts.position == "center" then
@@ -159,7 +159,7 @@ layout_element.button = function(el, opts, state)
 
     -- margin
     if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
-        val = pad_margin(val, state, opts.opts.margin, utils.from_nil(el.opts.shrink_margin, true))
+        val = pad_margin(val, state, opts.opts.margin, vim.F.if_nil(el.opts.shrink_margin, true))
         if el.opts.align_shortcut == "right"
             then padding.center = padding.center + opts.opts.margin
             else padding.left = padding.left + opts.opts.margin
