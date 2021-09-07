@@ -7,6 +7,7 @@ local cursor_jumps = {}
 local cursor_jumps_press = {}
 
 _G.alpha_redraw = function() end
+_G.alpha_close = function() end
 
 function _G.alpha_press()
     cursor_jumps_press[cursor_ix]()
@@ -355,6 +356,17 @@ local function start(on_vimenter, opts)
         vim.api.nvim_win_set_cursor(0, cursor_jumps[ix])
     end
     _G.alpha_redraw = draw
+    _G.alpha_close = function ()
+        -- deletes the buffer so there's nothing left in the window :Y
+        -- vim.api.nvim_buf_delete(state.buffer, {})
+
+        cursor_ix = 1
+        cursor_jumps = {}
+        cursor_jumps_press = {}
+
+        _G.alpha_redraw = function() end
+        _G.alpha_close = function() end
+    end
     draw()
     keymaps(opts, state)
 end
@@ -367,6 +379,7 @@ local function setup(opts)
         au!
         autocmd VimResized * if &filetype ==# 'alpha' | call v:lua.alpha_redraw() | endif
         autocmd VimEnter * nested lua require'alpha'.start(true)
+        autocmd BufUnload <buffer> call v:lua.alpha_close() 
         augroup END
     ]])
     if type(opts) == "table" then
