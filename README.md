@@ -18,6 +18,9 @@ if you want sessions, see
 - https://github.com/folke/persistence.nvim#-installation
 - :h :mks
 
+this theme makes some assumptions about your default keybindings
+to customize the buttons, see :h alpha-example
+
 #### vim-startify theme
 ![glamor shot](https://user-images.githubusercontent.com/24906808/132074699-a837806e-f845-4779-8e82-5bd9b535b979.png)
 ```lua
