@@ -116,6 +116,6 @@ local opts = {
 return {
     button = button,
     header = header,
-    scection = section,
+    section = section,
     opts = opts,
 }
