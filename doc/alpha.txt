@@ -172,9 +172,9 @@ Example with the startify theme:
         requires = { 'kyazdani42/nvim-web-devicons' },
         config = function ()
             local alpha = require'alpha'
-            local dashboard = require'alpha.themes.startify'
-            dashboard.section.header.val = 'foo'
-            alpha.setup(dashboard.opts)
+            local startify = require'alpha.themes.startify'
+            startify.section.header.val = 'foo'
+            alpha.setup(startify.opts)
         end
     }
 <
