@@ -38,7 +38,7 @@ local function button(sc, txt, keybind, keybind_opts)
         type = "button",
         val = txt,
         on_press = function()
-            local key = vim.api.nvim_replace_termcodes(sc_, true, false, true)
+            local key = vim.api.nvim_replace_termcodes(sc_ .. '<Ignore>', true, false, true)
             vim.api.nvim_feedkeys(key, "normal", false)
         end,
         opts = opts
