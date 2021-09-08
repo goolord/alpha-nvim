@@ -1,6 +1,6 @@
 local if_nil = vim.F.if_nil
 
-local header = {
+local default_header = {
     type = "text",
     val = {
         [[                               __                ]],
@@ -72,7 +72,7 @@ local buttons = {
 }
 
 local section = {
-    header = header,
+    header = default_header,
     buttons = buttons,
     footer = footer,
 }
@@ -92,7 +92,6 @@ local opts = {
 
 return {
     button = button,
-    header = header,
     section = section,
     opts = opts,
 }

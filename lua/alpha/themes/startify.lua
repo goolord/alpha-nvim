@@ -1,6 +1,6 @@
 local if_nil = vim.F.if_nil
 
-local header = {
+local default_header = {
     type = "text",
     val = {
         [[                                   __                ]],
@@ -96,7 +96,35 @@ end
 
 
 local section = {
-    header = header,
+    header = default_header,
+    top_buttons = {
+        type = "group",
+        val = {
+            button("e", "New file", ":ene <BAR> startinsert <CR>"),
+        }
+    },
+    mru = {
+        type = "group",
+        val = {
+            {type = "text", val = "MRU", opts = { hl = "Comment" }},
+            {type = "padding", val = 1},
+            mru(0),
+        }
+    },
+    mru_cwd = {
+        type = "group",
+        val = {
+            {type = "text", val = "MRU " .. vim.fn.getcwd() , opts = { hl = "Comment" }},
+            {type = "padding", val = 1},
+            mru(10, vim.fn.getcwd),
+        }
+    },
+    bottom_buttons = {
+        type = "group",
+        val = {
+            button("q", "Quit", ":q <CR>"),
+        }
+    },
 }
 
 local opts = {
@@ -104,17 +132,13 @@ local opts = {
         {type = "padding", val = 2},
         section.header,
         {type = "padding", val = 2},
-        button("e", "New file", ":ene <BAR> startinsert <CR>"),
+        section.top_buttons,
         {type = "padding", val = 1},
-        {type = "text", val = "MRU", opts = { hl = "Comment" }},
+        section.mru,
         {type = "padding", val = 1},
-        mru(0),
+        section.mru_cwd,
         {type = "padding", val = 1},
-        {type = "text", val = "MRU " .. vim.fn.getcwd() , opts = { hl = "Comment" }},
-        {type = "padding", val = 1},
-        mru(10, vim.fn.getcwd()),
-        {type = "padding", val = 1},
-        button("q", "Quit", ":q <CR>"),
+        section.bottom_buttons,
     },
     opts = {
         margin = 3,
@@ -124,7 +148,6 @@ local opts = {
 return {
     button = button,
     mru = mru,
-    header = header,
     section = section,
     opts = opts,
 }
