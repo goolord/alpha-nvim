@@ -1,3 +1,5 @@
+local if_nil = vim.F.if_nil
+
 local header = {
     type = "text",
     val = {
@@ -14,7 +16,8 @@ local header = {
     }
 }
 
-local function button(sc, txt, keybind)
+--                    req req  optional optional
+local function button(sc, txt, keybind, keybind_opts)
     local sc_ = sc:gsub("%s", ""):gsub("SPC", "<leader>")
 
     local opts = {
@@ -27,7 +30,8 @@ local function button(sc, txt, keybind)
         shrink_margin = false,
     }
     if keybind then
-        opts.keymap = {"n", sc_, keybind, {noremap = false, silent = true}}
+        keybind_opts = if_nil(keybind_opts, {noremap = true, silent = true, nowait = true})
+        opts.keymap = {"n", sc_, keybind, {noremap = false, silent = true, nowait = true}}
     end
 
     return {
