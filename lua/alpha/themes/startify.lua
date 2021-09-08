@@ -61,8 +61,12 @@ local function mru(start, cwd)
         if pcall(require, 'nvim-web-devicons')
         then
             local nvim_web_devicons = require('nvim-web-devicons')
-            local ext = fn:match("^.+(%..+)$"):sub(2)
-            return nvim_web_devicons.get_icon(fn, ext, { default = true })
+            local match = fn:match("^.+(%..+)$")
+            local ext = ''
+            if match ~= nil then
+                ext = match:sub(2)
+            end
+                return nvim_web_devicons.get_icon(fn, ext, { default = true })
         else
             return '', nil
         end
