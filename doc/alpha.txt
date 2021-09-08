@@ -1,4 +1,4 @@
-*alpha.txt*  The fancier start screen.
+*alpha.txt*
 *alpha*
 ==============================================================================
 CONTENTS                                                     *alpha-contents*
@@ -13,7 +13,7 @@ CONTENTS                                                     *alpha-contents*
 ==============================================================================
 INTRO                                                           *alpha-intro*
 
-alpha is a plugin that shows a customizable greeter screen win neovim is
+alpha is a plugin that shows a customizable greeter screen when neovim is
 launched.
 
 ==============================================================================
