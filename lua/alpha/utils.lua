@@ -17,13 +17,4 @@ function utils.memoize (f)
     end
 end
 
-function utils.from_nil(x, nil_case)
-    if x == nil
-        then return nil_case
-        else return x
-    end
-end
-
-
-
 return utils
