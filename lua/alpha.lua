@@ -103,7 +103,7 @@ layout_element.text = function(el, opts, state)
         local val = {}
         val = {}
         for s in el.val:gmatch("[^\r\n]+") do
-            table.insert(val, s)
+            val[#val+1] = s
         end
         if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
             val = pad_margin(val, state, opts.opts.margin, utils.from_nil(el.opts.shrink_margin, true))
@@ -121,6 +121,12 @@ layout_element.text = function(el, opts, state)
             end
         end
         state.line = end_ln
+    end
+
+    if type(el.val) == "function" then
+        local val = el.val()
+        el.val = val
+        layout_element.text(el, opts, state)
     end
 end
 
@@ -219,7 +225,6 @@ layout_element.group = function(el, opts, state)
     end
 end
 
-
 local function layout(opts, state)
     -- this is my way of hacking pattern matching
     -- you index the table by its "type"
@@ -239,6 +244,7 @@ keymaps_element.button = function (el, opts, state)
         vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
     end
 end
+
 keymaps_element.group = function (el, opts, state)
     for _, v in pairs(el.val) do
         keymaps_element[v.type](v, opts, state)
@@ -293,7 +299,7 @@ _G.alpha_set_cursor = function ()
     vim.api.nvim_win_set_cursor(0, closest_pt)
 end
 
-local function enable_alpha()
+local function enable_alpha(opts)
     -- vim.opt_local behaves inconsistently for window options, it seems.
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
@@ -302,6 +308,8 @@ local function enable_alpha()
     )
 
     vim.cmd("autocmd alpha CursorMoved <buffer> call v:lua.alpha_set_cursor()")
+
+    if opts.setup then opts.setup() end
 end
 
 local options = {}
@@ -325,7 +333,7 @@ local function start(on_vimenter, opts)
     local buffer = vim.api.nvim_create_buf(false, true)
     local window = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(window, buffer)
-    enable_alpha()
+    enable_alpha(opts)
 
     local state = {
         line = 0,
@@ -373,13 +381,13 @@ end
 
 local function setup(opts)
     vim.cmd("command! Alpha lua require'alpha'.start(false)")
-    vim.cmd("command! AlphaRedraw lua v:lua.alpha_redraw()")
+    vim.cmd("command! AlphaRedraw call v:lua.alpha_redraw()")
     vim.cmd([[
         augroup alpha
         au!
         autocmd VimResized * if &filetype ==# 'alpha' | call v:lua.alpha_redraw() | endif
         autocmd VimEnter * nested lua require'alpha'.start(true)
-        autocmd BufUnload <buffer> call v:lua.alpha_close() 
+        autocmd BufUnload alpha call v:lua.alpha_close() 
         augroup END
     ]])
     if type(opts) == "table" then
