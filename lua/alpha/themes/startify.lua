@@ -63,9 +63,9 @@ local function mru(start, cwd)
 
     local tbl = {}
     local function icon(fn)
-        if pcall(require, 'nvim-web-devicons')
+        local has_nwd, nvim_web_devicons = pcall(require, 'nvim-web-devicons')
+        if has_nwd
         then
-            local nvim_web_devicons = require('nvim-web-devicons')
             local match = fn:match("^.+(%..+)$")
             local ext = ''
             if match ~= nil then
