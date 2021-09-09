@@ -233,6 +233,7 @@ end
 
 local function layout_spacers(opts, state)
     local space = vim.api.nvim_win_get_height(state.window) - #vim.api.nvim_buf_get_lines(state.buffer, 0, -1, false)
+    space = math.max(space, 0)
     local space_lines = {}
     for _ = 1, space do
         table.insert(space_lines, "")
