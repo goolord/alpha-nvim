@@ -106,6 +106,13 @@ local section = {
             button("e", "New file", ":ene <BAR> startinsert <CR>"),
         }
     },
+    -- note about MRU: currently this is a function,
+    -- since that means we can get a fresh mru
+    -- whenever there is a DirChanged. this is *really*
+    -- inefficient on redraws, since mru does a lot of I/O.
+    -- should probably be cached, or maybe figure out a way
+    -- to make it a reference to something mutable
+    -- and only mutate that thing on DirChanged
     mru = {
         type = "group",
         val = {
