@@ -94,7 +94,6 @@ local function mru(start, cwd)
     }
 end
 
-
 local section = {
     header = default_header,
     top_buttons = {
@@ -106,6 +105,7 @@ local section = {
     mru = {
         type = "group",
         val = {
+            {type = "padding", val = 1},
             {type = "text", val = "MRU", opts = { hl = "Comment" }},
             {type = "padding", val = 1},
             mru(0),
@@ -114,6 +114,7 @@ local section = {
     mru_cwd = {
         type = "group",
         val = {
+            {type = "padding", val = 1},
             {type = "text", val = "MRU " .. vim.fn.getcwd() , opts = { hl = "Comment" }},
             {type = "padding", val = 1},
             mru(10, vim.fn.getcwd),
@@ -133,9 +134,7 @@ local opts = {
         section.header,
         {type = "padding", val = 2},
         section.top_buttons,
-        {type = "padding", val = 1},
         section.mru,
-        {type = "padding", val = 1},
         section.mru_cwd,
         {type = "padding", val = 1},
         section.bottom_buttons,
