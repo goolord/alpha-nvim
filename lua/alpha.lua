@@ -2,6 +2,7 @@
 
 local utils = require'alpha.utils'
 local if_nil = vim.F.if_nil
+local deepcopy = utils.deepcopy
 
 local cursor_ix = 1
 local cursor_jumps = {}
@@ -125,9 +126,9 @@ layout_element.text = function(el, opts, state)
     end
 
     if type(el.val) == "function" then
-        local val = el.val()
-        el.val = val
-        layout_element.text(el, opts, state)
+        local new_el = deepcopy(el)
+        new_el.val = el.val()
+        layout_element.text(new_el, opts, state)
     end
 end
 
@@ -217,11 +218,18 @@ layout_element.button = function(el, opts, state)
 end
 
 layout_element.group = function(el, opts, state)
-    for _, v in pairs(el.val) do
-        layout_element[v.type](v, opts, state)
-        if el.opts and el.opts.spacing then
-            local padding_el = {type = "padding", val = el.opts.spacing}
-            layout_element[padding_el.type](padding_el, opts, state)
+    if type(el.val) == "function"
+    then
+        local new_el = deepcopy(el)
+        new_el.val = el.val()
+        layout_element.group(new_el, opts, state)
+    else
+        for _, v in pairs(el.val) do
+            layout_element[v.type](v, opts, state)
+            if el.opts and el.opts.spacing then
+                local padding_el = {type = "padding", val = el.opts.spacing}
+                layout_element[padding_el.type](padding_el, opts, state)
+            end
         end
     end
 end
@@ -247,8 +255,15 @@ keymaps_element.button = function (el, opts, state)
 end
 
 keymaps_element.group = function (el, opts, state)
-    for _, v in pairs(el.val) do
-        keymaps_element[v.type](v, opts, state)
+    if type(el.val) == "function"
+    then
+        local new_el = deepcopy(el)
+        new_el.val = el.val()
+        keymaps_element.group(new_el, opts, state)
+    else
+        for _, v in pairs(el.val) do
+            keymaps_element[v.type](v, opts, state)
+        end
     end
 end
 
@@ -313,7 +328,7 @@ local function enable_alpha(opts)
     if opts.setup then opts.setup() end
 end
 
-local options = {}
+local options
 
 local function start(on_vimenter, opts)
     if on_vimenter then

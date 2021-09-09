@@ -94,6 +94,10 @@ local function mru(start, cwd)
     }
 end
 
+local function mru_title()
+    return "MRU " .. vim.fn.getcwd()
+end
+
 local section = {
     header = default_header,
     top_buttons = {
@@ -108,16 +112,16 @@ local section = {
             {type = "padding", val = 1},
             {type = "text", val = "MRU", opts = { hl = "Comment" }},
             {type = "padding", val = 1},
-            mru(0),
+            {type = "group", val = function() return { mru(0) } end},
         }
     },
     mru_cwd = {
         type = "group",
         val = {
             {type = "padding", val = 1},
-            {type = "text", val = "MRU " .. vim.fn.getcwd() , opts = { hl = "Comment" }},
+            {type = "text", val = mru_title , opts = { hl = "Comment" }},
             {type = "padding", val = 1},
-            mru(10, vim.fn.getcwd),
+            {type = "group", val = function() return { mru(10, vim.fn.getcwd) } end},
         }
     },
     bottom_buttons = {
@@ -142,6 +146,11 @@ local opts = {
     opts = {
         margin = 3,
     },
+    setup = function ()
+        vim.cmd[[
+        autocmd DirChanged * call v:lua.alpha_redraw()
+        ]]
+    end
 }
 
 return {
