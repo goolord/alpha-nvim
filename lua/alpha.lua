@@ -378,7 +378,7 @@ local function start(on_vimenter, opts)
             ":call v:lua.alpha_press()<CR>",
             {noremap = false, silent = true}
         )
-        vim.api.nvim_win_set_cursor(0, cursor_jumps[ix])
+        vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
     end
     _G.alpha_redraw = draw
     _G.alpha_close = function ()
