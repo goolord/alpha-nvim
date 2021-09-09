@@ -103,7 +103,6 @@ layout_element.text = function(el, opts, state)
 
     if type(el.val) == "string" then
         local val = {}
-        val = {}
         for s in el.val:gmatch("[^\r\n]+") do
             val[#val+1] = s
         end
@@ -218,12 +217,13 @@ layout_element.button = function(el, opts, state)
 end
 
 layout_element.group = function(el, opts, state)
-    if type(el.val) == "function"
-    then
+    if type(el.val) == "function" then
         local new_el = deepcopy(el)
         new_el.val = el.val()
         layout_element.group(new_el, opts, state)
-    else
+    end
+
+    if type(el.val) == "table" then
         for _, v in pairs(el.val) do
             layout_element[v.type](v, opts, state)
             if el.opts and el.opts.spacing then
@@ -255,12 +255,13 @@ keymaps_element.button = function (el, opts, state)
 end
 
 keymaps_element.group = function (el, opts, state)
-    if type(el.val) == "function"
-    then
+    if type(el.val) == "function" then
         local new_el = deepcopy(el)
         new_el.val = el.val()
         keymaps_element.group(new_el, opts, state)
-    else
+    end
+
+    if type(el.val) == "table" then
         for _, v in pairs(el.val) do
             keymaps_element[v.type](v, opts, state)
         end

@@ -91,7 +91,7 @@ text:
     -- the text to display
     -- when it's an array, each element is placed
     -- on a different line
-    val = "string" | "array",
+    val = "string" | { "array" } | function,
 
     -- optional
     opts = {
@@ -113,7 +113,7 @@ group:
  {
     -- required
     type = "group"
-    val = {} -- table of elements
+    val = {} | function -- table of elements
 
     -- optional
     opts = {
