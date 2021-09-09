@@ -5,7 +5,7 @@ See [Quick Start](#quick-start) for screenshots of the `dashboard-nvim` and `vim
 
 ## Quick Start
 #### dashboard-nvim theme
-![glamor shot](https://user-images.githubusercontent.com/24906808/131895631-96810a64-b528-430d-b08b-6542c2dededa.png)
+![glamor shot](https://user-images.githubusercontent.com/24906808/132604236-4f20adc4-706c-49b4-b473-ebfd6a7f0784.png)
 ```lua
 use {
     'goolord/alpha-nvim',
