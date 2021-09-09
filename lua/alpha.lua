@@ -141,6 +141,11 @@ layout_element.padding = function(el, opts, state)
     state.line = end_ln
 end
 
+layout_element.spacer = function (el, opts, state)
+    local s = { line = state.line, val = el.val }
+    table.insert(state.spacers, s)
+end
+
 layout_element.button = function(el, opts, state)
     local val
     local padding = {
@@ -189,7 +194,7 @@ layout_element.button = function(el, opts, state)
     local row = state.line + 1
     local _, count_spaces = string.find(val[1], "%s*")
     local col = ((el.opts and el.opts.cursor) or 0) + count_spaces
-    cursor_jumps[#cursor_jumps+1] = {row, col}
+    cursor_jumps[#cursor_jumps+1] = {row, col, #state.spacers}
     cursor_jumps_press[#cursor_jumps_press+1] = el.on_press
     vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, false, val)
     if el.opts and el.opts.hl_shortcut then
@@ -226,18 +231,53 @@ layout_element.group = function(el, opts, state)
     end
 end
 
+local function layout_spacers(opts, state)
+    local space = vim.api.nvim_win_get_height(state.window) - #vim.api.nvim_buf_get_lines(state.buffer, 0, -1, false)
+    local space_lines = {}
+    for _ = 1, space do
+        table.insert(space_lines, "")
+    end
+
+    local tot_val = 0
+    for _, s in ipairs(state.spacers) do
+        tot_val = tot_val + s.val
+    end
+
+    for i = #state.spacers, 1, -1 do
+        local s = state.spacers[i]
+        local n = math.floor(s.val / tot_val * #space_lines)
+        s.shift = space
+        space = space - n
+        local cur_lines = {unpack(space_lines, 1, n)}
+        vim.api.nvim_buf_set_lines(state.buffer, s.line, s.line, false, cur_lines)
+    end
+
+    dump("cj",cursor_jumps)
+    -- Correct cursor_jumps list for additional spacing
+    for k, v in ipairs(cursor_jumps) do
+        local shift = (v[3] == 0) and 0 or state.spacers[v[3]].shift
+        cursor_jumps[k][1] = v[1] + shift
+        cursor_jumps[k][3] = nil
+    end
+    dump("cj",cursor_jumps)
+    dump("sp",state)
+end
+
 local function layout(opts, state)
     -- this is my way of hacking pattern matching
     -- you index the table by its "type"
     for _, el in pairs(opts.layout) do
         layout_element[el.type](el, opts, state)
     end
+
+    layout_spacers(opts, state)
 end
 
 local keymaps_element = {}
 
 keymaps_element.text = function () end
 keymaps_element.padding = function () end
+keymaps_element.spacer = function () end
 
 keymaps_element.button = function (el, opts, state)
     if el.opts and el.opts.keymap then
@@ -280,16 +320,16 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
             if min[1] > res[1] then min = res end
         end
     end
-    if not min -- top or bottom
-        then
-            if direction
-                then return 1, cursors[1]
-                else return #cursors, cursors[#cursors]
-            end
+    if not min then -- top or bottom
+        if direction then
+          return 1, cursors[1]
         else
-            -- returns the key (stored in a jank way so we can sort the table)
-            -- and the {row, col} tuple
-            return min[2], cursors[min[2]]
+          return #cursors, cursors[#cursors]
+        end
+    else
+        -- returns the key (stored in a jank way so we can sort the table)
+        -- and the {row, col} tuple
+        return min[2], cursors[min[2]]
     end
 end
 
@@ -340,13 +380,15 @@ local function start(on_vimenter, opts)
         line = 0,
         buffer = buffer,
         window = window,
-        win_width = 0
+        win_width = 0,
+        spacers = {},
     }
     local function draw()
         for k in pairs(cursor_jumps) do cursor_jumps[k] = nil end
         for k in pairs(cursor_jumps_press) do cursor_jumps_press[k] = nil end
         state.win_width = vim.api.nvim_win_get_width(state.window)
         state.line = 0
+        state.spacers = {}
         -- this is for redraws. i guess the cursor 'moves'
         -- when the screen is cleared and then redrawn
         -- so we save the index before that happens
