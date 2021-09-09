@@ -1,4 +1,6 @@
 local if_nil = vim.F.if_nil
+local fnamemodify = vim.fn.fnamemodify
+local filereadable = vim.fn.filereadable
 
 local default_header = {
     type = "text",
@@ -46,16 +48,15 @@ local function button(sc, txt, keybind, keybind_opts)
 end
 
 local function mru(start, cwd)
-    vim.cmd("rshada")
     local oldfiles = {}
     for _,v in pairs(vim.v.oldfiles) do
         if #oldfiles == 10 then break end
         local cwd_cond
         if not cwd
             then cwd_cond = true
-            else cwd_cond = vim.fn.filereadable(v) == 1
+            else cwd_cond = filereadable(v) == 1
         end
-        if (vim.fn.filereadable(v) == 1) and cwd_cond then
+        if (filereadable(v) == 1) and cwd_cond then
             oldfiles[#oldfiles+1] = v
         end
     end
@@ -79,8 +80,8 @@ local function mru(start, cwd)
         local ico, hl = icon(fn)
         local short_fn
         if cwd
-            then short_fn = vim.fn.fnamemodify(fn, ':.')
-            else short_fn = vim.fn.fnamemodify(fn, ':~')
+            then short_fn = fnamemodify(fn, ':.')
+            else short_fn = fnamemodify(fn, ':~')
         end
         local file_button = button(tostring(i+start-1), ico .. '  ' .. short_fn , ":e " .. fn .. " <CR>")
         if hl then file_button.opts.hl = { { hl, 0, 1 } } end -- starts at val and not shortcut
@@ -155,6 +156,7 @@ local opts = {
     },
     setup = function ()
         vim.cmd[[
+        rshada
         autocmd DirChanged * call v:lua.alpha_redraw()
         ]]
     end
