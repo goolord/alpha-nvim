@@ -324,7 +324,10 @@ local function enable_alpha(opts)
         [[silent! setlocal bufhidden=wipe colorcolumn= foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap]]
     )
 
-    vim.cmd("autocmd alpha CursorMoved <buffer> call v:lua.alpha_set_cursor()")
+    vim.cmd[[
+    autocmd alpha BufUnload <buffer> call v:lua.alpha_close()
+    autocmd alpha CursorMoved <buffer> call v:lua.alpha_set_cursor()
+    ]]
 
     if opts.setup then opts.setup() end
 end
@@ -387,9 +390,7 @@ local function start(on_vimenter, opts)
         cursor_ix = 1
         cursor_jumps = {}
         cursor_jumps_press = {}
-
-        _G.alpha_redraw = function() end
-        _G.alpha_close = function() end
+        _G.alpha_redraw = function () end
     end
     draw()
     keymaps(opts, state)
@@ -403,7 +404,6 @@ local function setup(opts)
         au!
         autocmd VimResized * if &filetype ==# 'alpha' | call v:lua.alpha_redraw() | endif
         autocmd VimEnter * nested lua require'alpha'.start(true)
-        autocmd BufUnload alpha call v:lua.alpha_close() 
         augroup END
     ]])
     if type(opts) == "table" then
