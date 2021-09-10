@@ -62,9 +62,10 @@ local function icon(fn)
     end
 end
 
-local function file_button(fn, sc)
+local function file_button(fn, sc, short_fn)
+    short_fn = if_nil(short_fn, fn)
     local ico, hl = icon(fn)
-    local file_button_el = button(sc, ico .. '  ' .. fn , ":e " .. fn .. " <CR>")
+    local file_button_el = button(sc, ico .. '  ' .. short_fn , ":e " .. fn .. " <CR>")
     if hl then file_button_el.opts.hl = { { hl, 0, 1 } } end -- starts at val and not shortcut
     return file_button_el
 end
@@ -90,7 +91,7 @@ local function mru(start, cwd)
             then short_fn = fnamemodify(fn, ':.')
             else short_fn = fnamemodify(fn, ':~')
         end
-        local file_button_el = file_button(short_fn, tostring(i+start-1))
+        local file_button_el = file_button(fn, tostring(i+start-1), short_fn)
         tbl[#tbl+1] = file_button_el
     end
     return {
