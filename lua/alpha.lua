@@ -384,9 +384,6 @@ local function start(on_vimenter, opts)
     end
     _G.alpha_redraw = draw
     _G.alpha_close = function ()
-        -- deletes the buffer so there's nothing left in the window :Y
-        -- vim.api.nvim_buf_delete(state.buffer, {})
-
         cursor_ix = 1
         cursor_jumps = {}
         cursor_jumps_press = {}

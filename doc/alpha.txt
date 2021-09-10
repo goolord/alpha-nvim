@@ -217,7 +217,7 @@ How to work with indentLine plugin?
 How to disable the tabline in alpha buffer?
 
   >
-  autocmd FileType alpha set showtabline=0 | autocmd WinLeave <buffer> set showtabline=2
+  autocmd FileType alpha set showtabline=0 | autocmd BufUnload <buffer> set showtabline=2
 
 ==============================================================================
 
