@@ -350,6 +350,8 @@ local function start(on_vimenter, opts)
     local buffer = vim.api.nvim_create_buf(false, true)
     local window = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(window, buffer)
+    -- close empty buffer
+    if on_vimenter then vim.api.nvim_buf_delete(1, {}) end
     enable_alpha(opts)
 
     local state = {
