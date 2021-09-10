@@ -1,7 +1,7 @@
 # alpha-nvim
 `alpha` is a fast and highly customizable greeter for neovim.
 
-See [Quick Start](#quick-start) for screenshots of the `dashboard-nvim` and `vim-startify` themes
+share or snipe some custom themes @ https://github.com/goolord/alpha-nvim/discussions/16
 
 ## Quick Start
 #### dashboard-nvim theme
