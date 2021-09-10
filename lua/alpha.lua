@@ -179,10 +179,10 @@ layout_element.button = function(el, opts, state)
         if el.opts.position == "center" then
             local left
             val, left = center(val, state)
-            if el.opts.align_shortcut == "right"
-                then padding.center = padding.center + left
-                else padding.left = padding.left + left
+            if el.opts.align_shortcut == "right" then
+              padding.center = padding.center + left
             end
+            padding.left = padding.left + left
         end
     end
 
