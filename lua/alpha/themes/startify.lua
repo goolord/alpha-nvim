@@ -70,10 +70,11 @@ local function file_button(fn, sc, short_fn)
     return file_button_el
 end
 
-local function mru(start, cwd)
+local function mru(start, cwd, items_number)
+    items_number = if_nil(items_number, 10)
     local oldfiles = {}
     for _,v in pairs(vim.v.oldfiles) do
-        if #oldfiles == 10 then break end
+        if #oldfiles == items_number then break end
         local cwd_cond
         if not cwd
             then cwd_cond = true
