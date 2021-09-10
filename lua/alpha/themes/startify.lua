@@ -62,6 +62,13 @@ local function icon(fn)
     end
 end
 
+local function file_button(fn, sc)
+    local ico, hl = icon(fn)
+    local file_button_el = button(sc, ico .. '  ' .. fn , ":e " .. fn .. " <CR>")
+    if hl then file_button_el.opts.hl = { { hl, 0, 1 } } end -- starts at val and not shortcut
+    return file_button_el
+end
+
 local function mru(start, cwd)
     local oldfiles = {}
     for _,v in pairs(vim.v.oldfiles) do
@@ -78,15 +85,13 @@ local function mru(start, cwd)
 
     local tbl = {}
     for i, fn in pairs(oldfiles) do
-        local ico, hl = icon(fn)
         local short_fn
         if cwd
             then short_fn = fnamemodify(fn, ':.')
             else short_fn = fnamemodify(fn, ':~')
         end
-        local file_button = button(tostring(i+start-1), ico .. '  ' .. short_fn , ":e " .. fn .. " <CR>")
-        if hl then file_button.opts.hl = { { hl, 0, 1 } } end -- starts at val and not shortcut
-        tbl[#tbl+1] = file_button
+        local file_button_el = file_button(short_fn, tostring(i+start-1))
+        tbl[#tbl+1] = file_button_el
     end
     return {
         type = "group",
@@ -166,6 +171,7 @@ local opts = {
 return {
     icon = icon,
     button = button,
+    file_button = file_button,
     mru = mru,
     section = section,
     opts = opts,
