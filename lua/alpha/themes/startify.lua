@@ -71,6 +71,7 @@ local function file_button(fn, sc, short_fn)
 end
 
 local function mru(start, cwd, items_number)
+    items_number = if_nil(items_number, 10)
     local oldfiles = {}
     for _,v in pairs(vim.v.oldfiles) do
         if #oldfiles == items_number then break end
@@ -136,7 +137,7 @@ local section = {
             {type = "padding", val = 1},
             {type = "text", val = mru_title , opts = { hl = "Comment" }},
             {type = "padding", val = 1},
-            {type = "group", val = function() return { mru(10, vim.fn.getcwd, 10) } end},
+            {type = "group", val = function() return { mru(10, vim.fn.getcwd) } end},
         }
     },
     bottom_buttons = {
