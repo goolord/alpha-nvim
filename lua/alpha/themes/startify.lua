@@ -47,6 +47,21 @@ local function button(sc, txt, keybind, keybind_opts)
     }
 end
 
+local function icon(fn)
+    local has_nwd, nvim_web_devicons = pcall(require, 'nvim-web-devicons')
+    if has_nwd
+    then
+        local match = fn:match("^.+(%..+)$")
+        local ext = ''
+        if match ~= nil then
+            ext = match:sub(2)
+        end
+            return nvim_web_devicons.get_icon(fn, ext, { default = true })
+    else
+        return '', nil
+    end
+end
+
 local function mru(start, cwd)
     local oldfiles = {}
     for _,v in pairs(vim.v.oldfiles) do
@@ -62,20 +77,6 @@ local function mru(start, cwd)
     end
 
     local tbl = {}
-    local function icon(fn)
-        local has_nwd, nvim_web_devicons = pcall(require, 'nvim-web-devicons')
-        if has_nwd
-        then
-            local match = fn:match("^.+(%..+)$")
-            local ext = ''
-            if match ~= nil then
-                ext = match:sub(2)
-            end
-                return nvim_web_devicons.get_icon(fn, ext, { default = true })
-        else
-            return '', nil
-        end
-    end
     for i, fn in pairs(oldfiles) do
         local ico, hl = icon(fn)
         local short_fn
@@ -163,6 +164,7 @@ local opts = {
 }
 
 return {
+    icon = icon,
     button = button,
     mru = mru,
     section = section,
