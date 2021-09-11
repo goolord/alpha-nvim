@@ -62,7 +62,7 @@ local function pad_margin(tbl, state, margin, shrink)
     for k, v in pairs(tbl) do
         padded[k] = padding .. v .. padding
     end
-    return padded
+    return padded, left
 end
 
 -- function trim(tbl, state)
@@ -74,6 +74,27 @@ end
 --     return trimmed
 -- end
 
+local function highlight(state, end_ln, hl, left)
+    local hl_type = type(hl)
+    if hl_type == "string" then
+        for i = state.line, end_ln do
+            vim.api.nvim_buf_add_highlight(state.buffer, -1, hl, i, 0, -1)
+        end
+    end
+    -- TODO: support multiple lines
+    if hl_type == "table" then
+        for _, hl_section in pairs(hl) do
+            vim.api.nvim_buf_add_highlight(
+                state.buffer,
+                -1,
+                hl_section[1],
+                state.line,
+                left + hl_section[2],
+                left + hl_section[3]
+            )
+        end
+    end
+end
 
 local layout_element = {}
 
@@ -81,8 +102,11 @@ layout_element.text = function(el, opts, state)
     if type(el.val) == "table" then
         local end_ln = state.line + #el.val
         local val = el.val
+        local padding = { left = 0 }
         if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
-            val = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+            local left
+            val, left = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+            padding.left = padding.left + left
         end
         if el.opts then
             if el.opts.position == "center" then
@@ -94,9 +118,7 @@ layout_element.text = function(el, opts, state)
         end
         vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, false, val)
         if el.opts and el.opts.hl then
-            for i = state.line, end_ln do
-                vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, i, 0, -1)
-            end
+            highlight(state, end_ln, el.opts.hl, 0)
         end
         state.line = end_ln
     end
@@ -106,8 +128,11 @@ layout_element.text = function(el, opts, state)
         for s in el.val:gmatch("[^\r\n]+") do
             val[#val+1] = s
         end
+        local padding = { left = 0 }
         if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
-            val = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+            local left
+            val, left = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+            padding.left = padding.left + left
         end
         if el.opts then
             if el.opts.position == "center" then
@@ -117,9 +142,7 @@ layout_element.text = function(el, opts, state)
         vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, false, val)
         local end_ln = state.line + #val
         if el.opts and el.opts.hl then
-            for i = state.line, end_ln do
-                vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, i, 0, -1)
-            end
+            highlight(state, end_ln, el.opts.hl, padding.left)
         end
         state.line = end_ln
     end
@@ -167,10 +190,11 @@ layout_element.button = function(el, opts, state)
 
     -- margin
     if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
-        val = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+        local left
+        val, left = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
         if el.opts.align_shortcut == "right"
-            then padding.center = padding.center + opts.opts.margin
-            else padding.left = padding.left + opts.opts.margin
+            then padding.center = padding.center + left
+            else padding.left = padding.left + left
         end
     end
 
@@ -202,16 +226,7 @@ layout_element.button = function(el, opts, state)
     if el.opts and el.opts.hl then
         local left = padding.left
         if el.opts.align_shortcut == "left" then left = left + #el.opts.shortcut + 3 end
-        for _, hl in pairs(el.opts.hl) do
-            vim.api.nvim_buf_add_highlight(
-                state.buffer,
-                -1,
-                hl[1],
-                state.line,
-                left + hl[2],
-                left + hl[3]
-            )
-        end
+        highlight(state, state.line, el.opts.hl, left)
     end
     state.line = state.line + 1
 end

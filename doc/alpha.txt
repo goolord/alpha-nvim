@@ -64,7 +64,7 @@ button:
     -- optional
     opts = {
         position = "left" | "center" | "right",
-        hl = {{"hl_group", 0, -1}}
+        hl = "hl_group" | {{"hl_group", 0, -1}}
 
         shortcut = "string",
         align_shortcut = "left" | "right",
