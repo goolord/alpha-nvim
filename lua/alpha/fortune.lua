@@ -4,8 +4,8 @@
 -- use {
 --     'goolord/alpha-nvim',
 --     config = function ()
+--         require'alpha.themes.dashboard'.section.footer.val = require'alpha.fortune'()
 --         require'alpha'.setup(require'alpha.themes.dashboard'.opts)
---         dashboard.section.footer.val = require'alpha.fortune'()
 --     end
 -- }
 
