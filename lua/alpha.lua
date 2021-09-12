@@ -99,7 +99,8 @@ end
 local layout_element = {}
 
 layout_element.text = function(el, opts, state)
-    if type(el.val) == "table" then
+    local el_type = type(el.val)
+    if el_type == "table" then
         local end_ln = state.line + #el.val
         local val = el.val
         local padding = { left = 0 }
@@ -123,7 +124,7 @@ layout_element.text = function(el, opts, state)
         state.line = end_ln
     end
 
-    if type(el.val) == "string" then
+    if el_type == "string" then
         local val = {}
         for s in el.val:gmatch("[^\r\n]+") do
             val[#val+1] = s
@@ -147,7 +148,7 @@ layout_element.text = function(el, opts, state)
         state.line = end_ln
     end
 
-    if type(el.val) == "function" then
+    if el_type == "function" then
         local new_el = deepcopy(el)
         new_el.val = el.val()
         layout_element.text(new_el, opts, state)
@@ -181,8 +182,8 @@ layout_element.button = function(el, opts, state)
             end
         end
         if el.opts.align_shortcut == "right"
-            then val = {el.val .. spaces(padding.center) .. el.opts.shortcut}
-            else val = {el.opts.shortcut .. " " .. el.val .. spaces(padding.right)}
+            then val = { table.concat { el.val, spaces(padding.center), el.opts.shortcut } }
+            else val = { table.concat { el.opts.shortcut, " ", el.val, spaces(padding.right) } }
         end
     else
         val = {el.val}
@@ -232,13 +233,14 @@ layout_element.button = function(el, opts, state)
 end
 
 layout_element.group = function(el, opts, state)
-    if type(el.val) == "function" then
+    local el_type = type(el.val)
+    if el_type == "function" then
         local new_el = deepcopy(el)
         new_el.val = el.val()
         layout_element.group(new_el, opts, state)
     end
 
-    if type(el.val) == "table" then
+    if el_type == "table" then
         for _, v in pairs(el.val) do
             layout_element[v.type](v, opts, state)
             if el.opts and el.opts.spacing then
@@ -270,13 +272,14 @@ keymaps_element.button = function (el, opts, state)
 end
 
 keymaps_element.group = function (el, opts, state)
-    if type(el.val) == "function" then
+    local el_type = type(el.val)
+    if el_type == "function" then
         local new_el = deepcopy(el)
         new_el.val = el.val()
         keymaps_element.group(new_el, opts, state)
     end
 
-    if type(el.val) == "table" then
+    if el_type == "table" then
         for _, v in pairs(el.val) do
             keymaps_element[v.type](v, opts, state)
         end

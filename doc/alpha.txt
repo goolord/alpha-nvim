@@ -43,6 +43,10 @@ opts:
     opts = {
         -- number: how much space to pad on the sides of the screen
         margin = 0 
+
+        -- theme-specific setup,
+        -- ran once before the first draw
+        setup = function
     }
  }
 <
@@ -135,7 +139,7 @@ Highlighting is handled internally by the neovim api.
 You can highlight a button shortcut by supplying a highlight group to the 
 button option x.opt.hl_shortcut
 
-You can highlight most element by supplying an array of
+You can highlight most elements by supplying an array of
 {'hl_group', start_col, end_col}
 
 for multiline elements, you supply an array of an array of
@@ -198,6 +202,9 @@ Example with the startify theme:
             startify.section.mru_cwd.val = { { type = "padding", val = 0 } }
             startify.section.bottom_buttons.val = {
                 startify.button( "q", "  Quit NVIM" , ":qa<CR>"),
+            }
+            startify.section.footer = {
+                { type = "text", val = "footer" },
             }
             alpha.setup(startify.opts)
         end

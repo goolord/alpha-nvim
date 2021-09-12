@@ -146,6 +146,11 @@ local section = {
             button("q", "Quit", ":q <CR>"),
         }
     },
+    footer = {
+        type = "group",
+        val = {
+        }
+    },
 }
 
 local opts = {
@@ -158,6 +163,7 @@ local opts = {
         section.mru_cwd,
         {type = "padding", val = 1},
         section.bottom_buttons,
+        section.footer,
     },
     opts = {
         margin = 3,
