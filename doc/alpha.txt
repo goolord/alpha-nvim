@@ -1,7 +1,7 @@
 *alpha.txt*
 *alpha*
 ==============================================================================
-CONTENTS                                                     *alpha-contents*
+CONTENTS                                                        *alpha-contents*
 
     INTRO .......................................... |alpha-intro|
     COMMANDS ....................................... |alpha-commands|
@@ -11,13 +11,13 @@ CONTENTS                                                     *alpha-contents*
     EXAMPLE ........................................ |alpha-example|
 
 ==============================================================================
-INTRO                                                           *alpha-intro*
+INTRO                                                              *alpha-intro*
 
 alpha is a plugin that shows a customizable greeter screen when neovim is
 launched.
 
 ==============================================================================
-COMMANDS                                                     *alpha-commands*
+COMMANDS                                                        *alpha-commands*
 
 >
     :Alpha
@@ -25,8 +25,7 @@ COMMANDS                                                     *alpha-commands*
 Open the alpha buffer.
 
 ==============================================================================
-
-CONFIGURATION                                                 *alpha-configuration*
+CONFIGURATION                                              *alpha-configuration*
 
 the following is documentation for the types alpha uses for configuration
 
@@ -132,7 +131,7 @@ A theme may supply predefined widgets like buttons, headers, etc that
 you can use to customize the theme by updating its opts table
 
 ==============================================================================
-COLORS                                                         *alpha-colors*
+COLORS                                                            *alpha-colors*
 
 Highlighting is handled internally by the neovim api.
 
@@ -146,7 +145,7 @@ for multiline elements, you supply an array of an array of
 {'hl_group', start_col, end_col}
 
 ==============================================================================
-Example                                                          *alpha-example*
+EXAMPLE                                                          *alpha-example*
 
 For the default configuration, see the Quick Start guide in the README.md
 >
@@ -212,20 +211,18 @@ Example with the startify theme:
 <
 
 ==============================================================================
-FAQ                                                          *alpha-faq*
+FAQ                                                                  *alpha-faq*
 
 
-How to work with indentLine plugin?
+How to work with indentLine plugin?~
 
-  Disable the plugin while in alpha:
-
+    Disable the plugin while in alpha:
   >
-  let g:indentLine_fileTypeExclude = ['alpha']
+    let g:indentLine_fileTypeExclude = ['alpha']
 
-How to disable the tabline in alpha buffer?
-
+How to disable the tabline in alpha buffer?~
   >
-  autocmd FileType alpha set showtabline=0 | autocmd BufUnload <buffer> set showtabline=2
+    autocmd FileType alpha set showtabline=0 | autocmd BufUnload <buffer> set showtabline=2
 
 ==============================================================================
 
