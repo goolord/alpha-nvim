@@ -183,7 +183,7 @@ layout_element.button = function(el, opts, state)
         end
         if el.opts.align_shortcut == "right"
             then val = { table.concat { el.val, spaces(padding.center), el.opts.shortcut } }
-            else val = { table.concat { el.opts.shortcut, " ", el.val, spaces(padding.right) } }
+            else val = { table.concat { el.opts.shortcut, el.val, spaces(padding.right) } }
         end
     else
         val = {el.val}
@@ -218,15 +218,22 @@ layout_element.button = function(el, opts, state)
     cursor_jumps_press[#cursor_jumps_press+1] = el.on_press
     vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, false, val)
     if el.opts and el.opts.hl_shortcut then
+        local hl
+        if type(el.opts.hl_shortcut) == "string"
+            then hl = {{el.opts.hl_shortcut, 0, #el.opts.shortcut}}
+            else hl = el.opts.hl_shortcut
+        end
         if el.opts.align_shortcut == "right"
-            then vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, state.line, #el.val + padding.center, -1)
-            else vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, state.line, padding.left, padding.left + #el.opts.shortcut)
+            then 
+                highlight(state, state.line, hl, #el.val + padding.center)
+            else 
+                highlight(state, state.line, hl, padding.left)
         end
     end
 
     if el.opts and el.opts.hl then
         local left = padding.left
-        if el.opts.align_shortcut == "left" then left = left + #el.opts.shortcut + 3 end
+        if el.opts.align_shortcut == "left" then left = left + #el.opts.shortcut + 2 end
         highlight(state, state.line, el.opts.hl, left)
     end
     state.line = state.line + 1

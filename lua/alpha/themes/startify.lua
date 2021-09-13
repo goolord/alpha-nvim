@@ -5,12 +5,12 @@ local filereadable = vim.fn.filereadable
 local default_header = {
     type = "text",
     val = {
-        [[                                   __                ]],
-        [[      ___     ___    ___   __  __ /\_\    ___ ___    ]],
-        [[     / _ `\  / __`\ / __`\/\ \/\ \\/\ \  / __` __`\  ]],
-        [[    /\ \/\ \/\  __//\ \_\ \ \ \_/ |\ \ \/\ \/\ \/\ \ ]],
-        [[    \ \_\ \_\ \____\ \____/\ \___/  \ \_\ \_\ \_\ \_\]],
-        [[     \/_/\/_/\/____/\/___/  \/__/    \/_/\/_/\/_/\/_/]],
+        [[                                  __                ]],
+        [[     ___     ___    ___   __  __ /\_\    ___ ___    ]],
+        [[    / _ `\  / __`\ / __`\/\ \/\ \\/\ \  / __` __`\  ]],
+        [[   /\ \/\ \/\  __//\ \_\ \ \ \_/ |\ \ \/\ \/\ \/\ \ ]],
+        [[   \ \_\ \_\ \____\ \____/\ \___/  \ \_\ \_\ \_\ \_\]],
+        [[    \/_/\/_/\/____/\/___/  \/__/    \/_/\/_/\/_/\/_/]],
     },
     opts = {
         hl = "Type"
@@ -28,7 +28,7 @@ local function button(sc, txt, keybind, keybind_opts)
         cursor = 1,
         -- width = 50,
         align_shortcut = "left",
-        hl_shortcut = "Number",
+        hl_shortcut = { {"Operator", 0, 1}, {"Number", 1, #sc + 1}, {"Operator", #sc+1, #sc+2} },
         shrink_margin = false,
     }
     if keybind then
@@ -47,16 +47,18 @@ local function button(sc, txt, keybind, keybind_opts)
     }
 end
 
+local nvim_web_devicons = true
+
 local function icon(fn)
-    local has_nwd, nvim_web_devicons = pcall(require, 'nvim-web-devicons')
-    if has_nwd
+    if nvim_web_devicons
     then
+        local nwd = require('nvim-web-devicons')
         local match = fn:match("^.+(%..+)$")
         local ext = ''
         if match ~= nil then
             ext = match:sub(2)
         end
-            return nvim_web_devicons.get_icon(fn, ext, { default = true })
+            return nwd.get_icon(fn, ext, { default = true })
     else
         return '', nil
     end
@@ -66,7 +68,8 @@ local function file_button(fn, sc, short_fn)
     short_fn = if_nil(short_fn, fn)
     local ico, hl = icon(fn)
     local file_button_el = button(sc, ico .. '  ' .. short_fn , ":e " .. fn .. " <CR>")
-    if hl then file_button_el.opts.hl = { { hl, 0, 1 } } end -- starts at val and not shortcut
+    local fn_start = if_nil(short_fn:match(".*/"), 0)
+    if hl then file_button_el.opts.hl = { { hl, 0, 1 }, {"Comment", 3, #fn_start + 3} } end -- starts at val and not shortcut
     return file_button_el
 end
 
@@ -126,7 +129,7 @@ local section = {
         type = "group",
         val = {
             {type = "padding", val = 1},
-            {type = "text", val = "MRU", opts = { hl = "Comment" }},
+            {type = "text", val = "MRU", opts = { hl = "SpecialComment" }},
             {type = "padding", val = 1},
             {type = "group", val = function() return { mru(0) } end},
         }
@@ -135,7 +138,7 @@ local section = {
         type = "group",
         val = {
             {type = "padding", val = 1},
-            {type = "text", val = mru_title , opts = { hl = "Comment" }},
+            {type = "text", val = mru_title , opts = { hl = "SpecialComment" }},
             {type = "padding", val = 1},
             {type = "group", val = function() return { mru(10, vim.fn.getcwd) } end},
         }
@@ -180,6 +183,7 @@ return {
     icon = icon,
     button = button,
     file_button = file_button,
+    nvim_web_devicons = nvim_web_devicons,
     mru = mru,
     section = section,
     opts = opts,
