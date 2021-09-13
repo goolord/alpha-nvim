@@ -199,6 +199,9 @@ Example with the startify theme:
             startify.section.mru.val = { { type = "padding", val = 0 } }
             -- disable MRU cwd
             startify.section.mru_cwd.val = { { type = "padding", val = 0 } }
+            -- disable nvim_web_devicons
+            startify.nvim_web_devicons.enabled = false
+            --
             startify.section.bottom_buttons.val = {
                 startify.button( "q", "  Quit NVIM" , ":qa<CR>"),
             }

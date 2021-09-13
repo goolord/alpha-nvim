@@ -47,29 +47,34 @@ local function button(sc, txt, keybind, keybind_opts)
     }
 end
 
-local nvim_web_devicons = true
+local nvim_web_devicons = { enabled = true }
 
 local function icon(fn)
-    if nvim_web_devicons
-    then
-        local nwd = require('nvim-web-devicons')
-        local match = fn:match("^.+(%..+)$")
-        local ext = ''
-        if match ~= nil then
-            ext = match:sub(2)
-        end
-            return nwd.get_icon(fn, ext, { default = true })
-    else
-        return '', nil
+    local nwd = require('nvim-web-devicons')
+    local match = fn:match("^.+(%..+)$")
+    local ext = ''
+    if match ~= nil then
+        ext = match:sub(2)
     end
+    return nwd.get_icon(fn, ext, { default = true })
 end
 
 local function file_button(fn, sc, short_fn)
     short_fn = if_nil(short_fn, fn)
     local ico, hl = icon(fn)
-    local file_button_el = button(sc, ico .. '  ' .. short_fn , ":e " .. fn .. " <CR>")
+    local ico_txt
+    local fb_hl = {}
+    if nvim_web_devicons.enabled
+        then
+            if hl then table.insert(fb_hl, { hl, 0, 1 }) end
+            ico_txt = ico .. '  '
+        else
+            ico_txt = ''
+    end
+    local file_button_el = button(sc, ico_txt .. short_fn , ":e " .. fn .. " <CR>")
     local fn_start = if_nil(short_fn:match(".*/"), 0)
-    if hl then file_button_el.opts.hl = { { hl, 0, 1 }, {"Comment", 3, #fn_start + 3} } end -- starts at val and not shortcut
+    table.insert(fb_hl, {"Comment", #ico_txt - 2, #fn_start + #ico_txt - 2})
+    file_button_el.opts.hl = fb_hl
     return file_button_el
 end
 
