@@ -81,7 +81,7 @@ local function mru(start, cwd, items_number)
         local cwd_cond
         if not cwd
             then cwd_cond = true
-            else cwd_cond = filereadable(v) == 1
+            else cwd_cond = v:find(cwd,1,true) == 1
         end
         if (filereadable(v) == 1) and cwd_cond then
             oldfiles[#oldfiles+1] = v
@@ -140,7 +140,7 @@ local section = {
             {type = "padding", val = 1},
             {type = "text", val = mru_title , opts = { hl = "SpecialComment" }},
             {type = "padding", val = 1},
-            {type = "group", val = function() return { mru(10, vim.fn.getcwd) } end},
+            {type = "group", val = function() return { mru(10, vim.fn.getcwd()) } end},
         }
     },
     bottom_buttons = {
