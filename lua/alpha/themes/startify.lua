@@ -165,7 +165,7 @@ local section = {
 
 local opts = {
     layout = {
-        {type = "padding", val = 2},
+        {type = "padding", val = 1},
         section.header,
         {type = "padding", val = 2},
         section.top_buttons,
