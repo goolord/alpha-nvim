@@ -50,10 +50,13 @@ end
 
 local function pad_margin(tbl, state, margin, shrink)
     local longest = longest_line(tbl)
-    local pot_width = margin + margin + longest
     local left
-    if shrink and (pot_width > state.win_width) then
-        left = (state.win_width - pot_width) + margin
+    if shrink then
+        local pot_width = margin + margin + longest
+        if (pot_width > state.win_width)
+        then left = (state.win_width - pot_width) + margin
+        else left = margin
+        end
     else
         left = margin
     end
@@ -224,10 +227,8 @@ layout_element.button = function(el, opts, state)
             else hl = el.opts.hl_shortcut
         end
         if el.opts.align_shortcut == "right"
-            then 
-                highlight(state, state.line, hl, #el.val + padding.center)
-            else 
-                highlight(state, state.line, hl, padding.left)
+            then highlight(state, state.line, hl, #el.val + padding.center)
+            else highlight(state, state.line, hl, padding.left)
         end
     end
 
@@ -350,8 +351,12 @@ local function enable_alpha(opts)
     )
 
     vim.cmd[[
-    autocmd alpha BufUnload <buffer> call v:lua.alpha_close()
-    autocmd alpha CursorMoved <buffer> call v:lua.alpha_set_cursor()
+        augroup alpha_temp
+        au!
+        autocmd BufUnload <buffer> call v:lua.alpha_close()
+        autocmd CursorMoved <buffer> call v:lua.alpha_set_cursor()
+        autocmd VimResized * call v:lua.alpha_redraw()
+        augroup END
     ]]
 
     if opts.setup then opts.setup() end
@@ -416,6 +421,7 @@ local function start(on_vimenter, opts)
         cursor_jumps = {}
         cursor_jumps_press = {}
         _G.alpha_redraw = function () end
+        vim.cmd[[au! alpha_temp]]
     end
     draw()
     keymaps(opts, state)
@@ -424,13 +430,12 @@ end
 local function setup(opts)
     vim.cmd("command! Alpha lua require'alpha'.start(false)")
     vim.cmd("command! AlphaRedraw call v:lua.alpha_redraw()")
-    vim.cmd([[
-        augroup alpha
+    vim.cmd[[ 
+        augroup alpha_start
         au!
-        autocmd VimResized * if &filetype ==# 'alpha' | call v:lua.alpha_redraw() | endif
         autocmd VimEnter * nested lua require'alpha'.start(true)
         augroup END
-    ]])
+    ]]
     if type(opts) == "table" then
         options = opts
     end

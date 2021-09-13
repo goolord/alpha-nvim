@@ -174,7 +174,7 @@ local opts = {
     setup = function ()
         vim.cmd[[
         rshada
-        autocmd DirChanged * call v:lua.alpha_redraw()
+        autocmd alpha_temp DirChanged * call v:lua.alpha_redraw()
         ]]
     end
 }
