@@ -1,8 +1,23 @@
 -- business logic
 
-local utils = require'alpha.utils'
+--- @usage loadstring = memoize(loadstring)
+--- @param f function
+--- @return function
+local function memoize (f)
+    local mem = {} -- memoizing table
+    setmetatable(mem, {__mode = "kv"}) -- make it weak
+    return function (x) -- new version of ’f’, with memoizing
+        local r = mem[x]
+        if r == nil then -- no previous result?
+            r = f(x) -- calls original function
+            mem[x] = r -- store result for reuse
+        end
+        return r
+    end
+end
+
 local if_nil = vim.F.if_nil
-local deepcopy = utils.deepcopy
+local deepcopy = vim.deepcopy
 
 local cursor_ix = 1
 local cursor_jumps = {}
@@ -27,13 +42,13 @@ local function longest_line(tbl)
     return longest
 end
 
-longest_line = utils.memoize(longest_line)
+longest_line = memoize(longest_line)
 
 local function spaces(n)
     return string.rep(" ", n)
 end
 
-spaces = utils.memoize(spaces)
+spaces = memoize(spaces)
 
 local function center(tbl, state)
     -- longest line used to calculate the center.
@@ -369,7 +384,7 @@ local function start(on_vimenter, opts)
         if vim.opt.insertmode:get() -- Handle vim -y
             or (not vim.opt.modifiable:get()) -- Handle vim -M
             or vim.fn.argc() ~= 0 -- should probably figure out how to be smarter than this
-            or utils.contains(vim.v.argv, '-c')
+            or vim.tbl_contains(vim.v.argv, '-c')
             -- or vim.fn.line2byte('$') ~= -1
         then return end
      end
