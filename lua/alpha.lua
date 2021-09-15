@@ -74,79 +74,81 @@ end
 -- end
 
 
-local layout_element = {}
+local resolve_element = {}
+local render_element = {}
 
-layout_element.text = function(el, opts, state)
-    if type(el.val) == "table" then
-        local end_ln = state.line + #el.val
-        local val = el.val
-        if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
-            val = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
-        end
-        if el.opts then
-            if el.opts.position == "center" then
-                val, _ = center(val, state)
-            end
-        -- if el.opts.wrap == "overflow" then
-        --     val = trim(val, state)
-        -- end
-        end
-        vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, false, val)
-        if el.opts and el.opts.hl then
-            for i = state.line, end_ln do
-                vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, i, 0, -1)
-            end
-        end
-        state.line = end_ln
+resolve_element.text = function(layout, el, opts, state)
+    local val
+    if type(el.val) == "function" then
+        val = el.val()
+        el.val = val
+        resolve_element.text(layout, el, opts, state)
+        return
     end
 
-    if type(el.val) == "string" then
-        local val = {}
+
+    if type(el.val) == "table" then
+        val = el.val
+    elseif type(el.val) == "string" then
         val = {}
         for s in el.val:gmatch("[^\r\n]+") do
             val[#val+1] = s
         end
-        if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
-            val = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
-        end
-        if el.opts then
-            if el.opts.position == "center" then
-                val, _ = center(val, state)
-            end
-        end
-        vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, false, val)
-        local end_ln = state.line + #val
-        if el.opts and el.opts.hl then
-            for i = state.line, end_ln do
-                vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, i, 0, -1)
-            end
-        end
-        state.line = end_ln
     end
 
-    if type(el.val) == "function" then
-        local val = el.val()
-        el.val = val
-        layout_element.text(el, opts, state)
+    if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
+        val = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+    end
+    if el.opts then
+        if el.opts.position == "center" then
+            val, _ = center(val, state)
+        end
+    -- if el.opts.wrap == "overflow" then
+    --     val = trim(val, state)
+    -- end
+    end
+
+    el = vim.deepcopy(el)
+    el.val = val
+    local end_ln = state.line + #val
+    el.start_ln = state.line
+    el.end_ln = end_ln
+    state.line = end_ln
+
+    table.insert(layout, el)
+end
+
+render_element.text = function(el, _, state)
+    vim.api.nvim_buf_set_lines(state.buffer, el.start_ln, el.end_ln, false, el.val)
+    if el.opts and el.opts.hl then
+        for i = el.start_ln, el.end_ln do
+            vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl, i, 0, -1)
+        end
     end
 end
 
-layout_element.padding = function(el, opts, state)
+resolve_element.padding = function(layout, el, _, state)
     local end_ln = state.line + el.val
     local val = {}
     for i = 1, el.val + 1 do
         val[i] = ""
     end
-    vim.api.nvim_buf_set_lines(state.buffer, state.line, end_ln, false, val)
+    local p = { type = "text", start_ln = state.line, end_ln = end_ln, val = val }
+    table.insert(layout, p)
     state.line = end_ln
 end
 
-layout_element.spacer = function (el, opts, state)
-    local s = { line = state.line, val = el.val }
+-- render_element.padding is not needed (uses text renderer)
+
+resolve_element.spacer = function (layout, el, _, state)
+    local s = { type = "spacer", start_ln = state.line, end_ln = state.line, val = el.val }
+    table.insert(layout, s)
     table.insert(state.spacers, s)
 end
 
-layout_element.button = function(el, opts, state)
+-- render_element.spacer is not needed (uses text renderer, see layout_spacers)
+
+resolve_element.button = function(layout, el, opts, state)
     local val
     local padding = {
         left   = 0,
@@ -157,14 +159,16 @@ layout_element.button = function(el, opts, state)
         -- this min lets the padding resize when the window gets smaller
         if el.opts.width then
             local max_width = math.min(el.opts.width, state.win_width)
-            if el.opts.align_shortcut == "right"
-                then padding.center = max_width - (#el.val + #el.opts.shortcut)
-                else padding.right = max_width - (#el.val + #el.opts.shortcut)
+            if el.opts.align_shortcut == "right" then
+                padding.center = max_width - (#el.val + #el.opts.shortcut)
+            else
+                padding.right = max_width - (#el.val + #el.opts.shortcut)
             end
         end
-        if el.opts.align_shortcut == "right"
-            then val = {el.val .. spaces(padding.center) .. el.opts.shortcut}
-            else val = {el.opts.shortcut .. " " .. el.val .. spaces(padding.right)}
+        if el.opts.align_shortcut == "right" then
+            val = {el.val .. spaces(padding.center) .. el.opts.shortcut}
+        else
+            val = {el.opts.shortcut .. " " .. el.val .. spaces(padding.right)}
         end
     else
         val = {el.val}
@@ -173,9 +177,10 @@ layout_element.button = function(el, opts, state)
     -- margin
     if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
         val = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
-        if el.opts.align_shortcut == "right"
-            then padding.center = padding.center + opts.opts.margin
-            else padding.left = padding.left + opts.opts.margin
+        if el.opts.align_shortcut == "right" then
+            padding.center = padding.center + opts.opts.margin
+        else
+            padding.left = padding.left + opts.opts.margin
         end
     end
 
@@ -184,23 +189,39 @@ layout_element.button = function(el, opts, state)
         if el.opts.position == "center" then
             local left
             val, left = center(val, state)
-            if el.opts.align_shortcut == "right"
-                then padding.center = padding.center + left
-                else padding.left = padding.left + left
+            if el.opts.align_shortcut == "right" then
+                padding.center = padding.center + left
+            else
+                padding.left = padding.left + left
             end
         end
     end
 
-    local row = state.line + 1
-    local _, count_spaces = string.find(val[1], "%s*")
+    el = vim.deepcopy(el)
+    el.padding = padding
+    el.text = val
+    local end_ln = state.line + #val
+    el.start_ln = state.line
+    el.end_ln = end_ln
+    state.line = end_ln
+
+    table.insert(layout, el)
+end
+
+render_element.button = function(el, _, state)
+
+    local row = el.start_ln + 1
+    local _, count_spaces = string.find(el.text[1], "%s*")
     local col = ((el.opts and el.opts.cursor) or 0) + count_spaces
-    cursor_jumps[#cursor_jumps+1] = {row, col, #state.spacers}
+    cursor_jumps[#cursor_jumps+1] = {row, col}
     cursor_jumps_press[#cursor_jumps_press+1] = el.on_press
-    vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, false, val)
+    vim.api.nvim_buf_set_lines(state.buffer, el.start_ln, el.end_ln, false, el.text)
+    local padding = el.padding
     if el.opts and el.opts.hl_shortcut then
-        if el.opts.align_shortcut == "right"
-            then vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, state.line, #el.val + padding.center, -1)
-            else vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, state.line, padding.left, padding.left + #el.opts.shortcut)
+        if el.opts.align_shortcut == "right" then
+            vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, el.start_ln, #el.val + padding.center, -1)
+        else
+            vim.api.nvim_buf_add_highlight(state.buffer, -1, el.opts.hl_shortcut, el.start_ln, padding.left, padding.left + #el.opts.shortcut)
         end
     end
 
@@ -212,7 +233,7 @@ layout_element.button = function(el, opts, state)
                 state.buffer,
                 -1,
                 hl[1],
-                state.line,
+                el.start_ln,
                 left + hl[2],
                 left + hl[3]
             )
@@ -221,19 +242,22 @@ layout_element.button = function(el, opts, state)
     state.line = state.line + 1
 end
 
-layout_element.group = function(el, opts, state)
+resolve_element.group = function(layout, el, opts, state)
     for _, v in pairs(el.val) do
-        layout_element[v.type](v, opts, state)
+        resolve_element[v.type](layout, v, opts, state)
         if el.opts and el.opts.spacing then
             local padding_el = {type = "padding", val = el.opts.spacing}
-            layout_element[padding_el.type](padding_el, opts, state)
+            resolve_element[padding_el.type](layout, padding_el, opts, state)
         end
     end
 end
 
-local function layout_spacers(opts, state)
-    local space = vim.api.nvim_win_get_height(state.window) - #vim.api.nvim_buf_get_lines(state.buffer, 0, -1, false)
+-- render_element.group is not needed
+
+local function layout_spacers(layout, opts, state)
+    local space = vim.api.nvim_win_get_height(state.window) - layout[#layout].end_ln
     space = math.max(space, 0)
+
     local space_lines = {}
     for _ = 1, space do
         table.insert(space_lines, "")
@@ -244,34 +268,47 @@ local function layout_spacers(opts, state)
         tot_val = tot_val + s.val
     end
 
-    for i = #state.spacers, 1, -1 do
-        local s = state.spacers[i]
-        local n = math.floor(s.val / tot_val * #space_lines)
-        s.shift = space
-        space = space - n
-        local cur_lines = {unpack(space_lines, 1, n)}
-        vim.api.nvim_buf_set_lines(state.buffer, s.line, s.line, false, cur_lines)
+    local cur_shift = 0
+    for _, el in ipairs(layout) do
+        if el.type == "spacer" then
+            local shift = math.floor(el.val / tot_val * space)
+            el.type = "text"
+            el.val = {unpack(space_lines, 1, shift)}
+            el.start_ln = el.start_ln + cur_shift
+            el.end_ln = el.end_ln + cur_shift + shift
+
+            -- Adjust current total shift
+            cur_shift = cur_shift + shift
+        else
+            el.start_ln = el.start_ln + cur_shift
+            el.end_ln = el.end_ln + cur_shift
+        end
     end
 
-    dump("cj",cursor_jumps)
-    -- Correct cursor_jumps list for additional spacing
-    for k, v in ipairs(cursor_jumps) do
-        local shift = (v[3] == 0) and 0 or state.spacers[v[3]].shift
-        cursor_jumps[k][1] = v[1] + shift
-        cursor_jumps[k][3] = nil
-    end
-    dump("cj",cursor_jumps)
-    dump("sp",state)
+    -- -- Correct cursor_jumps list for additional spacing
+    -- for k, v in ipairs(cursor_jumps) do
+    --     local shift = (v[3] == 0) and 0 or state.spacers[v[3]].shift
+    --     cursor_jumps[k][1] = v[1] + shift
+    --     cursor_jumps[k][3] = nil
+    -- end
 end
 
-local function layout(opts, state)
+local function resolve_layout(opts, state)
+    local layout = {}
     -- this is my way of hacking pattern matching
     -- you index the table by its "type"
     for _, el in pairs(opts.layout) do
-        layout_element[el.type](el, opts, state)
+        resolve_element[el.type](layout, el, opts, state)
     end
 
-    layout_spacers(opts, state)
+    layout_spacers(layout, opts, state)
+    return layout
+end
+
+local function render_layout(layout, opts, state)
+    for _, el in pairs(layout) do
+        render_element[el.type](el, _, state)
+    end
 end
 
 local keymaps_element = {}
@@ -396,7 +433,8 @@ local function start(on_vimenter, opts)
         local ix = cursor_ix
         vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
         vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
-        layout(opts, state)
+        local layout = resolve_layout(opts, state)
+        render_layout(layout, opts, state)
         vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
         vim.api.nvim_buf_set_keymap(
             state.buffer,
