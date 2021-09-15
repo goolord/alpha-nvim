@@ -183,13 +183,14 @@ local opts = {
     },
     opts = {
         margin = 3,
+        redraw_on_resize = false,
+        setup = function ()
+            vim.cmd[[
+            rshada
+            autocmd alpha_temp DirChanged * call v:lua.alpha_redraw()
+            ]]
+        end,
     },
-    setup = function ()
-        vim.cmd[[
-        rshada
-        autocmd alpha_temp DirChanged * call v:lua.alpha_redraw()
-        ]]
-    end
 }
 
 return {

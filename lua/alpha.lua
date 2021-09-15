@@ -370,11 +370,16 @@ local function enable_alpha(opts)
         au!
         autocmd BufUnload <buffer> call v:lua.alpha_close()
         autocmd CursorMoved <buffer> call v:lua.alpha_set_cursor()
-        autocmd VimResized * call v:lua.alpha_redraw()
         augroup END
     ]]
 
-    if opts.setup then opts.setup() end
+    if opts.opts then
+        if if_nil(opts.opts.redraw_on_resize, true) then
+            vim.cmd[[autocmd alpha_temp VimResized * call v:lua.alpha_redraw()]]
+        end
+
+        if opts.opts.setup then opts.opts.setup() end
+    end
 end
 
 local options
