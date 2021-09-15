@@ -13,7 +13,8 @@ local default_header = {
         [[    \/_/\/_/\/____/\/___/  \/__/    \/_/\/_/\/_/\/_/]],
     },
     opts = {
-        hl = "Type"
+        hl = "Type",
+        shrink_margin = false,
         -- wrap = "overflow";
     }
 }
@@ -160,9 +161,9 @@ local section = {
         type = "group",
         val = {
             {type = "padding", val = 1},
-            {type = "text", val = mru_title , opts = { hl = "SpecialComment" }},
+            {type = "text", val = mru_title , opts = { hl = "SpecialComment", shrink_margin = false}},
             {type = "padding", val = 1},
-            {type = "group", val = function() return { mru(10, vim.fn.getcwd()) } end},
+            {type = "group", val = function() return { mru(10, vim.fn.getcwd()) } end, opts = {shrink_margin = false}},
         }
     },
     bottom_buttons = {
