@@ -31,7 +31,7 @@ local function button(sc, txt, keybind, keybind_opts)
         cursor = 1,
         -- width = 50,
         align_shortcut = "left",
-        hl_shortcut = { {"Operator", 0, 1}, {"Number", 1, #sc + 1}, {"Operator", #sc+1, #sc+2} },
+        hl_shortcut = { {"Operator", 0, 1}, {"Number", 1, #sc+1}, {"Operator", #sc+1, #sc+2} },
         shrink_margin = false,
     }
     if keybind then
@@ -50,7 +50,10 @@ local function button(sc, txt, keybind, keybind_opts)
     }
 end
 
-local nvim_web_devicons = { enabled = true }
+local nvim_web_devicons = {
+    enabled = true,
+    highlight = true
+}
 
 local function icon(fn)
     local nwd = require('nvim-web-devicons')
@@ -69,7 +72,13 @@ local function file_button(fn, sc, short_fn)
     local fb_hl = {}
     if nvim_web_devicons.enabled
         then
-            if hl then table.insert(fb_hl, { hl, 0, 1 }) end
+            local hl_option_type = type(nvim_web_devicons.highlight)
+            if hl_option_type == "bool" then
+                if hl and nvim_web_devicons.highlight then table.insert(fb_hl, { hl, 0, 1 }) end
+            end
+            if hl_option_type == "string" then
+                table.insert(fb_hl, {nvim_web_devicons.highlight , 0, 1 })
+            end
             ico_txt = ico .. '  '
         else
             ico_txt = ''
