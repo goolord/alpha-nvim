@@ -389,7 +389,11 @@ local function start(on_vimenter, opts)
     local window = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(window, buffer)
     -- close empty buffer
-    if on_vimenter then vim.api.nvim_buf_delete(1, {}) end
+    if on_vimenter then
+        -- maybe emit an error message here
+        -- so we can debug
+        pcall(vim.api.nvim_buf_delete, 1, {})
+    end
     enable_alpha(opts)
 
     local state = {
