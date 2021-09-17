@@ -386,10 +386,10 @@ local options
 
 local function start(on_vimenter, opts)
     if on_vimenter then
+        local _ = vim.tbl_contains(vim.v.argv, '-c')
         if vim.opt.insertmode:get() -- Handle vim -y
             or (not vim.opt.modifiable:get()) -- Handle vim -M
             or vim.fn.argc() ~= 0 -- should probably figure out how to be smarter than this
-            or vim.tbl_contains(vim.v.argv, '-c')
             -- or vim.fn.line2byte('$') ~= -1
         then return end
      end

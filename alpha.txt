@@ -1,0 +1,215 @@
+
+
+times in msec
+ clock   self+sourced   self:  sourced script
+ clock   elapsed:              other lines
+
+000.026  000.026: --- NVIM STARTING ---
+000.318  000.292: locale set
+000.628  000.310: inits 1
+000.643  000.015: window checked
+003.984  003.340: parsing arguments
+004.128  000.145: expanding arguments
+004.161  000.033: inits 2
+004.579  000.418: init highlight
+004.581  000.002: waiting for UI
+005.220  000.639: done waiting for UI
+005.241  000.021: initialized screen early for UI
+005.263  000.022: init default mappings
+005.339  000.076: init default autocommands
+005.899  000.527  000.527: sourcing lua/alpha.lua
+006.024  000.103  000.103: sourcing lua/alpha/themes/dashboard.lua
+006.939  001.585  000.956: sourcing min.vim
+006.942  000.018: sourcing vimrc file(s)
+013.310  000.021  000.021: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/idris2-vim/ftdetect/idris2.vim
+013.338  000.010  000.010: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/idris2-vim/ftdetect/lidris2.vim
+013.363  000.009  000.009: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-fugitive/ftdetect/fugitive.vim
+013.388  000.012  000.012: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-nix/ftdetect/nix.vim
+013.436  000.035  000.035: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-toml/ftdetect/toml.vim
+014.017  007.043  006.955: sourcing /usr/share/nvim/runtime/filetype.vim
+014.342  000.035  000.035: sourcing /usr/share/nvim/runtime/ftplugin.vim
+014.659  000.030  000.030: sourcing /usr/share/nvim/runtime/indent.vim
+015.071  000.087  000.087: sourcing /usr/share/nvim/runtime/syntax/synload.vim
+015.160  000.221  000.134: sourcing /usr/share/nvim/runtime/syntax/syntax.vim
+015.175  000.903: inits 3
+019.862  004.686: reading ShaDa
+020.079  000.217: opening buffers
+020.084  000.005: BufEnter autocommands
+020.086  000.002: editing files in windows
+024.623  004.537: VimEnter autocommands
+024.627  000.004: UIEnter autocommands
+024.629  000.002: before starting main loop
+024.987  000.358: first screen update
+024.990  000.003: --- NVIM STARTED ---
+
+
+times in msec
+ clock   self+sourced   self:  sourced script
+ clock   elapsed:              other lines
+
+000.008  000.008: --- NVIM STARTING ---
+000.263  000.255: locale set
+000.534  000.272: inits 1
+000.546  000.011: window checked
+003.370  002.824: parsing arguments
+003.454  000.084: expanding arguments
+003.473  000.018: inits 2
+003.845  000.372: init highlight
+003.847  000.001: waiting for UI
+004.401  000.554: done waiting for UI
+004.430  000.029: initialized screen early for UI
+004.449  000.019: init default mappings
+004.514  000.065: init default autocommands
+005.102  000.435  000.435: sourcing lua/alpha.lua
+005.213  000.091  000.091: sourcing lua/alpha/themes/dashboard.lua
+005.991  001.466  000.939: sourcing min.vim
+005.994  000.014: sourcing vimrc file(s)
+012.013  000.021  000.021: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/idris2-vim/ftdetect/idris2.vim
+012.041  000.009  000.009: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/idris2-vim/ftdetect/lidris2.vim
+012.063  000.008  000.008: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-fugitive/ftdetect/fugitive.vim
+012.084  000.010  000.010: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-nix/ftdetect/nix.vim
+012.127  000.030  000.030: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-toml/ftdetect/toml.vim
+012.658  006.637  006.557: sourcing /usr/share/nvim/runtime/filetype.vim
+012.960  000.034  000.034: sourcing /usr/share/nvim/runtime/ftplugin.vim
+013.242  000.028  000.028: sourcing /usr/share/nvim/runtime/indent.vim
+013.612  000.082  000.082: sourcing /usr/share/nvim/runtime/syntax/synload.vim
+013.693  000.204  000.123: sourcing /usr/share/nvim/runtime/syntax/syntax.vim
+013.707  000.810: inits 3
+017.455  003.747: reading ShaDa
+017.652  000.198: opening buffers
+017.657  000.004: BufEnter autocommands
+017.659  000.002: editing files in windows
+021.763  004.104: VimEnter autocommands
+021.767  000.004: UIEnter autocommands
+021.768  000.002: before starting main loop
+1333.933  1312.165: first screen update
+1333.954  000.021: --- NVIM STARTED ---
+
+
+times in msec
+ clock   self+sourced   self:  sourced script
+ clock   elapsed:              other lines
+
+000.029  000.029: --- NVIM STARTING ---
+001.043  001.013: locale set
+002.034  000.991: inits 1
+002.075  000.041: window checked
+013.363  011.289: parsing arguments
+013.790  000.426: expanding arguments
+013.860  000.070: inits 2
+015.397  001.537: init highlight
+015.405  000.008: waiting for UI
+017.509  002.105: done waiting for UI
+017.601  000.091: initialized screen early for UI
+017.695  000.095: init default mappings
+018.001  000.305: init default autocommands
+020.036  001.857  001.857: sourcing lua/alpha.lua
+020.503  000.377  000.377: sourcing lua/alpha/themes/dashboard.lua
+023.895  005.838  003.604: sourcing min.vim
+023.911  000.072: sourcing vimrc file(s)
+039.996  000.030  000.030: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/idris2-vim/ftdetect/idris2.vim
+040.035  000.016  000.016: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/idris2-vim/ftdetect/lidris2.vim
+040.071  000.014  000.014: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-fugitive/ftdetect/fugitive.vim
+040.106  000.017  000.017: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-nix/ftdetect/nix.vim
+040.173  000.050  000.050: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-toml/ftdetect/toml.vim
+040.998  016.974  016.848: sourcing /usr/share/nvim/runtime/filetype.vim
+041.493  000.053  000.053: sourcing /usr/share/nvim/runtime/ftplugin.vim
+041.955  000.046  000.046: sourcing /usr/share/nvim/runtime/indent.vim
+042.550  000.126  000.126: sourcing /usr/share/nvim/runtime/syntax/synload.vim
+042.673  000.316  000.190: sourcing /usr/share/nvim/runtime/syntax/syntax.vim
+042.695  001.395: inits 3
+048.185  005.491: reading ShaDa
+048.456  000.270: opening buffers
+048.461  000.006: BufEnter autocommands
+048.464  000.003: editing files in windows
+053.496  005.032: VimEnter autocommands
+053.501  000.005: UIEnter autocommands
+053.503  000.002: before starting main loop
+053.884  000.381: first screen update
+053.887  000.003: --- NVIM STARTED ---
+
+
+times in msec
+ clock   self+sourced   self:  sourced script
+ clock   elapsed:              other lines
+
+000.026  000.026: --- NVIM STARTING ---
+000.389  000.362: locale set
+000.675  000.287: inits 1
+000.686  000.010: window checked
+003.475  002.790: parsing arguments
+003.560  000.085: expanding arguments
+003.577  000.017: inits 2
+003.940  000.363: init highlight
+003.941  000.002: waiting for UI
+004.477  000.535: done waiting for UI
+004.502  000.026: initialized screen early for UI
+004.524  000.022: init default mappings
+004.590  000.065: init default autocommands
+005.045  000.422  000.422: sourcing lua/alpha.lua
+005.155  000.089  000.089: sourcing lua/alpha/themes/dashboard.lua
+005.928  001.327  000.817: sourcing min.vim
+005.931  000.014: sourcing vimrc file(s)
+011.890  000.021  000.021: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/idris2-vim/ftdetect/idris2.vim
+011.918  000.009  000.009: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/idris2-vim/ftdetect/lidris2.vim
+011.939  000.008  000.008: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-fugitive/ftdetect/fugitive.vim
+011.961  000.011  000.011: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-nix/ftdetect/nix.vim
+012.001  000.030  000.030: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-toml/ftdetect/toml.vim
+012.512  006.556  006.477: sourcing /usr/share/nvim/runtime/filetype.vim
+012.800  000.033  000.033: sourcing /usr/share/nvim/runtime/ftplugin.vim
+013.077  000.028  000.028: sourcing /usr/share/nvim/runtime/indent.vim
+013.448  000.080  000.080: sourcing /usr/share/nvim/runtime/syntax/synload.vim
+013.524  000.195  000.115: sourcing /usr/share/nvim/runtime/syntax/syntax.vim
+013.539  000.796: inits 3
+017.427  003.889: reading ShaDa
+017.658  000.231: opening buffers
+017.666  000.008: BufEnter autocommands
+017.668  000.002: editing files in windows
+021.847  004.179: VimEnter autocommands
+021.851  000.003: UIEnter autocommands
+021.853  000.002: before starting main loop
+022.188  000.336: first screen update
+022.191  000.002: --- NVIM STARTED ---
+
+
+times in msec
+ clock   self+sourced   self:  sourced script
+ clock   elapsed:              other lines
+
+000.010  000.010: --- NVIM STARTING ---
+000.314  000.305: locale set
+000.637  000.322: inits 1
+000.652  000.015: window checked
+004.323  003.672: parsing arguments
+004.482  000.158: expanding arguments
+004.516  000.034: inits 2
+004.993  000.477: init highlight
+004.995  000.002: waiting for UI
+005.730  000.735: done waiting for UI
+005.767  000.038: initialized screen early for UI
+005.792  000.025: init default mappings
+005.877  000.085: init default autocommands
+006.548  000.612  000.612: sourcing lua/alpha.lua
+006.691  000.117  000.117: sourcing lua/alpha/themes/dashboard.lua
+007.689  001.797  001.068: sourcing min.vim
+007.693  000.020: sourcing vimrc file(s)
+015.488  000.025  000.025: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/idris2-vim/ftdetect/idris2.vim
+015.521  000.013  000.013: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/idris2-vim/ftdetect/lidris2.vim
+015.550  000.012  000.012: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-fugitive/ftdetect/fugitive.vim
+015.579  000.014  000.014: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-nix/ftdetect/nix.vim
+015.635  000.041  000.041: sourcing /home/zach/.local/share/nvim/site/pack/packer/start/vim-toml/ftdetect/toml.vim
+016.298  008.570  008.465: sourcing /usr/share/nvim/runtime/filetype.vim
+016.678  000.042  000.042: sourcing /usr/share/nvim/runtime/ftplugin.vim
+017.049  000.036  000.036: sourcing /usr/share/nvim/runtime/indent.vim
+017.522  000.099  000.099: sourcing /usr/share/nvim/runtime/syntax/synload.vim
+017.622  000.253  000.154: sourcing /usr/share/nvim/runtime/syntax/syntax.vim
+017.640  001.046: inits 3
+022.579  004.939: reading ShaDa
+022.802  000.223: opening buffers
+022.807  000.005: BufEnter autocommands
+022.810  000.003: editing files in windows
+027.247  004.437: VimEnter autocommands
+027.251  000.004: UIEnter autocommands
+027.252  000.002: before starting main loop
+027.578  000.326: first screen update
+027.581  000.002: --- NVIM STARTED ---
