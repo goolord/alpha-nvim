@@ -39,7 +39,7 @@ local function center(tbl, state)
     -- which doesn't quite give a 'justfieid' look, but w.e
     local longest = longest_line(tbl)
     -- div 2
-    local left = bit.rshift(state.win_width - longest, 1)
+    local left = bit.arshift(state.win_width - longest, 1)
     local padding = spaces(left)
     local centered = {}
     for k, v in pairs(tbl) do
@@ -359,7 +359,10 @@ local function enable_alpha(opts)
 
     if opts.opts then
         if if_nil(opts.opts.redraw_on_resize, true) then
-            vim.cmd[[autocmd alpha_temp VimResized * call v:lua.alpha_redraw()]]
+            vim.cmd[[
+            autocmd alpha_temp VimResized * call v:lua.alpha_redraw()
+            autocmd alpha_temp WinEnter,WinNew * call v:lua.alpha_redraw()
+            ]]
         end
 
         if opts.opts.setup then opts.opts.setup() end
