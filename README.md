@@ -37,11 +37,6 @@ to customize the buttons, see :h alpha-example
 - using https://github.com/lewis6991/impatient.nvim
 - only config! doesn't measure drawing, some startup plugins won't measure drawing either
 
-## TODO
-- maybe center however something like Goyo does it
-- what is that annoying text that appears on the command-line
-  when you start up? can't tell by looking at anyone else's code
-
 ## Special Thanks
 - https://github.com/glepnir/dashboard-nvim - inspiration, code reference
 - https://github.com/mhinz/vim-startify     - inspiration
