@@ -1,30 +1,19 @@
 -- business logic
 
---- @usage loadstring = memoize(loadstring)
---- @param f function
---- @return function
-local function memoize (f)
-    local mem = {} -- memoizing table
-    setmetatable(mem, {__mode = "kv"}) -- make it weak
-    return function (x) -- new version of ’f’, with memoizing
-        local r = mem[x]
-        if r == nil then -- no previous result?
-            r = f(x) -- calls original function
-            mem[x] = r -- store result for reuse
-        end
-        return r
-    end
-end
-
 local if_nil = vim.F.if_nil
 local deepcopy = vim.deepcopy
+local abs = math.abs
+local strdisplaywidth = vim.fn.strdisplaywidth
+local str_rep = string.rep
 
 local cursor_ix = 1
 local cursor_jumps = {}
 local cursor_jumps_press = {}
 
-_G.alpha_redraw = function() end
-_G.alpha_close = function() end
+local function noop () end
+
+_G.alpha_redraw = noop
+_G.alpha_close = noop
 
 function _G.alpha_press()
     cursor_jumps_press[cursor_ix]()
@@ -32,7 +21,6 @@ end
 
 local function longest_line(tbl)
     local longest = 0
-    local strdisplaywidth = vim.fn.strdisplaywidth
     for _, v in pairs(tbl) do
         local width = strdisplaywidth(v)
         if width > longest then
@@ -42,19 +30,16 @@ local function longest_line(tbl)
     return longest
 end
 
-longest_line = memoize(longest_line)
-
 local function spaces(n)
-    return string.rep(" ", n)
+    return str_rep(" ", n)
 end
-
-spaces = memoize(spaces)
 
 local function center(tbl, state)
     -- longest line used to calculate the center.
     -- which doesn't quite give a 'justfieid' look, but w.e
     local longest = longest_line(tbl)
-    local left = math.ceil((state.win_width - longest) / 2)
+    -- div 2
+    local left = bit.arshift(state.win_width - longest, 1)
     local padding = spaces(left)
     local centered = {}
     for k, v in pairs(tbl) do
@@ -116,7 +101,7 @@ end
 
 local layout_element = {}
 
-layout_element.text = function(el, opts, state)
+function layout_element.text (el, opts, state)
     local el_type = type(el.val)
     if el_type == "table" then
         local end_ln = state.line + #el.val
@@ -173,7 +158,7 @@ layout_element.text = function(el, opts, state)
     end
 end
 
-layout_element.padding = function(el, opts, state)
+function layout_element.padding (el, opts, state)
     local end_ln = state.line + el.val
     local val = {}
     for i = 1, el.val + 1 do
@@ -183,7 +168,7 @@ layout_element.padding = function(el, opts, state)
     state.line = end_ln
 end
 
-layout_element.button = function(el, opts, state)
+function layout_element.button (el, opts, state)
     local val
     local padding = {
         left   = 0,
@@ -255,7 +240,7 @@ layout_element.button = function(el, opts, state)
     state.line = state.line + 1
 end
 
-layout_element.group = function(el, opts, state)
+function layout_element.group (el, opts, state)
     local el_type = type(el.val)
     if el_type == "function" then
         local new_el = deepcopy(el)
@@ -284,17 +269,17 @@ end
 
 local keymaps_element = {}
 
-keymaps_element.text = function () end
-keymaps_element.padding = function () end
+keymaps_element.text = noop
+keymaps_element.padding = noop
 
-keymaps_element.button = function (el, opts, state)
+function keymaps_element.button (el, opts, state)
     if el.opts and el.opts.keymap then
         local map = el.opts.keymap
         vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
     end
 end
 
-keymaps_element.group = function (el, opts, state)
+function keymaps_element.group (el, opts, state)
     local el_type = type(el.val)
     if el_type == "function" then
         local new_el = deepcopy(el)
@@ -322,16 +307,15 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
     -- excluding jumps in opposite direction
     local min
     local cursor_row = cursor[1]
-    local abs = math.abs
     for k, v in pairs(cursors) do
         local distance = v[1] - cursor_row -- new cursor distance from old cursor
-        if direction and (distance <= 0) then
+        if (distance <= 0) and direction then
             distance = abs(distance)
             local res = {distance, k}
             if not min then min = res end
             if min[1] > res[1] then min = res end
         end
-        if (not direction) and (distance >= 0) then
+        if (distance >= 0) and (not direction) then
             local res = {distance, k}
             if not min then min = res end
             if min[1] > res[1] then min = res end
@@ -375,7 +359,10 @@ local function enable_alpha(opts)
 
     if opts.opts then
         if if_nil(opts.opts.redraw_on_resize, true) then
-            vim.cmd[[autocmd alpha_temp VimResized * call v:lua.alpha_redraw()]]
+            vim.cmd[[
+            autocmd alpha_temp VimResized * call v:lua.alpha_redraw()
+            autocmd alpha_temp WinEnter,WinNew * call v:lua.alpha_redraw()
+            ]]
         end
 
         if opts.opts.setup then opts.opts.setup() end
@@ -405,7 +392,11 @@ local function start(on_vimenter, opts)
     local window = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(window, buffer)
     -- close empty buffer
-    if on_vimenter then vim.api.nvim_buf_delete(1, {}) end
+    if on_vimenter then
+        -- maybe emit an error message here
+        -- so we can debug
+        pcall(vim.api.nvim_buf_delete, 1, {})
+    end
     enable_alpha(opts)
 
     local state = {
@@ -441,7 +432,7 @@ local function start(on_vimenter, opts)
         cursor_ix = 1
         cursor_jumps = {}
         cursor_jumps_press = {}
-        _G.alpha_redraw = function () end
+        _G.alpha_redraw = noop
         vim.cmd[[au! alpha_temp]]
     end
     draw()

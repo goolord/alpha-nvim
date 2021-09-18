@@ -26,7 +26,7 @@ use {
 }
 ```
 if you want sessions, see 
-- https://github.com/folke/persistence.nvim#-installation
+- https://github.com/Shatur/neovim-session-manager
 - :h :mks
 
 this theme makes some assumptions about your default keybindings
