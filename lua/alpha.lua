@@ -364,7 +364,7 @@ local function enable_alpha(opts)
         if if_nil(opts.opts.redraw_on_resize, true) then
             vim.cmd[[
             autocmd alpha_temp VimResized * call v:lua.alpha_redraw()
-            autocmd alpha_temp WinEnter,WinNew,WinClosed * call v:lua.alpha_redraw()
+            autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * call v:lua.alpha_redraw()
             ]]
         end
 
