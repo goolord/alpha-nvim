@@ -5,6 +5,7 @@ local deepcopy = vim.deepcopy
 local abs = math.abs
 local strdisplaywidth = vim.fn.strdisplaywidth
 local str_rep = string.rep
+local list_extend = vim.list_extend
 
 local cursor_ix = 1
 local cursor_jumps = {}
@@ -79,24 +80,26 @@ end
 
 local function highlight(state, end_ln, hl, left)
     local hl_type = type(hl)
+    local hl_tbl = {}
     if hl_type == "string" then
         for i = state.line, end_ln do
-            vim.api.nvim_buf_add_highlight(state.buffer, -1, hl, i, 0, -1)
+            table.insert(hl_tbl, {state.buffer, -1, hl, i, 0, -1})
         end
     end
     -- TODO: support multiple lines
     if hl_type == "table" then
         for _, hl_section in pairs(hl) do
-            vim.api.nvim_buf_add_highlight(
+            table.insert(hl_tbl, {
                 state.buffer,
                 -1,
                 hl_section[1],
                 state.line,
                 left + hl_section[2],
                 left + hl_section[3]
-            )
+            })
         end
     end
+    return hl_tbl
 end
 
 local layout_element = {}
@@ -104,13 +107,14 @@ local layout_element = {}
 local function resolve(to, el, opts, state)
     local new_el = deepcopy(el)
     new_el.val = el.val()
-    to(new_el, opts, state)
+    return to(new_el, opts, state)
 end
 
 function layout_element.text (el, opts, state)
     if type(el.val) == "table" then
         local end_ln = state.line + #el.val
         local val = el.val
+        local hl = {}
         local padding = { left = 0 }
         if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
             local left
@@ -125,15 +129,16 @@ function layout_element.text (el, opts, state)
         --     val = trim(val, state)
         -- end
         end
-        vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, false, val)
         if el.opts and el.opts.hl then
-            highlight(state, end_ln, el.opts.hl, 0)
+            hl = highlight(state, end_ln, el.opts.hl, 0)
         end
         state.line = end_ln
+        return val, hl
     end
 
     if type(el.val) == "string" then
         local val = {}
+        local hl = {}
         for s in el.val:gmatch("[^\r\n]+") do
             val[#val+1] = s
         end
@@ -148,41 +153,33 @@ function layout_element.text (el, opts, state)
                 val, _ = center(val, state)
             end
         end
-        vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, false, val)
-        local end_ln = state.line + #val
+        local end_ln = state.line + 1
         if el.opts and el.opts.hl then
-            highlight(state, end_ln, el.opts.hl, padding.left)
+            hl = highlight(state, end_ln, el.opts.hl, padding.left)
         end
         state.line = end_ln
+        return val, hl
     end
 
-    if type(el.val) == "function" then resolve(layout_element.text, el, opts, state) end
+    if type(el.val) == "function" then return resolve(layout_element.text, el, opts, state) end
 end
 
 function layout_element.padding (el, opts, state)
-    if type(el.val) == "number" then
-        local end_ln = state.line + el.val
-        local val = {}
-        for i = 1, el.val + 1 do
-            val[i] = ""
-        end
-        vim.api.nvim_buf_set_lines(state.buffer, state.line, end_ln, false, val)
-        state.line = end_ln
+    local lines = 0
+    if type(el.val) == "function" then lines = el.val() end
+    if type(el.val) == "number" then lines = el.val end
+    local val = {}
+    for i = 1, lines do
+        val[i] = " "
     end
-
-    if type(el.val) == "function" then
-        local end_ln = state.line + el.val
-        local val = {}
-        for i = 1, el.val + 1 do
-            val[i] = ""
-        end
-        vim.api.nvim_buf_set_lines(state.buffer, state.line, end_ln, false, val)
-        state.line = end_ln
-    end
+    local end_ln = state.line + lines
+    state.line = end_ln
+    return val, {}
 end
 
 function layout_element.button (el, opts, state)
-    local val
+    local val = {}
+    local hl = {}
     local padding = {
         left   = 0,
         center = 0,
@@ -232,46 +229,60 @@ function layout_element.button (el, opts, state)
     local col = ((el.opts and el.opts.cursor) or 0) + count_spaces
     cursor_jumps[#cursor_jumps+1] = {row, col}
     cursor_jumps_press[#cursor_jumps_press+1] = el.on_press
-    vim.api.nvim_buf_set_lines(state.buffer, state.line, state.line, false, val)
     if el.opts and el.opts.hl_shortcut then
-        local hl
         if type(el.opts.hl_shortcut) == "string"
             then hl = {{el.opts.hl_shortcut, 0, #el.opts.shortcut}}
             else hl = el.opts.hl_shortcut
         end
         if el.opts.align_shortcut == "right"
-            then highlight(state, state.line, hl, #el.val + padding.center)
-            else highlight(state, state.line, hl, padding.left)
+            then hl = highlight(state, state.line, hl, #el.val + padding.center)
+            else hl = highlight(state, state.line, hl, padding.left)
         end
     end
 
     if el.opts and el.opts.hl then
         local left = padding.left
         if el.opts.align_shortcut == "left" then left = left + #el.opts.shortcut + 2 end
-        highlight(state, state.line, el.opts.hl, left)
+        list_extend(hl, highlight(state, state.line, el.opts.hl, left))
     end
     state.line = state.line + 1
+    return val, hl
 end
 
 function layout_element.group (el, opts, state)
-    if type(el.val) == "function" then resolve(layout_element.group, el, opts, state) end
+    if type(el.val) == "function" then return resolve(layout_element.group, el, opts, state) end
 
     if type(el.val) == "table" then
+        local text_tbl = {}
+        local hl_tbl = {}
         for _, v in pairs(el.val) do
-            layout_element[v.type](v, opts, state)
+            local text, hl = layout_element[v.type](v, opts, state)
+            if text then list_extend(text_tbl, text) end
+            if hl then list_extend(hl_tbl, hl) end
             if el.opts and el.opts.spacing then
                 local padding_el = {type = "padding", val = el.opts.spacing}
-                layout_element[padding_el.type](padding_el, opts, state)
+                local text_1, hl_1 = layout_element[padding_el.type](padding_el, opts, state)
+                list_extend(text_tbl, text_1)
+                list_extend(hl_tbl, hl_1)
             end
         end
+        return text_tbl, hl_tbl
     end
 end
 
 local function layout(opts, state)
     -- this is my way of hacking pattern matching
     -- you index the table by its "type"
+    local hl = {}
+    local text = {}
     for _, el in pairs(opts.layout) do
-        layout_element[el.type](el, opts, state)
+        local text_el, hl_el = layout_element[el.type](el, opts, state)
+        list_extend(text, text_el)
+        list_extend(hl, hl_el)
+    end
+    vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, text)
+    for _, hl_line in pairs(hl) do
+        vim.api.nvim_buf_add_highlight(hl_line[1], hl_line[2], hl_line[3], hl_line[4], hl_line[5], hl_line[6])
     end
 end
 
