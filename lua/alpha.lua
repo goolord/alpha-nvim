@@ -101,9 +101,14 @@ end
 
 local layout_element = {}
 
+local function resolve(to, el, opts, state)
+    local new_el = deepcopy(el)
+    new_el.val = el.val()
+    to(new_el, opts, state)
+end
+
 function layout_element.text (el, opts, state)
-    local el_type = type(el.val)
-    if el_type == "table" then
+    if type(el.val) == "table" then
         local end_ln = state.line + #el.val
         local val = el.val
         local padding = { left = 0 }
@@ -127,7 +132,7 @@ function layout_element.text (el, opts, state)
         state.line = end_ln
     end
 
-    if el_type == "string" then
+    if type(el.val) == "string" then
         local val = {}
         for s in el.val:gmatch("[^\r\n]+") do
             val[#val+1] = s
@@ -151,21 +156,29 @@ function layout_element.text (el, opts, state)
         state.line = end_ln
     end
 
-    if el_type == "function" then
-        local new_el = deepcopy(el)
-        new_el.val = el.val()
-        layout_element.text(new_el, opts, state)
-    end
+    if type(el.val) == "function" then resolve(layout_element.text, el, opts, state) end
 end
 
 function layout_element.padding (el, opts, state)
-    local end_ln = state.line + el.val
-    local val = {}
-    for i = 1, el.val + 1 do
-        val[i] = ""
+    if type(el.val) == "number" then
+        local end_ln = state.line + el.val
+        local val = {}
+        for i = 1, el.val + 1 do
+            val[i] = ""
+        end
+        vim.api.nvim_buf_set_lines(state.buffer, state.line, end_ln, false, val)
+        state.line = end_ln
     end
-    vim.api.nvim_buf_set_lines(state.buffer, state.line, end_ln, false, val)
-    state.line = end_ln
+
+    if type(el.val) == "function" then
+        local end_ln = state.line + el.val
+        local val = {}
+        for i = 1, el.val + 1 do
+            val[i] = ""
+        end
+        vim.api.nvim_buf_set_lines(state.buffer, state.line, end_ln, false, val)
+        state.line = end_ln
+    end
 end
 
 function layout_element.button (el, opts, state)
@@ -241,14 +254,9 @@ function layout_element.button (el, opts, state)
 end
 
 function layout_element.group (el, opts, state)
-    local el_type = type(el.val)
-    if el_type == "function" then
-        local new_el = deepcopy(el)
-        new_el.val = el.val()
-        layout_element.group(new_el, opts, state)
-    end
+    if type(el.val) == "function" then resolve(layout_element.group, el, opts, state) end
 
-    if el_type == "table" then
+    if type(el.val) == "table" then
         for _, v in pairs(el.val) do
             layout_element[v.type](v, opts, state)
             if el.opts and el.opts.spacing then
@@ -280,14 +288,9 @@ function keymaps_element.button (el, opts, state)
 end
 
 function keymaps_element.group (el, opts, state)
-    local el_type = type(el.val)
-    if el_type == "function" then
-        local new_el = deepcopy(el)
-        new_el.val = el.val()
-        keymaps_element.group(new_el, opts, state)
-    end
+    if type(el.val) == "function" then resolve(keymaps_element.group, el, opts, state) end
 
-    if el_type == "table" then
+    if type(el.val) == "table" then
         for _, v in pairs(el.val) do
             keymaps_element[v.type](v, opts, state)
         end
@@ -403,7 +406,7 @@ local function start(on_vimenter, opts)
         line = 0,
         buffer = buffer,
         window = window,
-        win_width = 0
+        win_width = 0,
     }
     local function draw()
         for k in pairs(cursor_jumps) do cursor_jumps[k] = nil end
@@ -456,4 +459,6 @@ end
 return {
     setup = setup,
     start = start,
+    layout_element = layout_element,
+    keymaps_element = keymaps_element,
 }
