@@ -283,7 +283,7 @@ local function layout(opts, state)
     end
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, text)
     for _, hl_line in ipairs(hl) do
-        vim.api.nvim_buf_add_highlight(unpack(hl_line))
+        vim.api.nvim_buf_add_highlight(hl_line[1],hl_line[2],hl_line[3],hl_line[4],hl_line[5],hl_line[6])
     end
 end
 
@@ -295,7 +295,7 @@ keymaps_element.padding = noop
 function keymaps_element.button (el, opts, state)
     if el.opts and el.opts.keymap then
         local map = el.opts.keymap
-        vim.api.nvim_buf_set_keymap(state.buffer, unpack(map))
+        vim.api.nvim_buf_set_keymap(state.buffer, map[1],map[2],map[3],map[4])
     end
 end
 
