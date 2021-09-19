@@ -349,13 +349,6 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
     end
 end
 
-_G.alpha_set_cursor = function ()
-    local cursor = vim.api.nvim_win_get_cursor(0)
-    local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
-    cursor_ix = closest_ix
-    vim.api.nvim_win_set_cursor(0, closest_pt)
-end
-
 local function enable_alpha(opts)
     -- vim.opt_local behaves inconsistently for window options, it seems.
     -- I don't have the patience to sort out a better way to do this
@@ -389,6 +382,13 @@ local options
 local function start(on_vimenter, opts)
     local window = vim.api.nvim_get_current_win()
     local buffer
+
+    _G.alpha_set_cursor = function ()
+        local cursor = vim.api.nvim_win_get_cursor(window)
+        local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
+        cursor_ix = closest_ix
+        vim.api.nvim_win_set_cursor(window, closest_pt)
+    end
 
     if on_vimenter
         then
