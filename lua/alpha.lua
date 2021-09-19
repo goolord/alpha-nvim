@@ -361,7 +361,7 @@ local function enable_alpha(opts)
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
     vim.cmd(
-        [[silent! setlocal bufhidden=wipe colorcolumn= foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap]]
+        [[silent! setlocal bufhidden=hide nobuflisted colorcolumn= foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap]]
     )
 
     vim.cmd[[
@@ -387,14 +387,22 @@ end
 local options
 
 local function start(on_vimenter, opts)
-    if on_vimenter then
-        if vim.opt.insertmode:get() -- Handle vim -y
-            or (not vim.opt.modifiable:get()) -- Handle vim -M
-            or vim.fn.argc() ~= 0 -- should probably figure out how to be smarter than this
-            or vim.tbl_contains(vim.v.argv, '-c')
-            -- or vim.fn.line2byte('$') ~= -1
-        then return end
-     end
+    local window = vim.api.nvim_get_current_win()
+    local buffer
+
+    if on_vimenter
+        then
+            if vim.opt.insertmode:get() -- Handle vim -y
+                or (not vim.opt.modifiable:get()) -- Handle vim -M
+                or vim.fn.argc() ~= 0 -- should probably figure out how to be smarter than this
+                or vim.tbl_contains(vim.v.argv, '-c')
+                -- or vim.fn.line2byte('$') ~= -1
+            then return end
+            buffer = vim.api.nvim_get_current_buf()
+        else
+            buffer = vim.api.nvim_create_buf(false, true)
+            vim.api.nvim_win_set_buf(window, buffer)
+    end
 
     if not vim.opt.hidden:get() and vim.opt_local.modified:get() then
         vim.api.nvim_err_writeln("Save your changes first.")
@@ -403,15 +411,6 @@ local function start(on_vimenter, opts)
 
     opts = opts or options
 
-    local buffer = vim.api.nvim_create_buf(false, true)
-    local window = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(window, buffer)
-    -- close empty buffer
-    if on_vimenter then
-        -- maybe emit an error message here
-        -- so we can debug
-        pcall(vim.api.nvim_buf_delete, 1, {})
-    end
     enable_alpha(opts)
 
     local state = {
