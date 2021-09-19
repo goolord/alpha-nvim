@@ -46,13 +46,15 @@ local function button(sc, txt, keybind, keybind_opts)
         opts.keymap = {"n", sc_, keybind, keybind_opts}
     end
 
+    local function on_press()
+        local key = vim.api.nvim_replace_termcodes(sc_ .. '<Ignore>', true, false, true)
+        vim.api.nvim_feedkeys(key, "normal", false)
+    end
+
     return {
         type = "button",
         val = txt,
-        on_press = function()
-            local key = vim.api.nvim_replace_termcodes(sc_ .. '<Ignore>', true, false, true)
-            vim.api.nvim_feedkeys(key, "normal", false)
-        end,
+        on_press = on_press,
         opts = opts,
     }
 end
