@@ -121,7 +121,7 @@ local function mru(start, cwd, items_number)
             else short_fn = fnamemodify(fn, ':~')
         end
         local file_button_el = file_button(fn, tostring(i+start-1), short_fn)
-        tbl[#tbl+1] = file_button_el
+        tbl[i] = file_button_el
     end
     return {
         type = "group",
@@ -198,7 +198,6 @@ local opts = {
         redraw_on_resize = false,
         setup = function ()
             vim.cmd[[
-            rshada
             autocmd alpha_temp DirChanged * call v:lua.alpha_redraw()
             ]]
         end,
