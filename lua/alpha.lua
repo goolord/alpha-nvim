@@ -353,11 +353,9 @@ local function enable_alpha(opts)
     -- vim.opt_local behaves inconsistently for window options, it seems.
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
-    vim.cmd(
-        [[silent! setlocal bufhidden=hide nobuflisted colorcolumn= foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap]]
-    )
+    vim.cmd [[
+        silent! setlocal bufhidden=hide nobuflisted colorcolumn= foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
 
-    vim.cmd[[
         augroup alpha_temp
         au!
         autocmd BufUnload <buffer> call v:lua.alpha_close()
@@ -367,9 +365,9 @@ local function enable_alpha(opts)
 
     if opts.opts then
         if if_nil(opts.opts.redraw_on_resize, true) then
-            vim.cmd[[
-            autocmd alpha_temp VimResized * call v:lua.alpha_redraw()
-            autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * call v:lua.alpha_redraw()
+            vim.cmd [[
+                autocmd alpha_temp VimResized * call v:lua.alpha_redraw()
+                autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * call v:lua.alpha_redraw()
             ]]
         end
 
@@ -454,9 +452,9 @@ local function start(on_vimenter, opts)
 end
 
 local function setup(opts)
-    vim.cmd("command! Alpha lua require'alpha'.start(false)")
-    vim.cmd("command! AlphaRedraw call v:lua.alpha_redraw()")
     vim.cmd[[ 
+        command! Alpha lua require'alpha'.start(false)
+        command! AlphaRedraw call v:lua.alpha_redraw()
         augroup alpha_start
         au!
         autocmd VimEnter * nested lua require'alpha'.start(true)
