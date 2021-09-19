@@ -99,7 +99,7 @@ end
 local function mru(start, cwd, items_number)
     items_number = if_nil(items_number, 10)
     local oldfiles = {}
-    for _,v in pairs(vim.v.oldfiles) do
+    for _,v in ipairs(vim.v.oldfiles) do
         if #oldfiles == items_number then break end
         local cwd_cond
         if not cwd
@@ -112,7 +112,7 @@ local function mru(start, cwd, items_number)
     end
 
     local tbl = {}
-    for i, fn in pairs(oldfiles) do
+    for i, fn in ipairs(oldfiles) do
         local short_fn
         if cwd
             then short_fn = fnamemodify(fn, ':.')

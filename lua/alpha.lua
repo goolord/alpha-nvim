@@ -6,6 +6,7 @@ local abs = math.abs
 local strdisplaywidth = vim.fn.strdisplaywidth
 local str_rep = string.rep
 local list_extend = vim.list_extend
+local concat = table.concat
 
 local cursor_ix = 1
 local cursor_jumps = {}
@@ -22,7 +23,7 @@ end
 
 local function longest_line(tbl)
     local longest = 0
-    for _, v in pairs(tbl) do
+    for _, v in ipairs(tbl) do
         local width = strdisplaywidth(v)
         if width > longest then
             longest = width
@@ -43,7 +44,7 @@ local function center(tbl, state)
     local left = bit.arshift(state.win_width - longest, 1)
     local padding = spaces(left)
     local centered = {}
-    for k, v in pairs(tbl) do
+    for k, v in ipairs(tbl) do
         centered[k] = padding .. v
     end
     return centered, left
@@ -63,7 +64,7 @@ local function pad_margin(tbl, state, margin, shrink)
     end
     local padding = spaces(left)
     local padded = {}
-    for k, v in pairs(tbl) do
+    for k, v in ipairs(tbl) do
         padded[k] = padding .. v .. padding
     end
     return padded, left
@@ -72,7 +73,7 @@ end
 -- function trim(tbl, state)
 --     local win_width = vim.api.nvim_win_get_width(state.window)
 --     local trimmed = {}
---     for k,v in pairs(tbl) do
+--     for k,v in ipairs(tbl) do
 --         trimmed[k] = string.sub(v, 1, win_width)
 --     end
 --     return trimmed
@@ -88,7 +89,7 @@ local function highlight(state, end_ln, hl, left)
     end
     -- TODO: support multiple lines
     if hl_type == "table" then
-        for _, hl_section in pairs(hl) do
+        for _, hl_section in ipairs(hl) do
             table.insert(hl_tbl, {
                 state.buffer,
                 -1,
@@ -195,8 +196,8 @@ function layout_element.button (el, opts, state)
             end
         end
         if el.opts.align_shortcut == "right"
-            then val = { table.concat { el.val, spaces(padding.center), el.opts.shortcut } }
-            else val = { table.concat { el.opts.shortcut, el.val, spaces(padding.right) } }
+            then val = { concat { el.val, spaces(padding.center), el.opts.shortcut } }
+            else val = { concat { el.opts.shortcut, el.val, spaces(padding.right) } }
         end
     else
         val = {el.val}
@@ -255,7 +256,7 @@ function layout_element.group (el, opts, state)
     if type(el.val) == "table" then
         local text_tbl = {}
         local hl_tbl = {}
-        for _, v in pairs(el.val) do
+        for _, v in ipairs(el.val) do
             local text, hl = layout_element[v.type](v, opts, state)
             if text then list_extend(text_tbl, text) end
             if hl then list_extend(hl_tbl, hl) end
@@ -275,13 +276,13 @@ local function layout(opts, state)
     -- you index the table by its "type"
     local hl = {}
     local text = {}
-    for _, el in pairs(opts.layout) do
+    for _, el in ipairs(opts.layout) do
         local text_el, hl_el = layout_element[el.type](el, opts, state)
         list_extend(text, text_el)
         list_extend(hl, hl_el)
     end
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, text)
-    for _, hl_line in pairs(hl) do
+    for _, hl_line in ipairs(hl) do
         vim.api.nvim_buf_add_highlight(unpack(hl_line))
     end
 end
@@ -302,14 +303,14 @@ function keymaps_element.group (el, opts, state)
     if type(el.val) == "function" then resolve(keymaps_element.group, el, opts, state) end
 
     if type(el.val) == "table" then
-        for _, v in pairs(el.val) do
+        for _, v in ipairs(el.val) do
             keymaps_element[v.type](v, opts, state)
         end
     end
 end
 
 local function keymaps(opts, state)
-    for _, el in pairs(opts.layout) do
+    for _, el in ipairs(opts.layout) do
         keymaps_element[el.type](el, opts, state)
     end
 end
@@ -321,7 +322,7 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
     -- excluding jumps in opposite direction
     local min
     local cursor_row = cursor[1]
-    for k, v in pairs(cursors) do
+    for k, v in ipairs(cursors) do
         local distance = v[1] - cursor_row -- new cursor distance from old cursor
         if (distance <= 0) and direction then
             distance = abs(distance)
@@ -420,8 +421,8 @@ local function start(on_vimenter, opts)
         win_width = 0,
     }
     local function draw()
-        for k in pairs(cursor_jumps) do cursor_jumps[k] = nil end
-        for k in pairs(cursor_jumps_press) do cursor_jumps_press[k] = nil end
+        for k in ipairs(cursor_jumps) do cursor_jumps[k] = nil end
+        for k in ipairs(cursor_jumps_press) do cursor_jumps_press[k] = nil end
         state.win_width = vim.api.nvim_win_get_width(state.window)
         state.line = 0
         -- this is for redraws. i guess the cursor 'moves'
