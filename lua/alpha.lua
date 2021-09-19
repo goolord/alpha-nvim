@@ -354,7 +354,7 @@ local function enable_alpha(opts)
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
     vim.cmd [[
-        silent! setlocal bufhidden=hide nobuflisted colorcolumn= foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
+        silent! setlocal bufhidden=delete nobuflisted colorcolumn= foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
 
         augroup alpha_temp
         au!
