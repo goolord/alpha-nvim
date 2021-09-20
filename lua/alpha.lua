@@ -171,7 +171,7 @@ function layout_element.padding (el, opts, state)
     if type(el.val) == "number" then lines = el.val end
     local val = {}
     for i = 1, lines do
-        val[i] = " "
+        val[i] = ""
     end
     local end_ln = state.line + lines
     state.line = end_ln
@@ -379,7 +379,6 @@ local options
 
 local function start(on_vimenter, opts)
     local window = vim.api.nvim_get_current_win()
-    local buffer
 
     _G.alpha_set_cursor = function ()
         local cursor = vim.api.nvim_win_get_cursor(window)
@@ -388,10 +387,11 @@ local function start(on_vimenter, opts)
         vim.api.nvim_win_set_cursor(window, closest_pt)
     end
 
+    local buffer
     if on_vimenter
         then
-            if vim.opt.insertmode:get() -- Handle vim -y
-                or (not vim.opt.modifiable:get()) -- Handle vim -M
+            if vim.o.insertmode -- Handle vim -y
+                or (not vim.o.modifiable) -- Handle vim -M
                 or vim.fn.argc() ~= 0 -- should probably figure out how to be smarter than this
                 or vim.tbl_contains(vim.v.argv, '-c')
                 -- or vim.fn.line2byte('$') ~= -1
@@ -402,7 +402,7 @@ local function start(on_vimenter, opts)
             vim.api.nvim_win_set_buf(window, buffer)
     end
 
-    if not vim.opt.hidden:get() and vim.opt_local.modified:get() then
+    if not vim.o.hidden and vim.opt_local.modified:get() then
         vim.api.nvim_err_writeln("Save your changes first.")
         return
     end
