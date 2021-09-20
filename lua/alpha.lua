@@ -34,6 +34,7 @@ local function start(on_vimenter, opts)
         buffer = buffer,
         window = window,
         win_width = 0,
+        cursor_ix = 1,
         cursor_jumps = {},
         cursor_jumps_press = {},
     }
