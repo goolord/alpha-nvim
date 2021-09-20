@@ -28,7 +28,7 @@ Trigger a redraw while in the alpha buffer.
 ==============================================================================
 CONFIGURATION                                              *alpha-configuration*
 
-alpha uses alpha-ui to build its ui. see :h alpha-ui
+alpha uses gamma-ui to build its ui. see :h gamma-ui
 
 ==============================================================================
 EXAMPLE                                                          *alpha-example*

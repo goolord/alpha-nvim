@@ -10,7 +10,7 @@ share or snipe some custom themes @ https://github.com/goolord/alpha-nvim/discus
 use {
     'goolord/alpha-nvim',
     requires = { 
-        '~/Dev/alpha-ui-nvim',
+        '~/Dev/gamma-ui-nvim',
         'kyazdani42/nvim-web-devicons',
     },
     config = function ()
@@ -23,7 +23,7 @@ use {
 ```lua
 use {
     'goolord/alpha-nvim',
-    requires = { '~/Dev/alpha-ui-nvim' },
+    requires = { '~/Dev/gamma-ui-nvim' },
     config = function ()
         require'alpha'.setup(require'alpha.themes.dashboard'.opts)
     end

@@ -1,6 +1,6 @@
 -- business logic
 
-local ui = require('alpha-ui')
+local ui = require('gamma-ui')
 
 local options
 
