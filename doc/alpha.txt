@@ -38,6 +38,7 @@ For the default configuration, see the Quick Start guide in the README.md
 >
  use {
      "goolord/alpha-nvim",
+     requires = { 'goolord/gamma-ui-nvim' },
      config = function ()
          local alpha = require'alpha'
          local dashboard = require'alpha.themes.dashboard'
@@ -66,7 +67,7 @@ Example with the startify theme:
 >
     use {
         "goolord/alpha-nvim",
-        requires = { 'kyazdani42/nvim-web-devicons' },
+        requires = { 'kyazdani42/nvim-web-devicons', 'goolord/gamma-ui-nvim' },
         config = function ()
             local alpha = require'alpha'
             local startify = require'alpha.themes.startify'
