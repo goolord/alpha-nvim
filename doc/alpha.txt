@@ -18,131 +18,17 @@ launched.
 
 ==============================================================================
 COMMANDS                                                        *alpha-commands*
-
 >
     :Alpha
-<
 Open the alpha buffer.
 
+>
+    :AlphaRedraw
+Trigger a redraw while in the alpha buffer.
 ==============================================================================
 CONFIGURATION                                              *alpha-configuration*
 
-the following is documentation for the types alpha uses for configuration
-
-opts: 
->
- opts = {
-    -- required
-
-    -- table of elements from top to bottom
-    -- key is arbitrary, so you can use lua's array syntax
-    layout = {},
-
-    -- optional
-    opts = {
-        -- number: how much space to pad on the sides of the screen
-        margin = 0 
-
-        -- theme-specific setup,
-        -- ran once before the first draw
-        setup = function
-    }
- }
-<
-button:
->
- { 
-    -- required
-
-    -- element type
-    type = "button",
-    -- the text to display
-    val = "string",
-    -- what to do when the button is pressed
-    -- useful functions:
-    -- local key = vim.api.nvim_replace_termcodes(shortcut, true, false, true)
-    -- vim.api.nvim_feedkeys(key, "normal", false)
-    on_press = function() end,
-
-    -- optional
-    opts = {
-        position = "left" | "center" | "right",
-        hl = "hl_group" | {{"hl_group", 0, -1}}
-
-        shortcut = "string",
-        align_shortcut = "left" | "right",
-        hl_shortcut = "hl_group",
-
-        -- starting at the first character,
-        -- from 0 to #shortcut + #val,
-        -- place the cursor on this row
-        cursor = 0,
-        -- how wide to pad the button.
-        -- useful if position = "center"
-        width = 50,
-    }
- }
-<
-
-text:
->
-
- { 
-    -- required
-
-    -- element type
-    type = "text",
-    -- the text to display
-    -- when it's an array, each element is placed
-    -- on a different line
-    val = "string" | { "array" } | function,
-
-    -- optional
-    opts = {
-        position = "left" | "center" | "right",
-        hl = "hl_group" | {{"hl_group", 0, -1}}
-    }
- }
-<
-padding:
->
- {
-    type = "padding",
-    val = 0 -- number
- }
-<
-
-group:
->
- {
-    -- required
-    type = "group"
-    val = {} | function -- table of elements
-
-    -- optional
-    opts = {
-        -- number of newlines inbetween each element
-        spacing = 1
-    }
- }
-<
-
-A theme may supply predefined widgets like buttons, headers, etc that
-you can use to customize the theme by updating its opts table
-
-==============================================================================
-COLORS                                                            *alpha-colors*
-
-Highlighting is handled internally by the neovim api.
-
-You can highlight a button shortcut by supplying a highlight group to the 
-button option x.opt.hl_shortcut
-
-You can highlight most elements by supplying an array of
-{'hl_group', start_col, end_col}
-
-for multiline elements, you supply an array of an array of
-{'hl_group', start_col, end_col}
+alpha uses alpha-ui to build its ui. see :h alpha-ui
 
 ==============================================================================
 EXAMPLE                                                          *alpha-example*
@@ -224,6 +110,8 @@ How to work with indentLine plugin?~
     Disable the plugin while in alpha:
   >
     let g:indentLine_fileTypeExclude = ['alpha']
+    or
+    vim.g.indentLine_fileTypeExclude = { 'alpha' }
 
 How to disable the tabline in alpha buffer?~
   >
