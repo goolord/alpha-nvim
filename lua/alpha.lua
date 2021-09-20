@@ -50,7 +50,7 @@ local function setup(opts)
     options = opts
     vim.cmd[[ 
         command! Alpha lua require'alpha'.start(false)
-        command! AlphaRedraw call v:lua.alpha_ui.alpha.redraw()
+        command! AlphaRedraw call v:lua.alpha_ui.alpha.draw()
         augroup alpha_start
         au!
         autocmd VimEnter * nested lua require'alpha'.start(true)
