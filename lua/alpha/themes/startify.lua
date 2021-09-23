@@ -198,6 +198,7 @@ local opts = {
         redraw_on_resize = false,
         setup = function ()
             vim.cmd[[
+            rshada
             autocmd alpha_ui_temp DirChanged * call v:lua.alpha_ui.alpha.draw()
             ]]
         end,
