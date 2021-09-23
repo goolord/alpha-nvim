@@ -6,17 +6,16 @@ local options
 
 local function start(on_vimenter, opts)
     opts = opts or options
-
     local window = vim.api.nvim_get_current_win()
-
     local buffer
+
     if on_vimenter
         then
-            if vim.o.insertmode -- Handle vim -y
+            if vim.o.insertmode           -- Handle vim -y
                 or (not vim.o.modifiable) -- Handle vim -M
-                or vim.fn.argc() ~= 0 -- should probably figure out how to be smarter than this
+                or vim.fn.argc() ~= 0     -- >1 file argument
                 or vim.tbl_contains(vim.v.argv, '-c')
-                -- or vim.fn.line2byte('$') ~= -1
+                -- or vim.api.nvim_buf_get_offset(0,0) ~= -1
             then return end
             buffer = vim.api.nvim_get_current_buf()
         else
