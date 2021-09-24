@@ -11,11 +11,11 @@ local function start(on_vimenter, opts)
 
     if on_vimenter
         then
-            if vim.o.insertmode           -- Handle vim -y
-                or (not vim.o.modifiable) -- Handle vim -M
-                or vim.fn.argc() ~= 0     -- >1 file argument
-                or vim.tbl_contains(vim.v.argv, '-c')
-                -- or vim.api.nvim_buf_get_offset(0,0) ~= -1
+            if vim.o.insertmode                       -- Handle nvim -y
+                or (not vim.o.modifiable)             -- Handle nvim -M
+                or vim.fn.argc() ~= 0                 -- Handle >1 file argument
+                or vim.tbl_contains(vim.v.argv, '-c') -- Handle nvim -c
+                -- or vim.api.nvim_buf_get_offset(0,0) ~= -1 -- opened buffer contains bytes
             then return end
             buffer = vim.api.nvim_get_current_buf()
         else
@@ -39,8 +39,8 @@ local function start(on_vimenter, opts)
     }
     ui.register_ui('alpha', state)
 
-    _G.alpha_ui.alpha.enable(opts)
-    _G.alpha_ui.alpha.draw(opts)
+    _G.gamma_ui.alpha.enable(opts)
+    _G.gamma_ui.alpha.draw(opts)
     ui.keymaps(opts, state)
     -- ui.keymaps(opts, state)
 end
@@ -49,7 +49,7 @@ local function setup(opts)
     options = opts
     vim.cmd[[ 
         command! Alpha lua require'alpha'.start(false)
-        command! AlphaRedraw call v:lua.alpha_ui.alpha.draw()
+        command! AlphaRedraw call v:lua.gamma_ui.alpha.draw()
         augroup alpha_start
         au!
         autocmd VimEnter * nested lua require'alpha'.start(true)
