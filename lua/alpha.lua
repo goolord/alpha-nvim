@@ -41,8 +41,6 @@ local function start(on_vimenter, opts)
 
     _G.gamma_ui.alpha.enable(opts)
     _G.gamma_ui.alpha.draw(opts)
-    ui.keymaps(opts, state)
-    -- ui.keymaps(opts, state)
 end
 
 local function setup(opts)
