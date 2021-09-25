@@ -140,7 +140,7 @@ local section = {
     top_buttons = {
         type = "group",
         val = {
-            button("e", "New file", ":ene <BAR> startinsert <CR>"),
+            button("e", "New file", ":ene <CR>"),
         }
     },
     -- note about MRU: currently this is a function,
