@@ -63,7 +63,7 @@ local buttons = {
     type = "group",
     val = {
         button( "e", "  New file"
-              , ":ene <BAR> startinsert <CR>"       ),
+              , ":ene <CR>"       ),
         button("SPC f f", "  Find file"            ),
         button("SPC f h", "  Recently opened files"),
         button("SPC f r", "  Frecency/MRU"         ),
