@@ -398,8 +398,15 @@ local function start(on_vimenter, opts)
             then return end
             buffer = vim.api.nvim_get_current_buf()
         else
-            buffer = vim.api.nvim_create_buf(false, true)
-            vim.api.nvim_win_set_buf(window, buffer)
+            if vim.bo.ft ~= 'alpha'
+            then
+                buffer = vim.api.nvim_create_buf(false, true)
+                vim.api.nvim_win_set_buf(window, buffer)
+            else
+                buffer = vim.api.nvim_get_current_buf()
+                vim.api.nvim_buf_delete(buffer, {})
+                return
+            end
     end
 
     if not vim.o.hidden and vim.opt_local.modified:get() then
@@ -470,4 +477,5 @@ return {
     start = start,
     layout_element = layout_element,
     keymaps_element = keymaps_element,
+    center = center,
 }
