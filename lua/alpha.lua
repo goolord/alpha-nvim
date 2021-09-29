@@ -478,4 +478,8 @@ return {
     layout_element = layout_element,
     keymaps_element = keymaps_element,
     center = center,
+    resolve = resolve,
+    pad_margin = pad_margin,
+    highlight = highlight,
+    noop = noop,
 }
