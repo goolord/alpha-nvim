@@ -58,13 +58,18 @@ local nvim_web_devicons = {
     highlight = true
 }
 
-local function icon(fn)
-    local nwd = require('nvim-web-devicons')
+local function get_extension(fn)
     local match = fn:match("^.+(%..+)$")
     local ext = ''
     if match ~= nil then
         ext = match:sub(2)
     end
+    return ext
+end
+
+local function icon(fn)
+    local nwd = require('nvim-web-devicons')
+    local ext = get_extension(fn)
     return nwd.get_icon(fn, ext, { default = true })
 end
 
@@ -95,10 +100,19 @@ local function file_button(fn, sc, short_fn)
     return file_button_el
 end
 
+local default_mru_ignore = { 'gitcommit' }
+
+local mru_opts = {
+    ignore = function(path, ft)
+        return vim.tbl_contains(default_mru_ignore, ft)
+    end
+}
+
 --- @param start number
 --- @param cwd string optional
 --- @param items_number number optional number of items to generate, default = 10
-local function mru(start, cwd, items_number)
+local function mru(start, cwd, items_number, opts)
+    opts = opts or mru_opts
     items_number = if_nil(items_number, 10)
     local oldfiles = {}
     for _,v in ipairs(vim.v.oldfiles) do
@@ -108,7 +122,8 @@ local function mru(start, cwd, items_number)
             then cwd_cond = true
             else cwd_cond = vim.startswith(v, cwd)
         end
-        if (filereadable(v) == 1) and cwd_cond then
+        local ignore = (opts.ignore and opts.ignore(v, get_extension(v)))  or false
+        if (filereadable(v) == 1) and cwd_cond and (not ignore) then
             oldfiles[#oldfiles+1] = v
         end
     end
@@ -210,6 +225,7 @@ return {
     file_button = file_button,
     nvim_web_devicons = nvim_web_devicons,
     mru = mru,
+    mru_opts = mru_opts,
     section = section,
     opts = opts,
 }

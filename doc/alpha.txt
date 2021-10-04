@@ -210,6 +210,10 @@ Example with the startify theme:
             startify.section.footer = {
                 { type = "text", val = "footer" },
             }
+            -- ignore filetypes in MRU
+            startify.mru_opts.ignore = function(path, ft)
+                return vim.tbl_contains({'gitignore'}, ft)
+            end
             alpha.setup(startify.opts)
         end
     }
