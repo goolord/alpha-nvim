@@ -103,8 +103,10 @@ end
 local default_mru_ignore = { 'gitcommit' }
 
 local mru_opts = {
-    ignore = function(path, ft)
-        return vim.tbl_contains(default_mru_ignore, ft)
+    ignore = function(path, ext)
+        return
+                (string.find(path, "COMMIT_EDITMSG"))
+            or  (vim.tbl_contains(default_mru_ignore, ext))
     end
 }
 

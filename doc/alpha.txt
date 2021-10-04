@@ -211,8 +211,11 @@ Example with the startify theme:
                 { type = "text", val = "footer" },
             }
             -- ignore filetypes in MRU
-            startify.mru_opts.ignore = function(path, ft)
-                return vim.tbl_contains({'gitignore'}, ft)
+
+            startify.mru_opts.ignore = function(path, ext)
+                return
+                        (string.find(path, "COMMIT_EDITMSG"))
+                    or  (vim.tbl_contains(default_mru_ignore, ext))
             end
             alpha.setup(startify.opts)
         end
