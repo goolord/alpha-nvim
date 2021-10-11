@@ -75,11 +75,11 @@ end
 
 local function file_button(fn, sc, short_fn)
     short_fn = if_nil(short_fn, fn)
-    local ico, hl = icon(fn)
     local ico_txt
     local fb_hl = {}
     if nvim_web_devicons.enabled
         then
+            local ico, hl = icon(fn)
             local hl_option_type = type(nvim_web_devicons.highlight)
             if hl_option_type == "boolean" then
                 if hl and nvim_web_devicons.highlight then table.insert(fb_hl, { hl, 0, 1 }) end
