@@ -131,7 +131,7 @@ function layout_element.text (el, opts, state)
         -- end
         end
         if el.opts and el.opts.hl then
-            hl = highlight(state, end_ln, el.opts.hl, 0)
+            hl = highlight(state, end_ln, el.opts.hl, padding.left)
         end
         state.line = end_ln
         return val, hl

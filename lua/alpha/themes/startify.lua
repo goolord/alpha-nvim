@@ -124,7 +124,7 @@ local function mru(start, cwd, items_number, opts)
             then cwd_cond = true
             else cwd_cond = vim.startswith(v, cwd)
         end
-        local ignore = (opts.ignore and opts.ignore(v, get_extension(v)))  or false
+        local ignore = (opts.ignore and opts.ignore(v, get_extension(v))) or false
         if (filereadable(v) == 1) and cwd_cond and (not ignore) then
             oldfiles[#oldfiles+1] = v
         end
