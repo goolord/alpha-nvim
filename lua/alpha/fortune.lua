@@ -231,9 +231,10 @@ local fortune_list = {
 }
 
 --- @return table
+--- @param max_width number
 --- returns an array of strings
-local main = function()
-    local max_width = 54
+local main = function(max_width)
+    max_width = max_width or 54
     local fortune = get_fortune(fortune_list)
     local formatted_fortune = format_fortune(fortune, max_width)
 
