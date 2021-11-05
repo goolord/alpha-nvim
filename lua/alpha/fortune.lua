@@ -31,7 +31,7 @@ local format_line = function(line, max_width)
     local bufstart = " "
     local buffer = bufstart
     for i, word in ipairs(words) do
-        if ((#buffer + #word + 1) < max_width) then
+        if ((#buffer + #word) <= max_width) then
             buffer = buffer .. word .. " "
             if (i == #words) then
                 table.insert(formatted_line, buffer:sub(1,-2))
@@ -39,6 +39,9 @@ local format_line = function(line, max_width)
         else
             table.insert(formatted_line, buffer:sub(1,-2))
             buffer = bufstart .. word .. " "
+            if (i == #words) then
+                table.insert(formatted_line, buffer:sub(1,-2))
+            end
         end
     end
     -- right-justify text if the line begins with -
