@@ -375,6 +375,26 @@ local function enable_alpha(opts)
     end
 end
 
+local function should_skip_alpha()
+    if
+        vim.fn.argc() > 0 -- should probably figure out how to be smarter than this
+        or (
+            #vim.v.argv > 1
+            and not (
+              vim.tbl_contains(vim.v.argv, "-b")
+              or vim.tbl_contains(vim.v.argv, "-i")
+              or vim.tbl_contains(vim.v.argv, "-n")
+              or vim.tbl_contains(vim.v.argv, "--listen")
+              or vim.tbl_contains(vim.v.argv, "--startuptime")
+            )
+        )
+    then
+        return true
+    end
+
+    return false
+end
+
 local options
 
 local function start(on_vimenter, opts)
@@ -390,12 +410,9 @@ local function start(on_vimenter, opts)
     local buffer
     if on_vimenter
         then
-            if vim.o.insertmode -- Handle vim -y
-                or (not vim.o.modifiable) -- Handle vim -M
-                or vim.fn.argc() ~= 0 -- should probably figure out how to be smarter than this
-                or vim.tbl_contains(vim.v.argv, '-c')
-                -- or vim.fn.line2byte('$') ~= -1
-            then return end
+            if should_skip_alpha() then
+              return
+            end
             buffer = vim.api.nvim_get_current_buf()
         else
             if vim.bo.ft ~= 'alpha'
