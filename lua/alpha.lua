@@ -1,12 +1,11 @@
--- business logic
-
-local if_nil = vim.F.if_nil
-local deepcopy = vim.deepcopy
+-- business logic local if_nil = vim.F.if_nil <<<<<<< HEAD local deepcopy = vim.deepcopy
 local abs = math.abs
-local strdisplaywidth = vim.fn.strdisplaywidth
-local str_rep = string.rep
-local list_extend = vim.list_extend
 local concat = table.concat
+local deepcopy = vim.deepcopy
+local if_nil = vim.F.if_nil
+local list_extend = vim.list_extend
+local str_rep = string.rep
+local strdisplaywidth = vim.fn.strdisplaywidth
 
 local cursor_ix = 1
 local cursor_jumps = {}
@@ -23,7 +22,7 @@ end
 
 local function longest_line(tbl)
     local longest = 0
-    for _, v in ipairs(tbl) do
+    for _, v in pairs(tbl) do
         local width = strdisplaywidth(v)
         if width > longest then
             longest = width
@@ -191,8 +190,8 @@ function layout_element.button (el, opts, state)
         if el.opts.width then
             local max_width = math.min(el.opts.width, state.win_width)
             if el.opts.align_shortcut == "right"
-                then padding.center = max_width - (#el.val + #el.opts.shortcut)
-                else padding.right = max_width - (#el.val + #el.opts.shortcut)
+                then padding.center = max_width - (strdisplaywidth(el.val) + strdisplaywidth(el.opts.shortcut))
+                else padding.right = max_width - (strdisplaywidth(el.val) + strdisplaywidth(el.opts.shortcut))
             end
         end
         if el.opts.align_shortcut == "right"
@@ -232,7 +231,7 @@ function layout_element.button (el, opts, state)
     cursor_jumps_press[#cursor_jumps_press+1] = el.on_press
     if el.opts and el.opts.hl_shortcut then
         if type(el.opts.hl_shortcut) == "string"
-            then hl = {{el.opts.hl_shortcut, 0, #el.opts.shortcut}}
+            then hl = {{el.opts.hl_shortcut, 0, strdisplaywidth(el.opts.shortcut)+1}}
             else hl = el.opts.hl_shortcut
         end
         if el.opts.align_shortcut == "right"
@@ -243,7 +242,7 @@ function layout_element.button (el, opts, state)
 
     if el.opts and el.opts.hl then
         local left = padding.left
-        if el.opts.align_shortcut == "left" then left = left + #el.opts.shortcut + 2 end
+        if el.opts.align_shortcut == "left" then left = left + strdisplaywidth(el.opts.shortcut) + 2 end
         list_extend(hl, highlight(state, state.line, el.opts.hl, left))
     end
     state.line = state.line + 1
