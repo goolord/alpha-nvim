@@ -12,18 +12,18 @@ local default_header = {
     },
     opts = {
         position = "center",
-        hl = "Type"
+        hl = "Type",
         -- wrap = "overflow";
-    }
+    },
 }
 
 local footer = {
     type = "text",
-    val = '',
+    val = "",
     opts = {
         position = "center",
         hl = "Number",
-    }
+    },
 }
 
 --- @param sc string
@@ -42,12 +42,12 @@ local function button(sc, txt, keybind, keybind_opts)
         hl_shortcut = "Keyword",
     }
     if keybind then
-        keybind_opts = if_nil(keybind_opts, {noremap = true, silent = true, nowait = true})
-        opts.keymap = {"n", sc_, keybind, keybind_opts}
+        keybind_opts = if_nil(keybind_opts, { noremap = true, silent = true, nowait = true })
+        opts.keymap = { "n", sc_, keybind, keybind_opts }
     end
 
     local function on_press()
-        local key = vim.api.nvim_replace_termcodes(sc_ .. '<Ignore>', true, false, true)
+        local key = vim.api.nvim_replace_termcodes(sc_ .. "<Ignore>", true, false, true)
         vim.api.nvim_feedkeys(key, "normal", false)
     end
 
@@ -62,18 +62,17 @@ end
 local buttons = {
     type = "group",
     val = {
-        button( "e", "  New file"
-              , ":ene <CR>"       ),
-        button("SPC f f", "  Find file"            ),
+        button("e", "  New file", ":ene <CR>"),
+        button("SPC f f", "  Find file"),
         button("SPC f h", "  Recently opened files"),
-        button("SPC f r", "  Frecency/MRU"         ),
-        button("SPC f g", "  Find word"            ),
-        button("SPC f m", "  Jump to bookmarks"    ),
-        button("SPC s l", "  Open last session"    ),
+        button("SPC f r", "  Frecency/MRU"),
+        button("SPC f g", "  Find word"),
+        button("SPC f m", "  Jump to bookmarks"),
+        button("SPC s l", "  Open last session"),
     },
     opts = {
-        spacing = 1
-    }
+        spacing = 1,
+    },
 }
 
 local section = {
@@ -84,14 +83,14 @@ local section = {
 
 local opts = {
     layout = {
-        {type = "padding", val = 2},
+        { type = "padding", val = 2 },
         section.header,
-        {type = "padding", val = 2},
+        { type = "padding", val = 2 },
         section.buttons,
         section.footer,
     },
     opts = {
-        margin = 5
+        margin = 5,
     },
 }
 
