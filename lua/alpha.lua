@@ -1,4 +1,4 @@
--- business logic local if_nil = vim.F.if_nil <<<<<<< HEAD local deepcopy = vim.deepcopy
+-- business logic
 local abs = math.abs
 local concat = table.concat
 local deepcopy = vim.deepcopy
