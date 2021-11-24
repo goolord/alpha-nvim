@@ -124,7 +124,7 @@ function layout_element.text(el, opts, state)
         end
         if el.opts then
             if el.opts.position == "center" then
-                val, _ = center(val, state)
+                val = center(val, state)
             end
             -- if el.opts.wrap == "overflow" then
             --     val = trim(val, state)
@@ -151,7 +151,7 @@ function layout_element.text(el, opts, state)
         end
         if el.opts then
             if el.opts.position == "center" then
-                val, _ = center(val, state)
+                val = center(val, state)
             end
         end
         local end_ln = state.line + 1
@@ -167,7 +167,7 @@ function layout_element.text(el, opts, state)
     end
 end
 
-function layout_element.padding(el, opts, state)
+function layout_element.padding(el, _, state)
     local lines = 0
     if type(el.val) == "function" then
         lines = el.val()
@@ -185,7 +185,7 @@ function layout_element.padding(el, opts, state)
 end
 
 function layout_element.button(el, opts, state)
-    local val = {}
+    local val
     local hl = {}
     local padding = {
         left = 0,
@@ -311,7 +311,7 @@ local keymaps_element = {}
 keymaps_element.text = noop
 keymaps_element.padding = noop
 
-function keymaps_element.button(el, opts, state)
+function keymaps_element.button(el, _, state)
     if el.opts and el.opts.keymap then
         local map = el.opts.keymap
         vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
@@ -410,23 +410,26 @@ end
 
 -- stylua: ignore
 local function should_skip_alpha()
-    if vim.fn.argc() > 0 then return true end -- don't start when opening a file
+    -- don't start when opening a file
+    if vim.fn.argc() > 0 then
+        return true
+    end
 
-    -- flag whitelist
-    if (vim.tbl_contains(vim.v.argv, "--startuptime")) then return false end
+    -- Handle nvim -M
+    if not vim.o.modifiable then
+        return true
+    end
 
-    -- flag blacklist
-    if (
-           vim.tbl_contains(vim.v.argv, "-b")
-        or not vim.o.modifiable -- Handle nvim -M
+    for _, arg in ipairs(vim.v.argv) do
+        if arg == "--startuptime" then
+            return false
+        end
         -- commands, typically used for scripting
-        or vim.tbl_contains(vim.v.argv, "-c")
-        or (
-            #vim.tbl_filter(function(s)
-                return vim.startswith(s, "+")
-            end, vim.v.argv) > 0
-        )
-    ) then return true end
+        if arg == "-b" or arg == "-c" or vim.startswith(arg, "+") then
+            return true
+        end
+    end
+    return false
 end
 
 local options
@@ -512,7 +515,7 @@ local function start(on_vimenter, opts)
 end
 
 local function setup(opts)
-    vim.cmd([[ 
+    vim.cmd([[
         command! Alpha lua require'alpha'.start(false)
         command! AlphaRedraw call v:lua.alpha_redraw()
         augroup alpha_start
