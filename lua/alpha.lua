@@ -408,24 +408,25 @@ local function enable_alpha(opts)
     end
 end
 
+-- stylua: ignore
 local function should_skip_alpha()
-    if
-        vim.fn.argc() > 0 -- should probably figure out how to be smarter than this
-        or (
-            #vim.v.argv > 1
-            and not (
-                vim.tbl_contains(vim.v.argv, "-b")
-                or vim.tbl_contains(vim.v.argv, "-i")
-                or vim.tbl_contains(vim.v.argv, "-n")
-                or vim.tbl_contains(vim.v.argv, "--listen")
-                or vim.tbl_contains(vim.v.argv, "--startuptime")
-            )
-        )
-    then
-        return true
-    end
+    if vim.fn.argc() > 0 then return true end -- don't start when opening a file
 
-    return false
+    -- flag whitelist
+    if (vim.tbl_contains(vim.v.argv, "--startuptime")) then return false end
+
+    -- flag blacklist
+    if (
+           vim.tbl_contains(vim.v.argv, "-b")
+        or not vim.o.modifiable -- Handle nvim -M
+        -- commands, typically used for scripting
+        or vim.tbl_contains(vim.v.argv, "-c")
+        or (
+            #vim.tbl_filter(function(s)
+                return vim.startswith(s, "+")
+            end, vim.v.argv) > 0
+        )
+    ) then return true end
 end
 
 local options
