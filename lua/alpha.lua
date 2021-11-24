@@ -419,15 +419,16 @@ local function should_skip_alpha()
     for _, arg in ipairs(vim.v.argv) do
         -- whitelisted arguments
         -- always open
-        if arg == "--startuptime"
+        if  arg == "--startuptime"
             then return false
         end
 
         -- blacklisted arguments
         -- always skip
-        if arg == "-b"
+        if  arg == "-b"
             -- commands, typically used for scripting
             or arg == "-c" or vim.startswith(arg, "+")
+            or arg == "-S"
             then return true
         end
     end
