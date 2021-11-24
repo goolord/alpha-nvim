@@ -385,7 +385,7 @@ local function enable_alpha(opts)
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
     vim.cmd([[
-        noautocmd silent! setlocal bufhidden=wipe nobuflisted colorcolumn= foldlevel=999 foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
+        silent! setlocal bufhidden=wipe nobuflisted colorcolumn= foldlevel=999 foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
 
         augroup alpha_temp
         au!
@@ -410,24 +410,30 @@ end
 
 -- stylua: ignore
 local function should_skip_alpha()
-    if vim.fn.argc() > 0 then return true end -- don't start when opening a file
+    -- don't start when opening a file
+    if vim.fn.argc() > 0 then return true end
 
-    -- flag whitelist
-    if (vim.tbl_contains(vim.v.argv, "--startuptime")) then return false end
+    -- Handle nvim -M
+    if not vim.o.modifiable then return true end
 
-    -- flag blacklist
-    if (
-           vim.tbl_contains(vim.v.argv, "-b")
-        or not vim.o.modifiable -- Handle nvim -M
-        -- commands, typically used for scripting
-        or vim.tbl_contains(vim.v.argv, "-c")
-        or (
-            #vim.tbl_filter(function(s)
-                return vim.startswith(s, "+")
-            end, vim.v.argv) > 0
-        )
-        or vim.tbl_contains(vim.v.argv, "-S")
-    ) then return true end
+    for _, arg in ipairs(vim.v.argv) do
+        -- whitelisted arguments
+        -- always open
+        if arg == "--startuptime"
+            then return false
+        end
+
+        -- blacklisted arguments
+        -- always skip
+        if arg == "-b"
+            -- commands, typically used for scripting
+            or arg == "-c" or vim.startswith(arg, "+")
+            then return true
+        end
+    end
+
+    -- base case: don't skip
+    return false
 end
 
 local options
@@ -513,7 +519,7 @@ local function start(on_vimenter, opts)
 end
 
 local function setup(opts)
-    vim.cmd([[ 
+    vim.cmd([[
         command! Alpha lua require'alpha'.start(false)
         command! AlphaRedraw call v:lua.alpha_redraw()
         augroup alpha_start
