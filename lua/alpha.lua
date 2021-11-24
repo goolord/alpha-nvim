@@ -124,7 +124,7 @@ function layout_element.text(el, opts, state)
         end
         if el.opts then
             if el.opts.position == "center" then
-                val = center(val, state)
+                val, _ = center(val, state)
             end
             -- if el.opts.wrap == "overflow" then
             --     val = trim(val, state)
@@ -151,7 +151,7 @@ function layout_element.text(el, opts, state)
         end
         if el.opts then
             if el.opts.position == "center" then
-                val = center(val, state)
+                val, _ = center(val, state)
             end
         end
         local end_ln = state.line + 1
@@ -167,7 +167,7 @@ function layout_element.text(el, opts, state)
     end
 end
 
-function layout_element.padding(el, _, state)
+function layout_element.padding(el, opts, state)
     local lines = 0
     if type(el.val) == "function" then
         lines = el.val()
@@ -185,7 +185,7 @@ function layout_element.padding(el, _, state)
 end
 
 function layout_element.button(el, opts, state)
-    local val
+    local val = {}
     local hl = {}
     local padding = {
         left = 0,
@@ -311,7 +311,7 @@ local keymaps_element = {}
 keymaps_element.text = noop
 keymaps_element.padding = noop
 
-function keymaps_element.button(el, _, state)
+function keymaps_element.button(el, opts, state)
     if el.opts and el.opts.keymap then
         local map = el.opts.keymap
         vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
@@ -411,24 +411,28 @@ end
 -- stylua: ignore
 local function should_skip_alpha()
     -- don't start when opening a file
-    if vim.fn.argc() > 0 then
-        return true
-    end
+    if vim.fn.argc() > 0 then return true end
 
     -- Handle nvim -M
-    if not vim.o.modifiable then
-        return true
-    end
+    if not vim.o.modifiable then return true end
 
     for _, arg in ipairs(vim.v.argv) do
-        if arg == "--startuptime" then
-            return false
+        -- whitelisted arguments
+        -- always open
+        if arg == "--startuptime"
+            then return false
         end
-        -- commands, typically used for scripting
-        if arg == "-b" or arg == "-c" or vim.startswith(arg, "+") then
-            return true
+
+        -- blacklisted arguments
+        -- always skip
+        if arg == "-b"
+            -- commands, typically used for scripting
+            or arg == "-c" or vim.startswith(arg, "+")
+            then return true
         end
     end
+
+    -- base case: don't skip
     return false
 end
 
