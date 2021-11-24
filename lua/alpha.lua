@@ -426,7 +426,7 @@ local function should_skip_alpha()
                 return vim.startswith(s, "+")
             end, vim.v.argv) > 0
         )
-		or vim.tbl_contains(vim.v.argv, "-S")
+        or vim.tbl_contains(vim.v.argv, "-S")
     ) then return true end
 end
 
