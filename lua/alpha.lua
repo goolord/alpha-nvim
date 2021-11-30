@@ -502,7 +502,7 @@ local function start(on_vimenter, opts)
             state.buffer,
             "n",
             "<CR>",
-            ":call v:lua.alpha_press()<CR>",
+            "<cmd>call v:lua.alpha_press()<CR>",
             { noremap = false, silent = true }
         )
         vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
