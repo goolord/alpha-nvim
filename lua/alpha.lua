@@ -6,12 +6,24 @@ local if_nil = vim.F.if_nil
 local list_extend = vim.list_extend
 local str_rep = string.rep
 local strdisplaywidth = vim.fn.strdisplaywidth
+local Job = require'plenary.job'
 
 local cursor_ix = 1
 local cursor_jumps = {}
 local cursor_jumps_press = {}
+local open_windows = {}
 
 local function noop() end
+
+local function get_dynamic_value(arg)
+	if arg == nil then
+		return nil
+	end
+	if type(arg) == "function" then
+		return arg()
+	end
+	return arg
+end
 
 _G.alpha_redraw = noop
 _G.alpha_close = noop
@@ -167,6 +179,125 @@ function layout_element.text(el, opts, state)
     end
 end
 
+_G.alpha_shellcmd_buf = nil;
+_G.alpha_shellcmd_win = nil
+
+
+
+local terminal_fillers = {}
+function terminal_fillers.create_shell_job(cmd)
+	return function(channel_id)
+		local env = vim.fn.environ()
+		env['TERM'] = 'xterm-256color' -- this is what default :term uses
+		Job:new{
+			command = 'sh',
+			args = {'-c', cmd },
+			env = env,
+			on_stdout = vim.schedule_wrap(function (_, data)
+				vim.api.nvim_chan_send(channel_id, data.."\r\n")
+			end),
+			on_stderr = vim.schedule_wrap(function (_, data)
+				vim.api.nvim_chan_send(channel_id, data.."\r\n")
+			end),
+			--on_exit = function() vim.defer_fn(spawn, 1000) end
+		}:start()
+	end
+end
+
+function terminal_fillers.from_raw_string(string)
+	return function(channel_id)
+		vim.api.nvim_chan_send(channel_id, string.."\r\n")
+	end
+end
+
+function layout_element.shell_command(el, opts, state)
+	local width  = get_dynamic_value(el.opts.width) or 20
+	local height = get_dynamic_value(el.opts.height) or 10
+	local offset = get_dynamic_value(el.opts.horizontal_offset) or 0
+	local hi = get_dynamic_value(el.opts.hl) or "Normal"
+	local cmd = get_dynamic_value(el.cmd) or "nil"
+	local on_channel_opened = el.opts.on_channel_opened or terminal_fillers.create_shell_job(cmd)
+
+	local end_ln = state.line + height
+
+	local winid = state.window
+	local itemid = state.current_item_id
+
+	local textlines = {}
+	for i = 1, height do
+		textlines[i] = ""
+	end
+
+
+	local col = offset
+	if el.opts.position == "center" then
+		col = (state.win_width - width) / 2 + offset
+	elseif el.opts.position == "right" then
+		col = state.win_width - width + offset
+	end
+
+	local win_options = {
+		relative = "win",
+		width = width,
+		height = height,
+		row = state.line,
+		col = col,
+		style = "minimal",
+		win = winid
+	}
+
+	if open_windows[winid] == nil then
+		open_windows[winid] = {}
+	end
+
+	if open_windows[winid][itemid] == nil then
+		open_windows[winid][itemid] = "creation in progress..."
+
+
+		local window = {}
+		window.buf = vim.api.nvim_create_buf(false, true)
+		window.win = vim.api.nvim_open_win(window.buf, false, win_options);
+		window.chan_id = vim.api.nvim_open_term(window.buf, {})
+		vim.api.nvim_win_set_option(window.win, 'winhighlight', 'Normal:'..hi)
+
+		on_channel_opened(window.chan_id)
+
+		--local string = "\27[38;2;70;130;255mHello\27[38;2;237;37;76m NeoVim! "
+		----vim.api.nvim_chan_send(window.chan_id,)
+		--local count = 1
+		--local function add()
+		--	vim.api.nvim_chan_send(window.chan_id, string:sub(count, count))
+		--	count = count + 1
+		--	if count > #string then
+		--		count = 1
+		--	end
+		--	vim.defer_fn(add, 10)
+		--end
+		--add()
+
+		-- I have no clue why I need to do this, but otherwise it gives errors :/
+		vim.api.nvim_buf_set_option(state.buffer, 'modifiable', true)
+
+		-- TODO(make this right!)
+		local old_alpha_close = _G.alpha_close
+		_G.alpha_close = function(...)
+			vim.api.nvim_win_close(window.win, false)
+			_G.alpha_shellcmd_buf = nil
+			_G.alpha_shellcmd_win = nil
+			old_alpha_close(...)
+		end
+
+		open_windows[winid][itemid] = window
+
+	elseif type(open_windows[winid][itemid]) == "table" then
+		local window = open_windows[winid][itemid]
+		vim.api.nvim_win_set_config(window.win, win_options);
+	end
+
+	state.line = end_ln
+	return textlines, {}
+end
+
 function layout_element.padding(el, opts, state)
     local lines = 0
     if type(el.val) == "function" then
@@ -295,7 +426,8 @@ local function layout(opts, state)
     -- you index the table by its "type"
     local hl = {}
     local text = {}
-    for _, el in ipairs(opts.layout) do
+    for id, el in ipairs(opts.layout) do
+		state.current_item_id = id
         local text_el, hl_el = layout_element[el.type](el, opts, state)
         list_extend(text, text_el)
         list_extend(hl, hl_el)
@@ -310,6 +442,7 @@ local keymaps_element = {}
 
 keymaps_element.text = noop
 keymaps_element.padding = noop
+keymaps_element.shell_command = noop
 
 function keymaps_element.button(el, opts, state)
     if el.opts and el.opts.keymap then
