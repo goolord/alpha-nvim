@@ -62,7 +62,7 @@ end
 local buttons = {
     type = "group",
     val = {
-        button("e", "  New file", ":ene <CR>"),
+        button("e", "  New file", "<cmd>ene <CR>"),
         button("SPC f f", "  Find file"),
         button("SPC f h", "  Recently opened files"),
         button("SPC f r", "  Frecency/MRU"),

@@ -92,7 +92,7 @@ local function file_button(fn, sc, short_fn)
     else
         ico_txt = ""
     end
-    local file_button_el = button(sc, ico_txt .. short_fn, ":e " .. fn .. " <CR>")
+    local file_button_el = button(sc, ico_txt .. short_fn, "<cmd>e " .. fn .. " <CR>")
     local fn_start = short_fn:match(".*/")
     if fn_start ~= nil then
         table.insert(fb_hl, { "Comment", #ico_txt - 2, #fn_start + #ico_txt - 2 })
@@ -159,7 +159,7 @@ local section = {
     top_buttons = {
         type = "group",
         val = {
-            button("e", "New file", ":ene <CR>"),
+            button("e", "New file", "<cmd>ene <CR>"),
         },
     },
     -- note about MRU: currently this is a function,
@@ -201,7 +201,7 @@ local section = {
     bottom_buttons = {
         type = "group",
         val = {
-            button("q", "Quit", ":q <CR>"),
+            button("q", "Quit", "<cmd>q <CR>"),
         },
     },
     footer = {
