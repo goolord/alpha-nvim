@@ -415,6 +415,9 @@ local function should_skip_alpha()
     -- don't start when opening a file
     if vim.fn.argc() > 0 then return true end
 
+    -- skip stdin
+    if vim.fn.line2byte("$") ~= -1 then return true end
+
     -- Handle nvim -M
     if not vim.o.modifiable then return true end
 
