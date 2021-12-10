@@ -13,18 +13,18 @@ local icon_string = (
 )
 
 local function animated_text_writer(raw_string, delay)
-	return function (channel_id)
-		local count = 1
-		local function output()
-			vim.api.nvim_chan_send(channel_id, raw_string:sub(count, count))
-			count = count + 1
-			if count < #raw_string then
-				--count = 1
-				vim.defer_fn(output, delay)
-			end
-		end
-		output()
-	end
+    return function (channel_id)
+        local count = 1
+        local function output()
+            vim.api.nvim_chan_send(channel_id, raw_string:sub(count, count))
+            count = count + 1
+            if count < #raw_string then
+                --count = 1
+                vim.defer_fn(output, delay)
+            end
+        end
+        output()
+    end
 end
 
 local command_header = {
@@ -34,7 +34,7 @@ local command_header = {
     on_channel_opened = animated_text_writer(icon_string, 10),
     --on_channel_opened = alpha.terminal_fillers.raw_string(icon_string),
 
-	opts = {
+    opts = {
         position = "center",
         horizontal_offset = 0,
         width = 69,
@@ -93,17 +93,17 @@ local buttons = {
 }
 
 local footer = (function()
-	local v = vim.version()
-	local text = string.format("Using nvim-%d.%d.%d", v.major, v.minor, v.patch)
-	local footer = {
-		type = "text",
-		val = text,
-		opts = {
-			position = "center",
-			hl = "Number"
-		}
-	}
-	return footer
+    local v = vim.version()
+    local text = string.format("Using nvim-%d.%d.%d", v.major, v.minor, v.patch)
+    local footer = {
+        type = "text",
+        val = text,
+        opts = {
+            position = "center",
+            hl = "Number"
+        }
+    }
+    return footer
 end)()
 
 local section = {
