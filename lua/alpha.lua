@@ -6,7 +6,7 @@ local if_nil = vim.F.if_nil
 local list_extend = vim.list_extend
 local str_rep = string.rep
 local strdisplaywidth = vim.fn.strdisplaywidth
-local Job = require'plenary.job'
+local Job = require("plenary.job")
 
 local cursor_ix = 1
 local cursor_jumps = {}
@@ -28,18 +28,18 @@ local terminal_fillers = {}
 function terminal_fillers.shell_command(cmd)
     return function(channel_id)
         local jobdesc = nil
-        if (type(cmd) == 'table') then
+        if type(cmd) == "table" then
             jobdesc = cmd
         else
             jobdesc = {
-                command = 'sh',
-                args = { '-c', cmd },
+                command = "sh",
+                args = { "-c", cmd },
             }
         end
 
-        jobdesc.on_stdout = vim.schedule_wrap(function (_, data)
-                vim.api.nvim_chan_send(channel_id, data.."\r\n")
-            end)
+        jobdesc.on_stdout = vim.schedule_wrap(function(_, data)
+            vim.api.nvim_chan_send(channel_id, data .. "\r\n")
+        end)
         jobdesc.on_stderr = jobdesc.on_stdout
 
         Job:new(jobdesc):start()
@@ -206,9 +206,12 @@ function layout_element.text(el, opts, state)
     end
 end
 
-
-function layout_element.terminalbuf(el, _ --[[opts]], state)
-    local width  = get_dynamic_value(el.opts.width) or 20
+function layout_element.terminalbuf(
+    el,
+    _ --[[opts]],
+    state
+)
+    local width = get_dynamic_value(el.opts.width) or 20
     local height = get_dynamic_value(el.opts.height) or 10
     local offset = get_dynamic_value(el.opts.horizontal_offset) or 0
     local hi_override = get_dynamic_value(el.opts.hl)
@@ -225,7 +228,6 @@ function layout_element.terminalbuf(el, _ --[[opts]], state)
         textlines[i] = ""
     end
 
-
     local col = offset
     if el.opts.position == "center" then
         col = (state.win_width - width) / 2 + offset
@@ -240,7 +242,7 @@ function layout_element.terminalbuf(el, _ --[[opts]], state)
         row = state.line,
         col = col,
         style = "minimal",
-        win = winid
+        win = winid,
     }
 
     if state.term_windows[itemid] == nil then
@@ -248,26 +250,23 @@ function layout_element.terminalbuf(el, _ --[[opts]], state)
         -- somehow this functions gets called concurrently
         state.term_windows[itemid] = "creation in progress..."
 
-
         local window = {}
         window.buf = vim.api.nvim_create_buf(false, true)
-        window.win = vim.api.nvim_open_win(window.buf, false, win_options);
+        window.win = vim.api.nvim_open_win(window.buf, false, win_options)
         window.chan_id = vim.api.nvim_open_term(window.buf, {})
         if hi_override ~= nil then
-            vim.api.nvim_win_set_option(window.win, 'winhighlight', 'Normal:'..hi_override)
+            vim.api.nvim_win_set_option(window.win, "winhighlight", "Normal:" .. hi_override)
         end
 
         on_channel_opened(window.chan_id)
 
-
         -- I have no clue why I need to do this, but otherwise it gives errors :/
-        vim.api.nvim_buf_set_option(state.buffer, 'modifiable', true)
+        vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
 
         state.term_windows[itemid] = window
-
     elseif type(state.term_windows[itemid]) == "table" then
         local window = state.term_windows[itemid]
-        vim.api.nvim_win_set_config(window.win, win_options);
+        vim.api.nvim_win_set_config(window.win, win_options)
     end
 
     state.line = end_ln
@@ -520,25 +519,32 @@ end
 -- stylua: ignore
 local function should_skip_alpha()
     -- don't start when opening a file
-    if vim.fn.argc() > 0 then return true end
+    if vim.fn.argc() > 0 then
+        return true
+    end
 
     -- Handle nvim -M
-    if not vim.o.modifiable then return true end
+    if not vim.o.modifiable then
+        return true
+    end
 
     for _, arg in ipairs(vim.v.argv) do
         -- whitelisted arguments
         -- always open
-        if  arg == "--startuptime"
-            then return false
+        if arg == "--startuptime" then
+            return false
         end
 
         -- blacklisted arguments
         -- always skip
-        if  arg == "-b"
+        if
+            arg == "-b"
             -- commands, typically used for scripting
-            or arg == "-c" or vim.startswith(arg, "+")
+            or arg == "-c"
+            or vim.startswith(arg, "+")
             or arg == "-S"
-            then return true
+        then
+            return true
         end
     end
 
@@ -589,7 +595,7 @@ local function start(on_vimenter, opts)
         buffer = buffer,
         window = window,
         win_width = 0,
-        term_windows = {}
+        term_windows = {},
     }
     local function draw()
         for k in ipairs(cursor_jumps) do
