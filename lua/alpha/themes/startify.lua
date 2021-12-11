@@ -227,7 +227,7 @@ local opts = {
         redraw_on_resize = false,
         setup = function()
             vim.cmd([[
-            autocmd alpha_temp DirChanged * call v:lua.alpha_redraw()
+            autocmd alpha_temp DirChanged * lua require('alpha').redraw()
             ]])
         end,
     },
