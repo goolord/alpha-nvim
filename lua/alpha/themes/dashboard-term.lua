@@ -1,4 +1,5 @@
-local alpha = require("alpha")
+require("alpha.term")
+
 local if_nil = vim.F.if_nil
 
 local icon_string = (
@@ -28,7 +29,7 @@ local function animated_text_writer(raw_string, delay)
 end
 
 local command_header = {
-    type = "terminalbuf",
+    type = "term",
 
     --on_channel_opened = alpha.terminal_fillers.shell_command("echo - alpha.nvim - | figlet | lolcat -f"),
     on_channel_opened = animated_text_writer(icon_string, 10),
