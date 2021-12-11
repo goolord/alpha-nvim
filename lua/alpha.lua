@@ -1,3 +1,5 @@
+local alpha = {}
+
 -- business logic
 local abs = math.abs
 local concat = table.concat
@@ -13,10 +15,10 @@ local cursor_jumps_press = {}
 
 local function noop() end
 
-_G.alpha_redraw = noop
-_G.alpha_close = noop
+alpha.redraw = noop
+alpha.close = noop
 
-function _G.alpha_press()
+function alpha.press()
     cursor_jumps_press[cursor_ix]()
 end
 
@@ -35,7 +37,7 @@ local function spaces(n)
     return str_rep(" ", n)
 end
 
-local function center(tbl, state)
+function alpha.align_center(tbl, state)
     -- longest line used to calculate the center.
     -- which doesn't quite give a 'justfieid' look, but w.e
     local longest = longest_line(tbl)
@@ -49,7 +51,7 @@ local function center(tbl, state)
     return centered, left
 end
 
-local function pad_margin(tbl, state, margin, shrink)
+function alpha.pad_margin(tbl, state, margin, shrink)
     local longest = longest_line(tbl)
     local left
     if shrink then
@@ -79,7 +81,7 @@ end
 --     return trimmed
 -- end
 
-local function highlight(state, end_ln, hl, left)
+function alpha.highlight(state, end_ln, hl, left)
     local hl_type = type(hl)
     local hl_tbl = {}
     if hl_type == "string" then
@@ -105,7 +107,7 @@ end
 
 local layout_element = {}
 
-local function resolve(to, el, opts, state)
+function alpha.resolve(to, el, opts, state)
     local new_el = deepcopy(el)
     new_el.val = el.val()
     return to(new_el, opts, state)
@@ -119,19 +121,19 @@ function layout_element.text(el, opts, state)
         local padding = { left = 0 }
         if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
             local left
-            val, left = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+            val, left = alpha.pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
             padding.left = padding.left + left
         end
         if el.opts then
             if el.opts.position == "center" then
-                val, _ = center(val, state)
+                val, _ = alpha.align_center(val, state)
             end
             -- if el.opts.wrap == "overflow" then
             --     val = trim(val, state)
             -- end
         end
         if el.opts and el.opts.hl then
-            hl = highlight(state, end_ln, el.opts.hl, padding.left)
+            hl = alpha.highlight(state, end_ln, el.opts.hl, padding.left)
         end
         state.line = end_ln
         return val, hl
@@ -146,24 +148,24 @@ function layout_element.text(el, opts, state)
         local padding = { left = 0 }
         if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
             local left
-            val, left = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+            val, left = alpha.pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
             padding.left = padding.left + left
         end
         if el.opts then
             if el.opts.position == "center" then
-                val, _ = center(val, state)
+                val, _ = alpha.align_center(val, state)
             end
         end
         local end_ln = state.line + 1
         if el.opts and el.opts.hl then
-            hl = highlight(state, end_ln, el.opts.hl, padding.left)
+            hl = alpha.highlight(state, end_ln, el.opts.hl, padding.left)
         end
         state.line = end_ln
         return val, hl
     end
 
     if type(el.val) == "function" then
-        return resolve(layout_element.text, el, opts, state)
+        return alpha.resolve(layout_element.text, el, opts, state)
     end
 end
 
@@ -215,7 +217,7 @@ function layout_element.button(el, opts, state)
     -- margin
     if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
         local left
-        val, left = pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+        val, left = alpha.pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
         if el.opts.align_shortcut == "right" then
             padding.center = padding.center + left
         else
@@ -227,7 +229,7 @@ function layout_element.button(el, opts, state)
     if el.opts then
         if el.opts.position == "center" then
             local left
-            val, left = center(val, state)
+            val, left = alpha.align_center(val, state)
             if el.opts.align_shortcut == "right" then
                 padding.center = padding.center + left
             end
@@ -247,9 +249,9 @@ function layout_element.button(el, opts, state)
             hl = el.opts.hl_shortcut
         end
         if el.opts.align_shortcut == "right" then
-            hl = highlight(state, state.line, hl, #el.val + padding.center)
+            hl = alpha.highlight(state, state.line, hl, #el.val + padding.center)
         else
-            hl = highlight(state, state.line, hl, padding.left)
+            hl = alpha.highlight(state, state.line, hl, padding.left)
         end
     end
 
@@ -258,7 +260,7 @@ function layout_element.button(el, opts, state)
         if el.opts.align_shortcut == "left" then
             left = left + strdisplaywidth(el.opts.shortcut) + 2
         end
-        list_extend(hl, highlight(state, state.line, el.opts.hl, left))
+        list_extend(hl, alpha.highlight(state, state.line, el.opts.hl, left))
     end
     state.line = state.line + 1
     return val, hl
@@ -266,7 +268,7 @@ end
 
 function layout_element.group(el, opts, state)
     if type(el.val) == "function" then
-        return resolve(layout_element.group, el, opts, state)
+        return alpha.resolve(layout_element.group, el, opts, state)
     end
 
     if type(el.val) == "table" then
@@ -322,7 +324,7 @@ end
 
 function keymaps_element.group(el, opts, state)
     if type(el.val) == "function" then
-        resolve(keymaps_element.group, el, opts, state)
+        alpha.resolve(keymaps_element.group, el, opts, state)
     end
 
     if type(el.val) == "table" then
@@ -391,16 +393,16 @@ local function enable_alpha(opts)
 
         augroup alpha_temp
         au!
-        autocmd BufUnload <buffer> call v:lua.alpha_close()
-        autocmd CursorMoved <buffer> call v:lua.alpha_set_cursor()
+        autocmd BufUnload <buffer> lua require('alpha').close()
+        autocmd CursorMoved <buffer> lua require('alpha').move_cursor()
         augroup END
     ]])
 
     if opts.opts then
         if if_nil(opts.opts.redraw_on_resize, true) then
             vim.cmd([[
-                autocmd alpha_temp VimResized * call v:lua.alpha_redraw()
-                autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * call v:lua.alpha_redraw()
+                autocmd alpha_temp VimResized * lua require('alpha').redraw()
+                autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * lua require('alpha').redraw()
             ]])
         end
 
@@ -410,12 +412,15 @@ local function enable_alpha(opts)
     end
 end
 
--- stylua: ignore
+-- stylua: ignore start
 local function should_skip_alpha()
     -- don't start when opening a file
     if vim.fn.argc() > 0 then
         return true
     end
+
+    -- skip stdin
+    if vim.fn.line2byte("$") ~= -1 then return true end
 
     -- Handle nvim -M
     if not vim.o.modifiable then
@@ -445,13 +450,14 @@ local function should_skip_alpha()
     -- base case: don't skip
     return false
 end
+-- stylua: ignore end
 
 local options
 
-local function start(on_vimenter, opts)
+function alpha.start(on_vimenter, opts)
     local window = vim.api.nvim_get_current_win()
 
-    _G.alpha_set_cursor = function()
+    alpha.move_cursor = function()
         local cursor = vim.api.nvim_win_get_cursor(window)
         local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
         cursor_ix = closest_ix
@@ -512,31 +518,30 @@ local function start(on_vimenter, opts)
             state.buffer,
             "n",
             "<CR>",
-            "<cmd>call v:lua.alpha_press()<CR>",
+            "<cmd>lua require('alpha').press()<CR>",
             { noremap = false, silent = true }
         )
         vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
     end
-    _G.alpha_redraw = draw
-    _G.alpha_close = function()
-        -- need to use pairs instead of ipairs, since this array may not start at 1
+    alpha.redraw = draw
+    alpha.close = function()
         for _, term_window in pairs(state.term_windows) do
             vim.api.nvim_win_close(term_window.win, false)
         end
         cursor_ix = 1
         cursor_jumps = {}
         cursor_jumps_press = {}
-        _G.alpha_redraw = noop
+        alpha.redraw = noop
         vim.cmd([[au! alpha_temp]])
     end
     draw()
     keymaps(opts, state)
 end
 
-local function setup(opts)
+function alpha.setup(opts)
     vim.cmd([[
         command! Alpha lua require'alpha'.start(false)
-        command! AlphaRedraw call v:lua.alpha_redraw()
+        command! AlphaRedraw lua require('alpha').redraw()
         augroup alpha_start
         au!
         autocmd VimEnter * nested lua require'alpha'.start(true)
@@ -547,14 +552,7 @@ local function setup(opts)
     end
 end
 
-return {
-    setup = setup,
-    start = start,
-    layout_element = layout_element,
-    keymaps_element = keymaps_element,
-    center = center,
-    resolve = resolve,
-    pad_margin = pad_margin,
-    highlight = highlight,
-    noop = noop,
-}
+alpha.layout_element = layout_element
+alpha.keymaps_element = keymaps_element
+
+return alpha
