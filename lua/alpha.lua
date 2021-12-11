@@ -408,7 +408,7 @@ local function enable_alpha(opts)
     end
 end
 
--- stylua: ignore
+-- stylua: ignore start
 local function should_skip_alpha()
     -- don't start when opening a file
     if vim.fn.argc() > 0 then return true end
@@ -436,6 +436,7 @@ local function should_skip_alpha()
     -- base case: don't skip
     return false
 end
+-- stylua: ignore end
 
 local options
 
