@@ -45,7 +45,7 @@ function alpha.align_center(tbl, state)
     local left = bit.arshift(state.win_width - longest, 1)
     local padding = spaces(left)
     local centered = {}
-    for k, v in ipairs(tbl) do
+    for k, v in pairs(tbl) do
         centered[k] = padding .. v
     end
     return centered, left
@@ -66,7 +66,7 @@ function alpha.pad_margin(tbl, state, margin, shrink)
     end
     local padding = spaces(left)
     local padded = {}
-    for k, v in ipairs(tbl) do
+    for k, v in pairs(tbl) do
         padded[k] = padding .. v .. padding
     end
     return padded, left
@@ -91,7 +91,7 @@ function alpha.highlight(state, end_ln, hl, left)
     end
     -- TODO: support multiple lines
     if hl_type == "table" then
-        for _, hl_section in ipairs(hl) do
+        for _, hl_section in pairs(hl) do
             table.insert(hl_tbl, {
                 state.buffer,
                 -1,
@@ -273,7 +273,7 @@ function layout_element.group(el, opts, state)
     if type(el.val) == "table" then
         local text_tbl = {}
         local hl_tbl = {}
-        for _, v in ipairs(el.val) do
+        for _, v in pairs(el.val) do
             local text, hl = layout_element[v.type](v, opts, state)
             if text then
                 list_extend(text_tbl, text)
@@ -297,13 +297,13 @@ local function layout(opts, state)
     -- you index the table by its "type"
     local hl = {}
     local text = {}
-    for _, el in ipairs(opts.layout) do
+    for _, el in pairs(opts.layout) do
         local text_el, hl_el = layout_element[el.type](el, opts, state)
         list_extend(text, text_el)
         list_extend(hl, hl_el)
     end
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, text)
-    for _, hl_line in ipairs(hl) do
+    for _, hl_line in pairs(hl) do
         vim.api.nvim_buf_add_highlight(hl_line[1], hl_line[2], hl_line[3], hl_line[4], hl_line[5], hl_line[6])
     end
 end
@@ -326,14 +326,14 @@ function keymaps_element.group(el, opts, state)
     end
 
     if type(el.val) == "table" then
-        for _, v in ipairs(el.val) do
+        for _, v in pairs(el.val) do
             keymaps_element[v.type](v, opts, state)
         end
     end
 end
 
 local function keymaps(opts, state)
-    for _, el in ipairs(opts.layout) do
+    for _, el in pairs(opts.layout) do
         keymaps_element[el.type](el, opts, state)
     end
 end
@@ -345,7 +345,7 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
     -- excluding jumps in opposite direction
     local min
     local cursor_row = cursor[1]
-    for k, v in ipairs(cursors) do
+    for k, v in pairs(cursors) do
         local distance = v[1] - cursor_row -- new cursor distance from old cursor
         if (distance <= 0) and direction then
             distance = abs(distance)
@@ -421,7 +421,7 @@ local function should_skip_alpha()
     -- Handle nvim -M
     if not vim.o.modifiable then return true end
 
-    for _, arg in ipairs(vim.v.argv) do
+    for _, arg in pairs(vim.v.argv) do
         -- whitelisted arguments
         -- always open
         if  arg == "--startuptime"
@@ -488,10 +488,10 @@ function alpha.start(on_vimenter, opts)
         win_width = 0,
     }
     local function draw()
-        for k in ipairs(cursor_jumps) do
+        for k in pairs(cursor_jumps) do
             cursor_jumps[k] = nil
         end
-        for k in ipairs(cursor_jumps_press) do
+        for k in pairs(cursor_jumps_press) do
             cursor_jumps_press[k] = nil
         end
         state.win_width = vim.api.nvim_win_get_width(state.window)
