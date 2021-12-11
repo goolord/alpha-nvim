@@ -37,7 +37,7 @@ local function spaces(n)
     return str_rep(" ", n)
 end
 
-local function center(tbl, state)
+local function align_center(tbl, state)
     -- longest line used to calculate the center.
     -- which doesn't quite give a 'justfieid' look, but w.e
     local longest = longest_line(tbl)
@@ -126,7 +126,7 @@ function layout_element.text(el, opts, state)
         end
         if el.opts then
             if el.opts.position == "center" then
-                val, _ = center(val, state)
+                val, _ = align_center(val, state)
             end
             -- if el.opts.wrap == "overflow" then
             --     val = trim(val, state)
@@ -153,7 +153,7 @@ function layout_element.text(el, opts, state)
         end
         if el.opts then
             if el.opts.position == "center" then
-                val, _ = center(val, state)
+                val, _ = align_center(val, state)
             end
         end
         local end_ln = state.line + 1
@@ -228,7 +228,7 @@ function layout_element.button(el, opts, state)
     if el.opts then
         if el.opts.position == "center" then
             local left
-            val, left = center(val, state)
+            val, left = align_center(val, state)
             if el.opts.align_shortcut == "right" then
                 padding.center = padding.center + left
             end
@@ -540,7 +540,7 @@ M.setup = setup
 M.start = start
 M.layout_element = layout_element
 M.keymaps_element = keymaps_element
-M.center = center
+M.center = align_center
 M.resolve = resolve
 M.pad_margin = pad_margin
 M.highlight = highlight
