@@ -15,10 +15,10 @@ local cursor_jumps_press = {}
 
 local function noop() end
 
-M.alpha_redraw = noop
-M.alpha_close = noop
+M.redraw = noop
+M.close = noop
 
-function M.alpha_press()
+function M.press()
     cursor_jumps_press[cursor_ix]()
 end
 
@@ -391,16 +391,16 @@ local function enable_alpha(opts)
 
         augroup alpha_temp
         au!
-        autocmd BufUnload <buffer> lua require('alpha').alpha_close()
-        autocmd CursorMoved <buffer> lua require('alpha').alpha_set_cursor()
+        autocmd BufUnload <buffer> lua require('alpha').close()
+        autocmd CursorMoved <buffer> lua require('alpha').set_cursor()
         augroup END
     ]])
 
     if opts.opts then
         if if_nil(opts.opts.redraw_on_resize, true) then
             vim.cmd([[
-                autocmd alpha_temp VimResized * lua require('alpha').alpha_redraw()
-                autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * lua require('alpha').alpha_redraw()
+                autocmd alpha_temp VimResized * lua require('alpha').redraw()
+                autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * lua require('alpha').redraw()
             ]])
         end
 
@@ -445,7 +445,7 @@ local options
 local function start(on_vimenter, opts)
     local window = vim.api.nvim_get_current_win()
 
-    M.alpha_set_cursor = function()
+    M.set_cursor = function()
         local cursor = vim.api.nvim_win_get_cursor(window)
         local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
         cursor_ix = closest_ix
@@ -505,17 +505,17 @@ local function start(on_vimenter, opts)
             state.buffer,
             "n",
             "<CR>",
-            "<cmd>lua require('alpha').alpha_press()<CR>",
+            "<cmd>lua require('alpha').press()<CR>",
             { noremap = false, silent = true }
         )
         vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
     end
-    M.alpha_redraw = draw
-    M.alpha_close = function()
+    M.redraw = draw
+    M.close = function()
         cursor_ix = 1
         cursor_jumps = {}
         cursor_jumps_press = {}
-        M.alpha_redraw = noop
+        M.redraw = noop
         vim.cmd([[au! alpha_temp]])
     end
     draw()
@@ -525,7 +525,7 @@ end
 local function setup(opts)
     vim.cmd([[
         command! Alpha lua require'alpha'.start(false)
-        command! AlphaRedraw lua require('alpha').alpha_redraw()
+        command! AlphaRedraw lua require('alpha').redraw()
         augroup alpha_start
         au!
         autocmd VimEnter * nested lua require'alpha'.start(true)
