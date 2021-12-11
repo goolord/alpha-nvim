@@ -392,7 +392,7 @@ local function enable_alpha(opts)
         augroup alpha_temp
         au!
         autocmd BufUnload <buffer> lua require('alpha').close()
-        autocmd CursorMoved <buffer> lua require('alpha').set_cursor()
+        autocmd CursorMoved <buffer> lua require('alpha').move_cursor()
         augroup END
     ]])
 
@@ -445,7 +445,7 @@ local options
 local function start(on_vimenter, opts)
     local window = vim.api.nvim_get_current_win()
 
-    M.set_cursor = function()
+    M.move_cursor = function()
         local cursor = vim.api.nvim_win_get_cursor(window)
         local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
         cursor_ix = closest_ix
