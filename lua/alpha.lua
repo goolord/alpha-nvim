@@ -386,8 +386,10 @@ local function enable_alpha(opts)
     -- vim.opt_local behaves inconsistently for window options, it seems.
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
-    vim.cmd([[
-        silent! setlocal bufhidden=wipe nobuflisted colorcolumn= foldlevel=999 foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
+    local noautocmd
+    if opts.opts.noautocmd then noautocmd = "noautocmd " else noautocmd = "" end
+    vim.cmd(noautocmd ..
+    [[  silent! setlocal bufhidden=wipe nobuflisted colorcolumn= foldlevel=999 foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
 
         augroup alpha_temp
         au!
@@ -522,6 +524,7 @@ function alpha.start(on_vimenter, opts)
         vim.cmd([[au! alpha_temp]])
     end
     draw()
+    vim.cmd([[doautocmd User AlphaReady]])
     keymaps(opts, state)
 end
 
