@@ -12,6 +12,7 @@ local strdisplaywidth = vim.fn.strdisplaywidth
 local cursor_ix = 1
 local cursor_jumps = {}
 local cursor_jumps_press = {}
+local win_opts_backup = {}
 
 local function noop() end
 
@@ -86,14 +87,14 @@ function alpha.highlight(state, end_ln, hl, left)
     local hl_tbl = {}
     if hl_type == "string" then
         for i = state.line, end_ln do
-            table.insert(hl_tbl, { state.buffer, -1, hl, i, 0, -1 })
+            table.insert(hl_tbl, { state.bufnr, -1, hl, i, 0, -1 })
         end
     end
     -- TODO: support multiple lines
     if hl_type == "table" then
         for _, hl_section in pairs(hl) do
             table.insert(hl_tbl, {
-                state.buffer,
+                state.bufnr,
                 -1,
                 hl_section[1],
                 state.line,
@@ -302,7 +303,7 @@ local function layout(opts, state)
         list_extend(text, text_el)
         list_extend(hl, hl_el)
     end
-    vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, text)
+    vim.api.nvim_buf_set_lines(state.bufnr, 0, -1, false, text)
     for _, hl_line in pairs(hl) do
         vim.api.nvim_buf_add_highlight(hl_line[1], hl_line[2], hl_line[3], hl_line[4], hl_line[5], hl_line[6])
     end
@@ -316,7 +317,7 @@ keymaps_element.padding = noop
 function keymaps_element.button(el, opts, state)
     if el.opts and el.opts.keymap then
         local map = el.opts.keymap
-        vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+        vim.api.nvim_buf_set_keymap(state.bufnr, map[1], map[2], map[3], map[4])
     end
 end
 
@@ -382,15 +383,53 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
     end
 end
 
-local function enable_alpha(opts)
-    -- vim.opt_local behaves inconsistently for window options, it seems.
-    -- I don't have the patience to sort out a better way to do this
-    -- or seperate out the buffer local options.
-    local noautocmd
-    if opts.opts.noautocmd then noautocmd = "noautocmd " else noautocmd = "" end
-    vim.cmd(noautocmd ..
-    [[  silent! setlocal bufhidden=wipe nobuflisted colorcolumn= foldlevel=999 foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
+local function enable_alpha(opts, state)
+    local default_buf_opts = {
+        modifiable = false,
+        swapfile = false,
+        textwidth = 0,
+        buftype = "nofile",
+        bufhidden = "wipe",
+        buflisted = false,
+        filetype = "alpha",
+        matchpairs = "",
+    }
 
+    local buf_opts = vim.tbl_deep_extend("force", default_buf_opts, opts and opts.buf_opts or {})
+
+    -- buffer options
+    for key, value in pairs(buf_opts) do
+        vim.api.nvim_buf_set_option(state.bufnr, key, value)
+    end
+
+    local default_win_opts = {
+        number = false,
+        relativenumber = false,
+        wrap = false,
+        spell = false,
+        foldlevel = 999,
+        foldcolumn = "0",
+        signcolumn = "no",
+        colorcolumn = "",
+        cursorline = false,
+    }
+
+    local win_opts = vim.tbl_deep_extend("force", default_win_opts, opts and opts.win_opts or {})
+
+    -- window options
+    for key, value in pairs(win_opts) do
+        -- these are backed up first because they are not local and will be inherited
+        win_opts_backup[key] = vim.api.nvim_win_get_option(state.win_id, key)
+        vim.api.nvim_win_set_option(state.win_id, key, value)
+    end
+
+    local noautocmd
+    if opts.opts.noautocmd then
+        noautocmd = "noautocmd "
+    else
+        noautocmd = ""
+    end
+    vim.cmd(noautocmd .. [[ silent! setlocal synmaxcol&
         augroup alpha_temp
         au!
         autocmd BufUnload <buffer> lua require('alpha').close()
@@ -448,28 +487,28 @@ end
 local options
 
 function alpha.start(on_vimenter, opts)
-    local window = vim.api.nvim_get_current_win()
+    local win_id = vim.api.nvim_get_current_win()
 
     alpha.move_cursor = function()
-        local cursor = vim.api.nvim_win_get_cursor(window)
+        local cursor = vim.api.nvim_win_get_cursor(win_id)
         local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
         cursor_ix = closest_ix
-        vim.api.nvim_win_set_cursor(window, closest_pt)
+        vim.api.nvim_win_set_cursor(win_id, closest_pt)
     end
 
-    local buffer
+    local bufnr
     if on_vimenter then
         if should_skip_alpha() then
             return
         end
-        buffer = vim.api.nvim_get_current_buf()
+        bufnr = vim.api.nvim_get_current_buf()
     else
         if vim.bo.ft ~= "alpha" then
-            buffer = vim.api.nvim_create_buf(false, true)
-            vim.api.nvim_win_set_buf(window, buffer)
+            bufnr = vim.api.nvim_create_buf(false, true)
+            vim.api.nvim_win_set_buf(win_id, bufnr)
         else
-            buffer = vim.api.nvim_get_current_buf()
-            vim.api.nvim_buf_delete(buffer, {})
+            bufnr = vim.api.nvim_get_current_buf()
+            vim.api.nvim_buf_delete(bufnr, {})
             return
         end
     end
@@ -481,14 +520,14 @@ function alpha.start(on_vimenter, opts)
 
     opts = opts or options
 
-    enable_alpha(opts)
-
     local state = {
         line = 0,
-        buffer = buffer,
-        window = window,
+        bufnr = bufnr,
+        win_id = win_id,
         win_width = 0,
     }
+    enable_alpha(opts, state)
+
     local function draw()
         for k in pairs(cursor_jumps) do
             cursor_jumps[k] = nil
@@ -496,27 +535,30 @@ function alpha.start(on_vimenter, opts)
         for k in pairs(cursor_jumps_press) do
             cursor_jumps_press[k] = nil
         end
-        state.win_width = vim.api.nvim_win_get_width(state.window)
+        state.win_width = vim.api.nvim_win_get_width(state.win_id)
         state.line = 0
         -- this is for redraws. i guess the cursor 'moves'
         -- when the screen is cleared and then redrawn
         -- so we save the index before that happens
         local ix = cursor_ix
-        vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
-        vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
+        vim.api.nvim_buf_set_option(state.bufnr, "modifiable", true)
+        vim.api.nvim_buf_set_lines(state.bufnr, 0, -1, false, {})
         layout(opts, state)
-        vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
+        vim.api.nvim_buf_set_option(state.bufnr, "modifiable", false)
         vim.api.nvim_buf_set_keymap(
-            state.buffer,
+            state.bufnr,
             "n",
             "<CR>",
             "<cmd>lua require('alpha').press()<CR>",
             { noremap = false, silent = true }
         )
-        vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
+        vim.api.nvim_win_set_cursor(state.win_id, cursor_jumps[ix])
     end
     alpha.redraw = draw
     alpha.close = function()
+        for key, value in pairs(win_opts_backup) do
+            vim.api.nvim_win_set_option(state.win_id, key, value)
+        end
         cursor_ix = 1
         cursor_jumps = {}
         cursor_jumps_press = {}
