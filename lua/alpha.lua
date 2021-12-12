@@ -12,7 +12,6 @@ local strdisplaywidth = vim.fn.strdisplaywidth
 local cursor_ix = 1
 local cursor_jumps = {}
 local cursor_jumps_press = {}
-local win_opts_backup = {}
 
 local function noop() end
 
@@ -383,6 +382,20 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
     end
 end
 
+-- workaround for inconsistant `vim.opt_local` (neovim/neovim#14670)
+local function set_local(opt, value, event_ignore)
+    local cmd
+    local setlocal = string.format("%s silent! setlocal", event_ignore and "noautocmd")
+    if value == true then
+        cmd = string.format("%s %s", setlocal, opt)
+    elseif value == false then
+        cmd = string.format("%s no%s", setlocal, opt)
+    else
+        cmd = string.format("%s %s=%s", setlocal, opt, value)
+    end
+    vim.cmd(cmd)
+end
+
 local function enable_alpha(opts, state)
     local default_buf_opts = {
         modifiable = false,
@@ -418,9 +431,7 @@ local function enable_alpha(opts, state)
 
     -- window options
     for key, value in pairs(win_opts) do
-        -- these are backed up first because they are not local and will be inherited
-        win_opts_backup[key] = vim.api.nvim_win_get_option(state.win_id, key)
-        vim.api.nvim_win_set_option(state.win_id, key, value)
+        set_local(key, value, opts.opts.noautocmd)
     end
 
     local noautocmd
@@ -505,7 +516,12 @@ function alpha.start(on_vimenter, opts)
     else
         if vim.bo.ft ~= "alpha" then
             bufnr = vim.api.nvim_create_buf(false, true)
-            vim.api.nvim_win_set_buf(win_id, bufnr)
+            vim.api.nvim_buf_set_name(bufnr, "Alpha")
+            if vim.api.nvim_buf_is_loaded(bufnr) and vim.api.nvim_buf_is_valid(bufnr) then
+                -- pcall necessary to avoid erroring with `mark not set` although no mark are set
+                -- this avoid other issues
+                pcall(vim.api.nvim_win_set_buf, win_id, bufnr)
+            end
         else
             bufnr = vim.api.nvim_get_current_buf()
             vim.api.nvim_buf_delete(bufnr, {})
@@ -556,9 +572,6 @@ function alpha.start(on_vimenter, opts)
     end
     alpha.redraw = draw
     alpha.close = function()
-        for key, value in pairs(win_opts_backup) do
-            vim.api.nvim_win_set_option(state.win_id, key, value)
-        end
         cursor_ix = 1
         cursor_jumps = {}
         cursor_jumps_press = {}
