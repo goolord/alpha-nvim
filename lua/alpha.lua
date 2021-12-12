@@ -169,7 +169,6 @@ function layout_element.text(el, opts, state)
     end
 end
 
-
 function layout_element.padding(el, opts, state)
     local lines = 0
     if type(el.val) == "function" then
@@ -389,7 +388,13 @@ local function enable_alpha(opts)
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
     local noautocmd
-    if opts.opts.noautocmd then noautocmd = "noautocmd " else noautocmd = "" end
+    if opts.opts.noautocmd then
+        noautocmd = "noautocmd "
+    else
+        noautocmd = ""
+    end
+
+    -- stylua: ignore
     vim.cmd(noautocmd ..
     [[  silent! setlocal bufhidden=wipe nobuflisted colorcolumn= foldlevel=999 foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
 
