@@ -90,7 +90,11 @@ function alpha.layout_element.term(
         window.win = vim.api.nvim_open_win(window.buf, false, win_options)
         window.chan_id = vim.api.nvim_open_term(window.buf, {})
         if hi_override ~= nil then
-            vim.api.nvim_win_set_option(window.win, "winhighlight", "Normal:" .. hi_override)
+            vim.api.nvim_win_set_option(
+                window.win,
+                "winhighlight",
+                "Normal:" .. hi_override .. ",TermCursor:None,TermCursorNC:NoneCursorLine:None,CursorColumn:None"
+            )
         end
 
         on_channel_opened(window.chan_id)
@@ -108,6 +112,6 @@ function alpha.layout_element.term(
     return textlines, {}
 end
 
-alpha.keymaps_element.term = alpha.noop
+alpha.keymaps_element.term = function() end
 
 return term
