@@ -385,7 +385,7 @@ end
 -- workaround for inconsistant `vim.opt_local` (neovim/neovim#14670)
 local function set_local(opt, value, event_ignore)
     local cmd
-    local setlocal = string.format("%s silent! setlocal", event_ignore and "noautocmd")
+    local setlocal = string.format("%s silent! setlocal", event_ignore and "noautocmd" or "")
     if value == true then
         cmd = string.format("%s %s", setlocal, opt)
     elseif value == false then
