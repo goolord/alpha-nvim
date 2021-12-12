@@ -532,8 +532,8 @@ function alpha.start(on_vimenter, opts)
     end
     alpha.redraw = draw
     alpha.close = function()
-        for _, window in pairs(state.aux_windows) do
-            vim.api.nvim_win_close(window.win, false)
+        for _, aux_win in pairs(state.aux_windows) do
+            vim.api.nvim_win_close(aux_win.win, false)
         end
         cursor_ix = 1
         cursor_jumps = {}
