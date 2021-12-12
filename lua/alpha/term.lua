@@ -80,10 +80,10 @@ function alpha.layout_element.term(
         win = winid,
     }
 
-    if state.term_windows[itemid] == nil then
+    if state.aux_windows[itemid] == nil then
         -- works like a mutex lock
         -- somehow this functions gets called concurrently
-        state.term_windows[itemid] = "creation in progress..."
+        state.aux_windows[itemid] = "creation in progress..."
 
         local window = {}
         window.buf = vim.api.nvim_create_buf(false, true)
@@ -98,9 +98,9 @@ function alpha.layout_element.term(
         -- I have no clue why I need to do this, but otherwise it gives errors :/
         vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
 
-        state.term_windows[itemid] = window
-    elseif type(state.term_windows[itemid]) == "table" then
-        local window = state.term_windows[itemid]
+        state.aux_windows[itemid] = window
+    elseif type(state.aux_windows[itemid]) == "table" then
+        local window = state.aux_windows[itemid]
         vim.api.nvim_win_set_config(window.win, win_options)
     end
 

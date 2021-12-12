@@ -497,7 +497,7 @@ function alpha.start(on_vimenter, opts)
         buffer = buffer,
         window = window,
         win_width = 0,
-        term_windows = {},
+        aux_windows = {},
     }
     local function draw()
         for k in pairs(cursor_jumps) do
@@ -527,8 +527,8 @@ function alpha.start(on_vimenter, opts)
     end
     alpha.redraw = draw
     alpha.close = function()
-        for _, term_window in pairs(state.term_windows) do
-            vim.api.nvim_win_close(term_window.win, false)
+        for _, window in pairs(state.aux_windows) do
+            vim.api.nvim_win_close(window.win, false)
         end
         cursor_ix = 1
         cursor_jumps = {}
