@@ -12,6 +12,7 @@ local strdisplaywidth = vim.fn.strdisplaywidth
 local cursor_ix = 1
 local cursor_jumps = {}
 local cursor_jumps_press = {}
+local cursor_jumps_press_queue = {}
 
 local function noop() end
 
@@ -19,7 +20,31 @@ alpha.redraw = noop
 alpha.close = noop
 
 function alpha.press()
-    cursor_jumps_press[cursor_ix]()
+    for queued_cursor_ix, _ in pairs(cursor_jumps_press_queue) do
+        cursor_jumps_press[queued_cursor_ix]()
+    end
+    -- only press under the cursor if there's no queue
+    if vim.tbl_count(cursor_jumps_press_queue) == 0 then
+        cursor_jumps_press[cursor_ix]()
+    end
+end
+
+function alpha.queue_press()
+    if cursor_jumps_press_queue[cursor_ix] then
+        cursor_jumps_press_queue[cursor_ix] = nil
+    else
+        cursor_jumps_press_queue[cursor_ix] = true
+
+        -- temporary, find a way to do this in a pure, data-oriented way
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local row = cursor[1]
+        local col = cursor[2]
+        vim.api.nvim_buf_set_option(0, "modifiable", true)
+        vim.api.nvim_buf_set_text(0, row - 1, col, row - 1, col + 1, { "*" })
+        vim.api.nvim_buf_set_option(0, "modifiable", false)
+        local height = vim.api.nvim_win_get_height(0)
+        vim.api.nvim_win_set_cursor(0, { math.min(row + 1, height + 2), col })
+    end
 end
 
 local function longest_line(tbl)
@@ -315,8 +340,14 @@ keymaps_element.padding = noop
 
 function keymaps_element.button(el, opts, state)
     if el.opts and el.opts.keymap then
-        local map = el.opts.keymap
-        vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+        if type(el.opts.keymap[1]) == "table" then
+            for _, map in el.opts.keymap do
+                vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+            end
+        else
+            local map = el.opts.keymap
+            vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+        end
     end
 end
 
@@ -382,6 +413,7 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
     end
 end
 
+-- stylua: ignore start
 local function enable_alpha(opts)
     -- vim.opt_local behaves inconsistently for window options, it seems.
     -- I don't have the patience to sort out a better way to do this
@@ -411,6 +443,7 @@ local function enable_alpha(opts)
         end
     end
 end
+-- stylua: ignore end
 
 -- stylua: ignore start
 local function should_skip_alpha()
@@ -511,6 +544,13 @@ function alpha.start(on_vimenter, opts)
             "n",
             "<CR>",
             "<cmd>lua require('alpha').press()<CR>",
+            { noremap = false, silent = true }
+        )
+        vim.api.nvim_buf_set_keymap(
+            state.buffer,
+            "n",
+            "<M-CR>",
+            "<cmd>lua require('alpha').queue_press()<CR>",
             { noremap = false, silent = true }
         )
         vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
