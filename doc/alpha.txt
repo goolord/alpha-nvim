@@ -189,7 +189,7 @@ For the default configuration, see the Quick Start guide in the README.md
          handle:close()
          dashboard.section.footer.val = fortune
 
-         dasboard.opts.opts.noautocmd = true
+         dashboard.opts.opts.noautocmd = true
 
          vim.cmd[[autocmd User AlphaReady echo 'ready']]
 
