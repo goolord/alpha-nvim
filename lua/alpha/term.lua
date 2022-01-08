@@ -1,6 +1,5 @@
 local term = {}
 
-local Job = require("plenary.job")
 local alpha = require("alpha")
 
 local function get_dynamic_value(arg)
@@ -15,38 +14,37 @@ end
 
 term.terminal_fillers = {}
 function term.terminal_fillers.shell_command(cmd)
-    return function(channel_id)
-        local jobdesc = nil
-        if type(cmd) == "table" then
-            jobdesc = cmd
-        else
-            jobdesc = {
-                command = "sh",
-                args = { "-c", cmd },
-            }
-        end
-
-        jobdesc.on_stdout = vim.schedule_wrap(function(_, data)
-            vim.api.nvim_chan_send(channel_id, data .. "\r\n")
+    return function(win)
+        local handler = vim.schedule_wrap(function(_, data)
+            vim.fn.chansend(win.channel_id, data)
         end)
-        jobdesc.on_stderr = jobdesc.on_stdout
-
-        Job:new(jobdesc):start()
+        local jobid = vim.fn.jobstart(cmd, {
+            pty = true,
+            width = win.width,
+            height = win.height,
+            on_stdout = handler,
+        })
+        return {
+            on_close = function()
+                vim.fn.jobstop(jobid)
+            end,
+        }
     end
 end
 
 function term.terminal_fillers.raw_string(string)
-    return function(channel_id)
-        vim.api.nvim_chan_send(channel_id, get_dynamic_value(string))
+    return function(win)
+        vim.api.nvim_chan_send(win.channel_id, get_dynamic_value(string))
+        return { on_close = function() end }
     end
 end
 
 function alpha.layout_element.term(
     el,
-    _ --[[opts]],
+    _, --[[opts]]
     state
 )
-    local width = get_dynamic_value(el.opts.width) or 20
+    local width = get_dynamic_value(el.opts.width) or 80
     local height = get_dynamic_value(el.opts.height) or 10
     local offset = get_dynamic_value(el.opts.horizontal_offset) or 0
     local hi_override = get_dynamic_value(el.opts.hl)
@@ -97,7 +95,13 @@ function alpha.layout_element.term(
             )
         end
 
-        on_channel_opened(window.chan_id)
+        local response = on_channel_opened({
+            channel_id = window.chan_id,
+            width = width,
+            height = height,
+        })
+
+        window.on_close = response.on_close
 
         -- I have no clue why I need to do this, but otherwise it gives errors :/
         vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)

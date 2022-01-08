@@ -533,6 +533,7 @@ function alpha.start(on_vimenter, opts)
     alpha.redraw = draw
     alpha.close = function()
         for _, aux_win in pairs(state.aux_windows) do
+            aux_win.on_close()
             vim.api.nvim_win_close(aux_win.win, false)
         end
         cursor_ix = 1
