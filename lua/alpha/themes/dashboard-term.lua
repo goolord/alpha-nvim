@@ -1,4 +1,4 @@
-require("alpha.term")
+local term = require("alpha.term")
 
 local if_nil = vim.F.if_nil
 
@@ -13,6 +13,7 @@ local icon_string = ( -- https://github.com/glepnir/dashboard-nvim/wiki/Ascii-He
         .. "\27[38;2;237;37;76m██████  ███ \27[38;2;70;130;255m█████████████████ \27[38;2;237;37;76m████ \27[38;2;70;130;255m█████ █████ ████ ██████ "
     )
 
+-- demo for dynamic rendering
 local function animated_text_writer(raw_string, delay)
     return function(win)
         local count = 1
@@ -36,9 +37,14 @@ end
 local command_header = {
     type = "term",
 
-    --on_channel_opened = alpha.terminal_fillers.shell_command("echo - alpha.nvim - | figlet | lolcat"),
-    on_channel_opened = animated_text_writer(icon_string, 10),
-    --on_channel_opened = alpha.terminal_fillers.raw_string(icon_string),
+	-- use the output of a shell command:
+    on_channel_opened = term.terminal_fillers.shell_command("echo - alpha.nvim - | figlet | lolcat"),
+
+	-- render icon_string char by char:
+    --on_channel_opened = animated_text_writer(icon_string, 10),
+
+	-- dump icon_string into the window:
+    --on_channel_opened = term.terminal_fillers.raw_string(icon_string),
 
     opts = {
         position = "center",
