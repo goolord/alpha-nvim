@@ -89,9 +89,7 @@ local opts = {
         section.buttons,
         section.footer,
     },
-    opts = {
-        margin = 5,
-    },
+    margin = 5,
 }
 
 return {

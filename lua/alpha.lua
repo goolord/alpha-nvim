@@ -144,9 +144,9 @@ function layout_element.text(el, opts, state)
         local val = el.val
         local hl = {}
         local padding = { left = 0 }
-        if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
+        if opts.margin and el.opts and (el.opts.position ~= "center") then
             local left
-            val, left = alpha.pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+            val, left = alpha.pad_margin(val, state, opts.margin, if_nil(el.opts.shrink_margin, true))
             padding.left = padding.left + left
         end
         if el.opts then
@@ -171,9 +171,9 @@ function layout_element.text(el, opts, state)
             val[#val + 1] = s
         end
         local padding = { left = 0 }
-        if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
+        if opts.margin and el.opts and (el.opts.position ~= "center") then
             local left
-            val, left = alpha.pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+            val, left = alpha.pad_margin(val, state, opts.margin, if_nil(el.opts.shrink_margin, true))
             padding.left = padding.left + left
         end
         if el.opts then
@@ -239,9 +239,9 @@ function layout_element.button(el, opts, state)
     end
 
     -- margin
-    if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
+    if opts.margin and el.opts and (el.opts.position ~= "center") then
         local left
-        val, left = alpha.pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+        val, left = alpha.pad_margin(val, state, opts.margin, if_nil(el.opts.shrink_margin, true))
         if el.opts.align_shortcut == "right" then
             padding.center = padding.center + left
         else
@@ -419,7 +419,7 @@ local function enable_alpha(opts)
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
     local noautocmd
-    if opts.opts.noautocmd then noautocmd = "noautocmd " else noautocmd = "" end
+    if opts.noautocmd then noautocmd = "noautocmd " else noautocmd = "" end
     vim.cmd(noautocmd ..
     [[  silent! setlocal bufhidden=wipe nobuflisted colorcolumn= foldlevel=999 foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
 
@@ -430,17 +430,15 @@ local function enable_alpha(opts)
         augroup END
     ]])
 
-    if opts.opts then
-        if if_nil(opts.opts.redraw_on_resize, true) then
-            vim.cmd([[
-                autocmd alpha_temp VimResized * lua require('alpha').redraw()
-                autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * lua require('alpha').redraw()
-            ]])
-        end
+    if if_nil(opts.redraw_on_resize, true) then
+        vim.cmd([[
+            autocmd alpha_temp VimResized * lua require('alpha').redraw()
+            autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * lua require('alpha').redraw()
+        ]])
+    end
 
-        if opts.opts.setup then
-            opts.opts.setup()
-        end
+    if opts.setup then
+       opts.setup()
     end
 end
 -- stylua: ignore end
