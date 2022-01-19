@@ -12,7 +12,7 @@ use {
     'goolord/alpha-nvim',
     requires = { 'kyazdani42/nvim-web-devicons' },
     config = function ()
-        require'alpha'.setup(require'alpha.themes.startify'.opts)
+        require'alpha'.setup(require'alpha.themes.startify'.config)
     end
 }
 ```
@@ -22,7 +22,7 @@ require "paq" {
     "goolord/alpha-nvim";
     "kyazdani42/nvim-web-devicons";
 }
-require'alpha'.setup(require'alpha.themes.startify'.opts)
+require'alpha'.setup(require'alpha.themes.startify'.config)
 ```
 #### dashboard-nvim theme
 ![glamor shot](https://user-images.githubusercontent.com/24906808/132604236-4f20adc4-706c-49b4-b473-ebfd6a7f0784.png)
@@ -31,7 +31,7 @@ With packer:
 use {
     'goolord/alpha-nvim',
     config = function ()
-        require'alpha'.setup(require'alpha.themes.dashboard'.opts)
+        require'alpha'.setup(require'alpha.themes.dashboard'.config)
     end
 }
 ```
@@ -41,7 +41,7 @@ require "paq" {
     "goolord/alpha-nvim";
     "kyazdani42/nvim-web-devicons";
 }
-require'alpha'.setup(require'alpha.themes.dashboard'.opts)
+require'alpha'.setup(require'alpha.themes.dashboard'.config)
 ```
 if you want sessions, see 
 - https://github.com/Shatur/neovim-session-manager

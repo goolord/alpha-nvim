@@ -210,7 +210,7 @@ local section = {
     },
 }
 
-local opts = {
+local config = {
     layout = {
         { type = "padding", val = 1 },
         section.header,
@@ -241,5 +241,6 @@ return {
     mru = mru,
     mru_opts = mru_opts,
     section = section,
-    opts = opts,
+    opts = config,
+    config = config
 }
