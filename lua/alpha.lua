@@ -138,15 +138,15 @@ function alpha.resolve(to, el, opts, state)
     return to(new_el, opts, state)
 end
 
-function layout_element.text(el, opts, state)
+function layout_element.text(el, conf, state)
     if type(el.val) == "table" then
         local end_ln = state.line + #el.val
         local val = el.val
         local hl = {}
         local padding = { left = 0 }
-        if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
+        if conf.opts and conf.opts.margin and el.opts and (el.opts.position ~= "center") then
             local left
-            val, left = alpha.pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+            val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(el.opts.shrink_margin, true))
             padding.left = padding.left + left
         end
         if el.opts then
@@ -171,9 +171,9 @@ function layout_element.text(el, opts, state)
             val[#val + 1] = s
         end
         local padding = { left = 0 }
-        if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
+        if conf.opts and conf.opts.margin and el.opts and (el.opts.position ~= "center") then
             local left
-            val, left = alpha.pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+            val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(el.opts.shrink_margin, true))
             padding.left = padding.left + left
         end
         if el.opts then
@@ -190,11 +190,11 @@ function layout_element.text(el, opts, state)
     end
 
     if type(el.val) == "function" then
-        return alpha.resolve(layout_element.text, el, opts, state)
+        return alpha.resolve(layout_element.text, el, conf, state)
     end
 end
 
-function layout_element.padding(el, opts, state)
+function layout_element.padding(el, conf, state)
     local lines = 0
     if type(el.val) == "function" then
         lines = el.val()
@@ -211,7 +211,7 @@ function layout_element.padding(el, opts, state)
     return val, {}
 end
 
-function layout_element.button(el, opts, state)
+function layout_element.button(el, conf, state)
     local val = {}
     local hl = {}
     local padding = {
@@ -239,9 +239,9 @@ function layout_element.button(el, opts, state)
     end
 
     -- margin
-    if opts.opts and opts.opts.margin and el.opts and (el.opts.position ~= "center") then
+    if conf.opts and conf.opts.margin and el.opts and (el.opts.position ~= "center") then
         local left
-        val, left = alpha.pad_margin(val, state, opts.opts.margin, if_nil(el.opts.shrink_margin, true))
+        val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(el.opts.shrink_margin, true))
         if el.opts.align_shortcut == "right" then
             padding.center = padding.center + left
         else
@@ -290,16 +290,16 @@ function layout_element.button(el, opts, state)
     return val, hl
 end
 
-function layout_element.group(el, opts, state)
+function layout_element.group(el, conf, state)
     if type(el.val) == "function" then
-        return alpha.resolve(layout_element.group, el, opts, state)
+        return alpha.resolve(layout_element.group, el, conf, state)
     end
 
     if type(el.val) == "table" then
         local text_tbl = {}
         local hl_tbl = {}
         for _, v in pairs(el.val) do
-            local text, hl = layout_element[v.type](v, opts, state)
+            local text, hl = layout_element[v.type](v, conf, state)
             if text then
                 list_extend(text_tbl, text)
             end
@@ -308,7 +308,7 @@ function layout_element.group(el, opts, state)
             end
             if el.opts and el.opts.spacing then
                 local padding_el = { type = "padding", val = el.opts.spacing }
-                local text_1, hl_1 = layout_element[padding_el.type](padding_el, opts, state)
+                local text_1, hl_1 = layout_element[padding_el.type](padding_el, conf, state)
                 list_extend(text_tbl, text_1)
                 list_extend(hl_tbl, hl_1)
             end
@@ -317,13 +317,13 @@ function layout_element.group(el, opts, state)
     end
 end
 
-local function layout(opts, state)
+local function layout(conf, state)
     -- this is my way of hacking pattern matching
     -- you index the table by its "type"
     local hl = {}
     local text = {}
-    for _, el in pairs(opts.layout) do
-        local text_el, hl_el = layout_element[el.type](el, opts, state)
+    for _, el in pairs(conf.layout) do
+        local text_el, hl_el = layout_element[el.type](el, conf, state)
         list_extend(text, text_el)
         list_extend(hl, hl_el)
     end
@@ -338,7 +338,7 @@ local keymaps_element = {}
 keymaps_element.text = noop
 keymaps_element.padding = noop
 
-function keymaps_element.button(el, opts, state)
+function keymaps_element.button(el, conf, state)
     if el.opts and el.opts.keymap then
         if type(el.opts.keymap[1]) == "table" then
             for _, map in el.opts.keymap do
@@ -351,21 +351,21 @@ function keymaps_element.button(el, opts, state)
     end
 end
 
-function keymaps_element.group(el, opts, state)
+function keymaps_element.group(el, conf, state)
     if type(el.val) == "function" then
-        alpha.resolve(keymaps_element.group, el, opts, state)
+        alpha.resolve(keymaps_element.group, el, conf, state)
     end
 
     if type(el.val) == "table" then
         for _, v in pairs(el.val) do
-            keymaps_element[v.type](v, opts, state)
+            keymaps_element[v.type](v, conf, state)
         end
     end
 end
 
-local function keymaps(opts, state)
-    for _, el in pairs(opts.layout) do
-        keymaps_element[el.type](el, opts, state)
+local function keymaps(conf, state)
+    for _, el in pairs(conf.layout) do
+        keymaps_element[el.type](el, conf, state)
     end
 end
 
@@ -414,12 +414,12 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
 end
 
 -- stylua: ignore start
-local function enable_alpha(opts)
+local function enable_alpha(conf)
     -- vim.opt_local behaves inconsistently for window options, it seems.
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
     local noautocmd
-    if opts.opts.noautocmd then noautocmd = "noautocmd " else noautocmd = "" end
+    if conf.opts.noautocmd then noautocmd = "noautocmd " else noautocmd = "" end
     vim.cmd(noautocmd ..
     [[  silent! setlocal bufhidden=wipe nobuflisted colorcolumn= foldlevel=999 foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
 
@@ -430,16 +430,16 @@ local function enable_alpha(opts)
         augroup END
     ]])
 
-    if opts.opts then
-        if if_nil(opts.opts.redraw_on_resize, true) then
+    if conf.opts then
+        if if_nil(conf.opts.redraw_on_resize, true) then
             vim.cmd([[
                 autocmd alpha_temp VimResized * lua require('alpha').redraw()
                 autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * lua require('alpha').redraw()
             ]])
         end
 
-        if opts.opts.setup then
-            opts.opts.setup()
+        if conf.opts.setup then
+            conf.opts.setup()
         end
     end
 end
@@ -478,9 +478,9 @@ local function should_skip_alpha()
 end
 -- stylua: ignore end
 
-local options
+local current_config
 
-function alpha.start(on_vimenter, opts)
+function alpha.start(on_vimenter, conf)
     local window = vim.api.nvim_get_current_win()
 
     alpha.move_cursor = function()
@@ -512,9 +512,9 @@ function alpha.start(on_vimenter, opts)
         return
     end
 
-    opts = opts or options
+    conf = conf or current_config
 
-    enable_alpha(opts)
+    enable_alpha(conf)
 
     local state = {
         line = 0,
@@ -537,7 +537,7 @@ function alpha.start(on_vimenter, opts)
         local ix = cursor_ix
         vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
         vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
-        layout(opts, state)
+        layout(conf, state)
         vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
         vim.api.nvim_buf_set_keymap(
             state.buffer,
@@ -565,10 +565,16 @@ function alpha.start(on_vimenter, opts)
     end
     draw()
     vim.cmd([[doautocmd User AlphaReady]])
-    keymaps(opts, state)
+    keymaps(conf, state)
 end
 
-function alpha.setup(opts)
+function alpha.setup(config)
+    vim.validate {
+      config = { config, "table" },
+      layout = {config.layout, "table"},
+    }
+    current_config = config
+
     vim.cmd([[
         command! Alpha lua require'alpha'.start(false)
         command! AlphaRedraw lua require('alpha').redraw()
@@ -577,9 +583,6 @@ function alpha.setup(opts)
         autocmd VimEnter * nested lua require'alpha'.start(true)
         augroup END
     ]])
-    if type(opts) == "table" then
-        options = opts
-    end
 end
 
 alpha.layout_element = layout_element

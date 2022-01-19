@@ -81,7 +81,7 @@ local section = {
     footer = footer,
 }
 
-local opts = {
+local config = {
     layout = {
         { type = "padding", val = 2 },
         section.header,
@@ -97,5 +97,6 @@ local opts = {
 return {
     button = button,
     section = section,
-    opts = opts,
+    opts = config,
+    config = config
 }

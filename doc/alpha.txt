@@ -29,9 +29,9 @@ CONFIGURATION                                              *alpha-configuration*
 
 the following is documentation for the types alpha uses for configuration
 
-opts: 
+config: 
 >
- opts = {
+ config = {
     -- required
 
     -- table of elements from top to bottom
@@ -189,11 +189,11 @@ For the default configuration, see the Quick Start guide in the README.md
          handle:close()
          dashboard.section.footer.val = fortune
 
-         dashboard.opts.opts.noautocmd = true
+         dashboard.config.opts.noautocmd = true
 
          vim.cmd[[autocmd User AlphaReady echo 'ready']]
 
-         alpha.setup(dashboard.opts)
+         alpha.setup(dashboard.config)
      end
  }
 <
@@ -239,7 +239,7 @@ Example with the startify theme:
                         (string.find(path, "COMMIT_EDITMSG"))
                     or  (vim.tbl_contains(default_mru_ignore, ext))
             end
-            alpha.setup(startify.opts)
+            alpha.setup(startify.config)
         end
     }
 <
