@@ -97,6 +97,7 @@ local config = {
 return {
     button = button,
     section = section,
+    config = config,
+    -- deprecated
     opts = config,
-    config = config
 }

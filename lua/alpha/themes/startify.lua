@@ -241,6 +241,7 @@ return {
     mru = mru,
     mru_opts = mru_opts,
     section = section,
+    config = config,
+    -- deprecated
     opts = config,
-    config = config
 }
