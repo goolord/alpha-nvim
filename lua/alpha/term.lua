@@ -39,6 +39,18 @@ function term.terminal_fillers.raw_string(string)
     end
 end
 
+function term.update_pos(winid)
+    local old_scroll_pos = 0 -- FIXME
+    local scroll_pos = vim.fn.line('w0', winid)
+    local diff_scroll_pos = scroll_pos - old_scroll_pos
+    local old_win_opts = vim.api.nvim_win_get_options(winid)
+    local win_options = {
+        relative = "win",
+        row = old_win_opts.row - diff_scroll_pos,
+    }
+    vim.api.nvim_win_set_config(winid, win_options)
+end
+
 function alpha.layout_element.term(
     el,
     _, --[[opts]]
