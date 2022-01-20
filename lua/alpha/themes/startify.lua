@@ -41,8 +41,8 @@ local function button(sc, txt, keybind, keybind_opts)
     end
 
     local function on_press()
-        local key = vim.api.nvim_replace_termcodes(sc_ .. "<Ignore>", true, false, true)
-        vim.api.nvim_feedkeys(key, "normal", false)
+        local key = vim.api.nvim_replace_termcodes(keybind .. "<Ignore>", true, false, true)
+        vim.api.nvim_feedkeys(key, "normal", true)
     end
 
     return {
@@ -210,7 +210,7 @@ local section = {
     },
 }
 
-local opts = {
+local config = {
     layout = {
         { type = "padding", val = 1 },
         section.header,
@@ -241,5 +241,7 @@ return {
     mru = mru,
     mru_opts = mru_opts,
     section = section,
-    opts = opts,
+    config = config,
+    -- deprecated
+    opts = config,
 }
