@@ -575,6 +575,10 @@ function alpha.setup(config)
     }
     current_config = config
 
+    --[[
+    vim.api.nvim_add_user_command('Alpha', function () alpha.start(false) end, {bang = true})
+    vim.api.nvim_add_user_command('AlphaRedraw', alpha.redraw, {bang = true})
+    ]]
     vim.cmd([[
         command! Alpha lua require'alpha'.start(false)
         command! AlphaRedraw lua require('alpha').redraw()
