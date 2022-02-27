@@ -26,12 +26,14 @@ local footer = {
     },
 }
 
+local leader = "SPC"
+
 --- @param sc string
 --- @param txt string
 --- @param keybind string optional
 --- @param keybind_opts table optional
 local function button(sc, txt, keybind, keybind_opts)
-    local sc_ = sc:gsub("%s", ""):gsub("SPC", "<leader>")
+    local sc_ = sc:gsub("%s", ""):gsub(leader, "<leader>")
 
     local opts = {
         position = "center",
@@ -98,6 +100,8 @@ return {
     button = button,
     section = section,
     config = config,
+    -- theme config
+    leader = leader,
     -- deprecated
     opts = config,
 }

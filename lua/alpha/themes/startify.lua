@@ -19,12 +19,14 @@ local default_header = {
     },
 }
 
+local leader = "SPC"
+
 --- @param sc string
 --- @param txt string
 --- @param keybind string optional
 --- @param keybind_opts table optional
 local function button(sc, txt, keybind, keybind_opts)
-    local sc_ = sc:gsub("%s", ""):gsub("SPC", "<leader>")
+    local sc_ = sc:gsub("%s", ""):gsub(leader, "<leader>")
 
     local opts = {
         position = "left",
@@ -237,11 +239,13 @@ return {
     icon = icon,
     button = button,
     file_button = file_button,
-    nvim_web_devicons = nvim_web_devicons,
     mru = mru,
     mru_opts = mru_opts,
     section = section,
     config = config,
+    -- theme config
+    nvim_web_devicons = nvim_web_devicons,
+    leader = leader,
     -- deprecated
     opts = config,
 }
