@@ -83,6 +83,7 @@ function alpha.start(on_vimenter, conf)
     ui.alpha.draw(conf)
 
     vim.cmd([[doautocmd User AlphaReady]])
+    vim.api.nvim_do_autocmd('User', {pattern = 'AlphaReady'})
 end
 
 function alpha.setup(config)
@@ -90,20 +91,20 @@ function alpha.setup(config)
       config = { config, "table" },
       layout = {config.layout, "table"},
     }
+
     current_config = config
 
-    --[[
     vim.api.nvim_add_user_command('Alpha', function () alpha.start(false) end, {bang = true})
-    vim.api.nvim_add_user_command('AlphaRedraw', alpha.redraw, {bang = true})
-    ]]
-    vim.cmd([[
-        command! Alpha lua require'alpha'.start(false)
-        command! AlphaRedraw lua require('alpha').redraw()
-        augroup alpha_start
-        au!
-        autocmd VimEnter * nested lua require'alpha'.start(true)
-        augroup END
-    ]])
+    vim.api.nvim_add_user_command('AlphaReady', function () alpha.redraw() end, {bang = true})
+
+    vim.api.nvim_create_augroup('alpha_start', { clear = true })
+
+    vim.api.nvim_create_autocmd("VimEnter", {
+        group = 'alpha_start',
+        pattern = "*",
+        callback = function() alpha.start(true) end,
+        nested = true
+    })
 end
 
 return alpha
