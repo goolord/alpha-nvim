@@ -43,8 +43,9 @@ local function button(sc, txt, keybind, keybind_opts)
     end
 
     local function on_press()
-        local key = vim.api.nvim_replace_termcodes(keybind .. "<Ignore>", true, false, true)
-        vim.api.nvim_feedkeys(key, "normal", true)
+        -- local key = vim.api.nvim_replace_termcodes(keybind .. "<Ignore>", true, false, true)
+        -- vim.api.nvim_feedkeys(key, "t", false)
+        vim.api.nvim_feedkeys(sc, "t", false)
     end
 
     return {
