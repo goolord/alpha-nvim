@@ -5,7 +5,7 @@ CONTENTS                                                        *alpha-contents*
 
     INTRO .......................................... |alpha-intro|
     COMMANDS ....................................... |alpha-commands|
-    OPTIONS ........................................ |alpha-options|
+    CONFIGURATION .................................. |alpha-configuration|
     AUTOCMD ........................................ |alpha-autocmd|
     COLORS ......................................... |alpha-colors|
     EXAMPLE ........................................ |alpha-example|
@@ -159,7 +159,7 @@ alpha supports the following autocmds
 - `autocmd User AlphaReady`
 
 there is an option to use *:noautocmd* when setting alpha's buffer local options
-see *alpha-configuration*
+see |alpha-configuration|
 
 ==============================================================================
 EXAMPLE                                                          *alpha-example*
