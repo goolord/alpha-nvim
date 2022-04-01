@@ -2,6 +2,8 @@ local if_nil = vim.F.if_nil
 local fnamemodify = vim.fn.fnamemodify
 local filereadable = vim.fn.filereadable
 
+local mru_index = 0
+
 local default_header = {
     type = "text",
     val = {
@@ -181,7 +183,9 @@ local section = {
             {
                 type = "group",
                 val = function()
-                    return { mru(0) }
+                    local x = mru(mru_index)
+                    mru_index = mru_index + 10
+                    return {x}
                 end,
             },
         },
@@ -195,7 +199,9 @@ local section = {
             {
                 type = "group",
                 val = function()
-                    return { mru(10, vim.fn.getcwd()) }
+                    local x = mru(mru_index, vim.fn.getcwd())
+                    mru_index = mru_index + 10
+                    return {x}
                 end,
                 opts = { shrink_margin = false },
             },
@@ -228,6 +234,9 @@ local config = {
     opts = {
         margin = 3,
         redraw_on_resize = false,
+        on_redraw = function ()
+            mru_index = 0
+        end,
         setup = function()
             vim.cmd([[
             autocmd alpha_temp DirChanged * lua require('alpha').redraw()

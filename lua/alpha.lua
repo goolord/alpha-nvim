@@ -555,7 +555,10 @@ function alpha.start(on_vimenter, conf)
         )
         vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
     end
-    alpha.redraw = draw
+    alpha.redraw = function ()
+        if conf.opts and conf.opts.on_redraw then conf.opts.on_redraw() end
+        draw()
+    end
     alpha.close = function()
         cursor_ix = 1
         cursor_jumps = {}
