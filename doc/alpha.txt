@@ -251,12 +251,26 @@ FAQ                                                                  *alpha-faq*
 How to work with indentLine plugin?~
 
     Disable the plugin while in alpha:
-  >
+>
     let g:indentLine_fileTypeExclude = ['alpha']
 
 How to disable the tabline in alpha buffer?~
   >
     autocmd User AlphaReady set showtabline=0 | autocmd BufUnload <buffer> set showtabline=2
+
+How do I make a theme with no buttons?~
+    
+    alpha needs to know where to place the cursor, falling back to {1,0}
+    negatively impacted performance, so if you want to use a theme with no
+    buttons, either create an empty button
+>
+    { type = "button", val = "" }
+<
+    or arbitrarily pick an element of some other type change to
+>
+    el.type = "button"
+<
+    as the sole possible cursor position for your theme
 
 ==============================================================================
 
