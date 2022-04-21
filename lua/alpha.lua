@@ -562,6 +562,7 @@ function alpha.start(on_vimenter, conf)
         cursor_jumps_press = {}
         alpha.redraw = noop
         vim.cmd([[au! alpha_temp]])
+        vim.cmd([[doautocmd User AlphaClosed]])
     end
     draw()
     vim.cmd([[doautocmd User AlphaReady]])
