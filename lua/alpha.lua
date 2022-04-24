@@ -418,24 +418,60 @@ local function enable_alpha(conf)
     -- vim.opt_local behaves inconsistently for window options, it seems.
     -- I don't have the patience to sort out a better way to do this
     -- or seperate out the buffer local options.
-    local noautocmd
-    if conf.opts.noautocmd then noautocmd = "noautocmd " else noautocmd = "" end
-    vim.cmd(noautocmd ..
-    [[  silent! setlocal bufhidden=wipe nobuflisted colorcolumn= foldlevel=999 foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
+    if conf.opts.noautocmd then
+      vim.bo.autocmd = false
+    end
 
-        augroup alpha_temp
-        au!
-        autocmd BufUnload <buffer> lua require('alpha').close()
-        autocmd CursorMoved <buffer> lua require('alpha').move_cursor()
-        augroup END
-    ]])
+    vim.bo.bufhidden = 'wipe'
+    vim.bo.buflisted = false
+    vim.bo.matchpairs = ''
+    vim.bo.swapfile = false
+    vim.bo.buftype = 'nofile'
+    vim.bo.filetype = 'alpha'
+
+    vim.wo.wrap = false
+    vim.wo.colorcolumn = ''
+    vim.wo.foldlevel = 999
+    vim.wo.foldcolumn = '0'
+    vim.wo.cursorcolumn = false
+    vim.wo.cursorline = false
+    vim.wo.number = false
+    vim.wo.relativenumber = false
+    vim.wo.list = false
+    vim.wo.spell = false
+
+    -- https://github.com/neovim/neovim/issues/14670
+    -- vim.wo.signcolumn = 'no'
+    -- vim.wo.synmaxcol = vim.go.synmaxcol
+
+    vim.cmd([[silent! setlocal synmaxcol&  signcolumn='no']])
+
+    local group_id = vim.api.nvim_create_augroup('alpha_temp', { clear = true })
+
+    vim.api.nvim_create_autocmd('BufUnload', {
+      group = group_id,
+      pattern = '<buffer>',
+      callback = alpha.close,
+    })
+
+    vim.api.nvim_create_autocmd('BufUnload', {
+      group = group_id,
+      pattern = '<buffer>',
+      callback = alpha.move_cursor,
+    })
 
     if conf.opts then
         if if_nil(conf.opts.redraw_on_resize, true) then
-            vim.cmd([[
-                autocmd alpha_temp VimResized * lua require('alpha').redraw()
-                autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * lua require('alpha').redraw()
-            ]])
+            vim.api.nvim_create_autocmd('VimResized', {
+              group = group_id,
+              pattern = '*',
+              callback = alpha.redraw,
+            })
+            vim.api.nvim_create_autocmd({ 'BufLeave','WinEnter','WinNew','WinClosed' }, {
+              group = group_id,
+              pattern = '*',
+              callback = alpha.redraw,
+            })
         end
 
         if conf.opts.setup then
@@ -561,7 +597,7 @@ function alpha.start(on_vimenter, conf)
         cursor_jumps = {}
         cursor_jumps_press = {}
         alpha.redraw = noop
-        vim.cmd([[au! alpha_temp]])
+        vim.api.nvim_del_augroup_by_name('alpha_temp')
         vim.cmd([[doautocmd User AlphaClosed]])
     end
     draw()
@@ -574,20 +610,35 @@ function alpha.setup(config)
       config = { config, "table" },
       layout = {config.layout, "table"},
     }
+
+    config.opts = config.opts or { autostart = true }
+    if config.opts.autostart == nil then
+      config.opts.autostart = true
+    end
+
     current_config = config
 
-    --[[
-    vim.api.nvim_add_user_command('Alpha', function () alpha.start(false) end, {bang = true})
-    vim.api.nvim_add_user_command('AlphaRedraw', alpha.redraw, {bang = true})
-    ]]
-    vim.cmd([[
-        command! Alpha lua require'alpha'.start(false)
-        command! AlphaRedraw lua require('alpha').redraw()
-        augroup alpha_start
-        au!
-        autocmd VimEnter * nested lua require'alpha'.start(true)
-        augroup END
-    ]])
+    vim.api.nvim_create_user_command('Alpha', function () alpha.start(false) end, {
+      bang = true,
+      desc = 'require"alpha".start(false)',
+    })
+
+    vim.api.nvim_create_user_command('AlphaRedraw', alpha.redraw, {
+      bang = true,
+      desc = 'require"alpha".redraw()',
+    })
+
+    local group_id = vim.api.nvim_create_augroup('alpha_start', { clear = true })
+    vim.api.nvim_create_autocmd('VimEnter', {
+      group = group_id,
+      pattern = '*',
+      nested = true,
+      callback = function()
+        if current_config.opts.autostart then
+          alpha.start(true)
+        end
+      end
+    })
 end
 
 alpha.layout_element = layout_element
