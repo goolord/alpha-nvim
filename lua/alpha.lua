@@ -186,7 +186,6 @@ function layout_element.text(el, conf, state)
             end
         end
         local end_ln = state.line + 1
-        print(padding.left)
         if el.opts and el.opts.hl then
             hl = alpha.highlight(state, end_ln, el.opts.hl, padding.left)
         end
