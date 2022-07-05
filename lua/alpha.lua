@@ -151,7 +151,9 @@ function layout_element.text(el, conf, state)
         end
         if el.opts then
             if el.opts.position == "center" then
-                val, _ = alpha.align_center(val, state)
+                local left
+                val, left = alpha.align_center(val, state)
+                padding.left = padding.left + left
             end
             -- if el.opts.wrap == "overflow" then
             --     val = trim(val, state)
@@ -178,10 +180,13 @@ function layout_element.text(el, conf, state)
         end
         if el.opts then
             if el.opts.position == "center" then
-                val, _ = alpha.align_center(val, state)
+                local left
+                val, left = alpha.align_center(val, state)
+                padding.left = padding.left + left
             end
         end
         local end_ln = state.line + 1
+        print(padding.left)
         if el.opts and el.opts.hl then
             hl = alpha.highlight(state, end_ln, el.opts.hl, padding.left)
         end
