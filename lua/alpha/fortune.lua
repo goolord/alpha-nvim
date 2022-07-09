@@ -611,10 +611,20 @@ local fortune_list = {
 --- @return table
 --- @param max_width number optional
 --- returns an array of strings
-local main = function(max_width)
-    max_width = max_width or 54
-    local fortune = get_fortune(fortune_list)
-    local formatted_fortune = format_fortune(fortune, max_width)
+local main = function(opts)
+    local options = {
+        max_width = 54,
+        fortune_list = fortune_list,
+    }
+
+    if type(opts) == 'number' then
+        options.max_width = opts
+    elseif type(opts) == 'table' then
+        options = vim.tbl_extend('force', options, opts)
+    end
+
+    local fortune = get_fortune(options.fortune_list)
+    local formatted_fortune = format_fortune(fortune, options.max_width)
 
     return formatted_fortune
 end
