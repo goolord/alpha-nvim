@@ -185,11 +185,10 @@ function layout_element.text(el, conf, state)
                 padding.left = padding.left + left
             end
         end
-        local end_ln = state.line + 1
         if el.opts and el.opts.hl then
-            hl = alpha.highlight(state, end_ln, el.opts.hl, padding.left)
+            hl = alpha.highlight(state, state.line, el.opts.hl, padding.left)
         end
-        state.line = end_ln
+        state.line = state.line + 1
         return val, hl
     end
 
