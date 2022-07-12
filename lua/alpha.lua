@@ -173,9 +173,9 @@ function layout_element.text(el, conf, state)
             val[#val + 1] = s
         end
         local padding = { left = 0 }
-        if conf.opts and conf.opts.margin and el.opts and (el.opts.position ~= "center") then
+        if conf.opts and conf.opts.margin and (not el.opts or el.opts.position ~= "center") then
             local left
-            val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(el.opts.shrink_margin, true))
+            val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(el.opts and el.opts.shrink_margin, true))
             padding.left = padding.left + left
         end
         if el.opts then
