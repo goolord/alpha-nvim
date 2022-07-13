@@ -484,6 +484,7 @@ end
 local current_config
 
 function alpha.start(on_vimenter, conf)
+    local term = require("alpha.term")
     local window = vim.api.nvim_get_current_win()
 
     alpha.move_cursor = function()
@@ -525,6 +526,9 @@ function alpha.start(on_vimenter, conf)
         window = window,
         win_width = 0,
     }
+
+    term.run_command:send()
+
     local function draw()
         for k in pairs(cursor_jumps) do
             cursor_jumps[k] = nil
@@ -560,6 +564,7 @@ function alpha.start(on_vimenter, conf)
     end
     alpha.redraw = draw
     alpha.close = function()
+        term.close_window()
         cursor_ix = 1
         cursor_jumps = {}
         cursor_jumps_press = {}
