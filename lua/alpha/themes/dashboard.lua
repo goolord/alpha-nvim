@@ -1,5 +1,14 @@
 local if_nil = vim.F.if_nil
 
+local default_terminal = {
+    type = "terminal",
+    command = nil,
+    opts = {
+        width = 69,
+        height = 8,
+    },
+}
+
 local default_header = {
     type = "text",
     val = {
@@ -79,6 +88,7 @@ local buttons = {
 }
 
 local section = {
+    terminal = default_terminal,
     header = default_header,
     buttons = buttons,
     footer = footer,

@@ -326,9 +326,11 @@ local function layout(conf, state)
     local hl = {}
     local text = {}
     for _, el in pairs(conf.layout) do
-        local text_el, hl_el = layout_element[el.type](el, conf, state)
-        list_extend(text, text_el)
-        list_extend(hl, hl_el)
+        if el.type ~= "terminal" then
+            local text_el, hl_el = layout_element[el.type](el, conf, state)
+            list_extend(text, text_el)
+            list_extend(hl, hl_el)
+        end
     end
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, text)
     for _, hl_line in pairs(hl) do
@@ -368,7 +370,9 @@ end
 
 local function keymaps(conf, state)
     for _, el in pairs(conf.layout) do
-        keymaps_element[el.type](el, conf, state)
+        if el.type ~= "terminal" then
+            keymaps_element[el.type](el, conf, state)
+        end
     end
 end
 
@@ -527,7 +531,13 @@ function alpha.start(on_vimenter, conf)
         win_width = 0,
     }
 
-    term.run_command:send()
+    for i = 1, #conf.layout, 1 do
+        if conf.layout[i].command then
+            term.run_command(conf.layout[i].command, conf.layout[i].opts)
+            goto continue
+        end
+    end
+    ::continue::
 
     local function draw()
         for k in pairs(cursor_jumps) do
@@ -564,10 +574,12 @@ function alpha.start(on_vimenter, conf)
     end
     alpha.redraw = draw
     alpha.close = function()
-        term.close_window()
         cursor_ix = 1
         cursor_jumps = {}
         cursor_jumps_press = {}
+        if term then
+            term.close_window()
+        end
         alpha.redraw = noop
         vim.cmd([[au! alpha_temp]])
         vim.cmd([[doautocmd User AlphaClosed]])
@@ -578,10 +590,10 @@ function alpha.start(on_vimenter, conf)
 end
 
 function alpha.setup(config)
-    vim.validate {
-      config = { config, "table" },
-      layout = {config.layout, "table"},
-    }
+    vim.validate({
+        config = { config, "table" },
+        layout = { config.layout, "table" },
+    })
     current_config = config
 
     --[[
