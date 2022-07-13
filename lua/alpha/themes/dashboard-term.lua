@@ -38,13 +38,13 @@ local command_header = {
     type = "term",
 
 	-- use the output of a shell command:
-    on_channel_opened = term.terminal_fillers.shell_command("echo - alpha.nvim - | figlet | lolcat"),
+    -- on_channel_opened = term.terminal_fillers.shell_command("echo - alpha.nvim - | figlet | lolcat"),
 
-	-- render icon_string char by char:
-    --on_channel_opened = animated_text_writer(icon_string, 10),
+	-- render icon_string char by char (Example for custom rendering):
+    -- on_channel_opened = animated_text_writer(icon_string, 10),
 
 	-- dump icon_string into the window:
-    --on_channel_opened = term.terminal_fillers.raw_string(icon_string),
+    on_channel_opened = term.terminal_fillers.raw_string(icon_string),
 
     opts = {
         position = "center",
@@ -142,5 +142,5 @@ local config = {
 return {
     button = button,
     section = section,
-    config = config
+    opts = config
 }
