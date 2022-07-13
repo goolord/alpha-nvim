@@ -575,9 +575,7 @@ function alpha.start(on_vimenter, conf)
         cursor_ix = 1
         cursor_jumps = {}
         cursor_jumps_press = {}
-        if term then
-            term.close_window()
-        end
+        term.close_window()
         alpha.redraw = noop
         vim.cmd([[au! alpha_temp]])
         vim.cmd([[doautocmd User AlphaClosed]])
