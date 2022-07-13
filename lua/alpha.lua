@@ -326,11 +326,9 @@ local function layout(conf, state)
     local hl = {}
     local text = {}
     for _, el in pairs(conf.layout) do
-        if el.type ~= "terminal" then
-            local text_el, hl_el = layout_element[el.type](el, conf, state)
-            list_extend(text, text_el)
-            list_extend(hl, hl_el)
-        end
+        local text_el, hl_el = layout_element[el.type](el, conf, state)
+        list_extend(text, text_el)
+        list_extend(hl, hl_el)
     end
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, text)
     for _, hl_line in pairs(hl) do
@@ -370,9 +368,7 @@ end
 
 local function keymaps(conf, state)
     for _, el in pairs(conf.layout) do
-        if el.type ~= "terminal" then
-            keymaps_element[el.type](el, conf, state)
-        end
+        keymaps_element[el.type](el, conf, state)
     end
 end
 
@@ -488,7 +484,6 @@ end
 local current_config
 
 function alpha.start(on_vimenter, conf)
-    local term = require("alpha.term")
     local window = vim.api.nvim_get_current_win()
 
     alpha.move_cursor = function()
@@ -530,13 +525,6 @@ function alpha.start(on_vimenter, conf)
         window = window,
         win_width = 0,
     }
-
-    for i = 1, #conf.layout, 1 do
-        if conf.layout[i].command then
-            term.run_command(conf.layout[i].command, conf.layout[i].opts)
-        end
-    end
-
     local function draw()
         for k in pairs(cursor_jumps) do
             cursor_jumps[k] = nil
@@ -575,7 +563,6 @@ function alpha.start(on_vimenter, conf)
         cursor_ix = 1
         cursor_jumps = {}
         cursor_jumps_press = {}
-        term.close_window()
         alpha.redraw = noop
         vim.cmd([[au! alpha_temp]])
         vim.cmd([[doautocmd User AlphaClosed]])
@@ -586,10 +573,10 @@ function alpha.start(on_vimenter, conf)
 end
 
 function alpha.setup(config)
-    vim.validate({
-        config = { config, "table" },
-        layout = { config.layout, "table" },
-    })
+    vim.validate {
+      config = { config, "table" },
+      layout = { config.layout, "table" },
+    }
     current_config = config
 
     --[[
