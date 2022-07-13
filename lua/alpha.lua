@@ -534,10 +534,8 @@ function alpha.start(on_vimenter, conf)
     for i = 1, #conf.layout, 1 do
         if conf.layout[i].command then
             term.run_command(conf.layout[i].command, conf.layout[i].opts)
-            goto continue
         end
     end
-    ::continue::
 
     local function draw()
         for k in pairs(cursor_jumps) do
