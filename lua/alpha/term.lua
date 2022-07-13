@@ -32,14 +32,14 @@ function M.run_command(cmd, opts)
             vim.api.nvim_command("terminal " .. cmd)
             vim.api.nvim_command("wincmd j")
             vim.api.nvim_buf_set_option(wininfo[1], "buflisted", false)
-            vim.api.nvim_win_set_var(0, "dashboard_preview_wininfo", wininfo)
-            vim.api.nvim_command('let b:term_title ="dashboard_preview" ')
+            vim.api.nvim_win_set_var(0, "alpha_section_terminal", wininfo)
+            vim.api.nvim_command('let b:term_title ="alpha_terminal" ')
         end))
         :send()
 end
 
 function M.close_window()
-    local ok, wininfo = pcall(vim.api.nvim_win_get_var, 0, "dashboard_preview_wininfo")
+    local ok, wininfo = pcall(vim.api.nvim_win_get_var, 0, "alpha_section_terminal")
     if ok and vim.api.nvim_buf_is_loaded(wininfo[1]) then
         vim.api.nvim_buf_delete(wininfo[1], { force = true })
     end
