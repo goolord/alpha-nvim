@@ -41,7 +41,7 @@ config:
     -- optional
     opts = {
         -- number: how much space to pad on the sides of the screen
-        margin = 0 
+        margin = 0
 
         -- theme-specific setup,
         -- ran once before the first draw
@@ -131,6 +131,29 @@ group:
     opts = {
         -- number of newlines inbetween each element
         spacing = 1
+    }
+ }
+<
+terminal:
+>
+ -- note: require'alpha.term' must be called
+ -- after require'alpha'
+ {
+    -- required
+    type = "terminal"
+    command = "string" -- the shell command to run
+    -- command size can be fixed, or calculated by mutating these
+    width = 0 -- number
+    height = 0 -- number
+
+    -- optional
+    opts = {
+        -- turns 'false' after the command is run
+        -- when redraw = true alpha will rerun the command
+        -- on the next redraw
+        redraw = true
+        -- see :h nvim_open_win {config} parameter
+        window_config = {}
     }
  }
 <

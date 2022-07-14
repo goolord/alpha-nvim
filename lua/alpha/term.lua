@@ -2,13 +2,13 @@ local alpha = require('alpha')
 
 local M = {}
 
-function M.open_window(opts)
-    local width = opts.width
-    local height = opts.height
+function M.open_window(el)
+    local width = el.width
+    local height = el.height
     local row = math.floor(height / 5)
     local col = math.floor((vim.o.columns - width) / 2)
 
-    opts = vim.tbl_extend('keep', opts, {
+    local opts = vim.tbl_extend((el.opts and el.opts.window_config) or {}, {
         relative = "editor",
         row = row,
         col = col,
@@ -23,14 +23,14 @@ function M.open_window(opts)
     return { bufnr, winid }
 end
 
-function M.run_command(cmd, opts)
+function M.run_command(cmd, el)
     if cmd == nil then
         return
     end
 
     vim.loop
         .new_async(vim.schedule_wrap(function()
-            local wininfo = M.open_window(opts)
+            local wininfo = M.open_window(el)
             vim.api.nvim_command("terminal " .. cmd)
             vim.api.nvim_command("wincmd j")
             vim.api.nvim_buf_set_option(wininfo[1], "buflisted", false)
@@ -53,9 +53,9 @@ vim.api.nvim_create_autocmd('User', {
 })
 
 function alpha.layout_element.terminal(el, _, _)
-    if el.redraw == nil or el.redraw then
-        el.redraw = false
-        M.run_command(el.command, el.opts)
+    if el.opts and (el.opts.redraw == nil or el.opts.redraw) then
+        el.opts.redraw = false
+        M.run_command(el.command, el)
     end
     return {}, {}
 end
