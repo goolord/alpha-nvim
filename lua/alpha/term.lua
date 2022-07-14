@@ -24,7 +24,6 @@ function M.open_window(el)
 end
 
 function M.run_command(cmd, el)
-    print("cool")
     if cmd == nil then
         return
     end
