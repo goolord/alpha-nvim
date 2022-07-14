@@ -3,10 +3,12 @@ local if_nil = vim.F.if_nil
 local default_terminal = {
     type = "terminal",
     command = nil,
+    width = 69,
+    height = 8,
     opts = {
-        width = 69,
-        height = 8,
-    },
+        redraw = true,
+        window_config = {}
+    }
 }
 
 local default_header = {
