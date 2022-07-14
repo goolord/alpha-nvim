@@ -8,7 +8,7 @@ function M.open_window(el)
     local row = math.floor(height / 5)
     local col = math.floor((vim.o.columns - width) / 2)
 
-    local opts = vim.tbl_extend((el.opts and el.opts.window_config) or {}, {
+    local opts = vim.tbl_extend('keep', (el.opts and el.opts.window_config) or {}, {
         relative = "editor",
         row = row,
         col = col,
@@ -24,6 +24,7 @@ function M.open_window(el)
 end
 
 function M.run_command(cmd, el)
+    print("cool")
     if cmd == nil then
         return
     end
