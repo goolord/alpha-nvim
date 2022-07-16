@@ -14,10 +14,10 @@ local cursor_jumps = {}
 local cursor_jumps_press = {}
 local cursor_jumps_press_queue = {}
 
-local function noop() end
+local current_config
+local current_state
 
-alpha.redraw = noop
-alpha.close = noop
+local function noop() end
 
 function alpha.press()
     for queued_cursor_ix, _ in pairs(cursor_jumps_press_queue) do
@@ -416,35 +416,84 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
     end
 end
 
--- stylua: ignore start
-local function enable_alpha(conf)
-    -- vim.opt_local behaves inconsistently for window options, it seems.
-    -- I don't have the patience to sort out a better way to do this
-    -- or seperate out the buffer local options.
-    local noautocmd
-    if conf.opts.noautocmd then noautocmd = "noautocmd " else noautocmd = "" end
-    vim.cmd(noautocmd ..
-    [[  silent! setlocal bufhidden=wipe nobuflisted colorcolumn= foldlevel=999 foldcolumn=0 matchpairs= nocursorcolumn nocursorline nolist nonumber norelativenumber nospell noswapfile signcolumn=no synmaxcol& buftype=nofile filetype=alpha nowrap
+local alpha_window_opts = {
+  wrap = false,
+  colorcolumn = '',
+  foldlevel = 999,
+  foldcolumn = '0',
+  cursorcolumn = false,
+  cursorline = false,
+  number = false,
+  relativenumber = false,
+  list = false,
+  spell = false,
+  signcolumn = 'no',
+}
 
-        augroup alpha_temp
-        au!
-        autocmd BufUnload <buffer> lua require('alpha').close()
-        autocmd CursorMoved <buffer> lua require('alpha').move_cursor()
-        augroup END
-    ]])
+-- stylua: ignore start
+local function enable_alpha(conf, state)
+    local eventignore = vim.opt.eventignore
+    if conf.opts.noautocmd then
+        vim.opt.eventignore = 'all'
+    end
+
+    vim.opt_local.bufhidden = 'wipe'
+    vim.opt_local.buflisted = false
+    vim.opt_local.matchpairs = ''
+    vim.opt_local.swapfile = false
+    vim.opt_local.buftype = 'nofile'
+    vim.opt_local.filetype = 'alpha'
+    vim.opt_local.synmaxcol = 0
+    vim.opt_local.wrap = false
+    vim.opt_local.colorcolumn = ''
+    vim.opt_local.foldlevel = 999
+    vim.opt_local.foldcolumn = '0'
+    vim.opt_local.cursorcolumn = false
+    vim.opt_local.cursorline = false
+    vim.opt_local.number = false
+    vim.opt_local.relativenumber = false
+    vim.opt_local.list = false
+    vim.opt_local.spell = false
+    vim.opt_local.signcolumn = 'no'
+
+    if conf.opts.noautocmd then
+        vim.opt.eventignore = eventignore
+    end
+
+    local group_id = vim.api.nvim_create_augroup('alpha_temp', { clear = true })
+
+    vim.api.nvim_create_autocmd('BufUnload', {
+      group = group_id,
+      pattern = '<buffer>',
+      callback = alpha.close,
+    })
+
+    vim.api.nvim_create_autocmd('CursorMoved', {
+      group = group_id,
+      pattern = '<buffer>',
+      callback = function() alpha.move_cursor(state.window) end,
+    })
 
     if conf.opts then
         if if_nil(conf.opts.redraw_on_resize, true) then
-            vim.cmd([[
-                autocmd alpha_temp VimResized * lua require('alpha').redraw()
-                autocmd alpha_temp BufLeave,WinEnter,WinNew,WinClosed * lua require('alpha').redraw()
-            ]])
+            vim.api.nvim_create_autocmd('VimResized', {
+              group = group_id,
+              pattern = '*',
+              callback = function() alpha.redraw(conf, state) end,
+            })
+            vim.api.nvim_create_autocmd({ 'BufLeave','WinEnter','WinNew','WinClosed' }, {
+              group = group_id,
+              pattern = '*',
+              callback = function() alpha.redraw(conf, state) end,
+            })
         end
 
         if conf.opts.setup then
             conf.opts.setup()
         end
     end
+
+    state.open = true
 end
 -- stylua: ignore end
 
@@ -481,17 +530,69 @@ local function should_skip_alpha()
 end
 -- stylua: ignore end
 
-local current_config
+function alpha.draw(conf, state)
+    for k in pairs(cursor_jumps) do
+        cursor_jumps[k] = nil
+    end
+    for k in pairs(cursor_jumps_press) do
+        cursor_jumps_press[k] = nil
+    end
+    state.win_width = vim.api.nvim_win_get_width(state.window)
+    state.line = 0
+    -- this is for redraws. i guess the cursor 'moves'
+    -- when the screen is cleared and then redrawn
+    -- so we save the index before that happens
+    local ix = cursor_ix
+    vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
+    vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
+    layout(conf, state)
+    vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
+    vim.api.nvim_buf_set_keymap(
+        state.buffer,
+        "n",
+        "<CR>",
+        "<cmd>lua require('alpha').press()<CR>",
+        { noremap = false, silent = true }
+    )
+    vim.api.nvim_buf_set_keymap(
+        state.buffer,
+        "n",
+        "<M-CR>",
+        "<cmd>lua require('alpha').queue_press()<CR>",
+        { noremap = false, silent = true }
+    )
+    vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
+end
+
+function alpha.move_cursor(window)
+    if current_state.open then
+      local cursor = vim.api.nvim_win_get_cursor(window)
+      local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
+      cursor_ix = closest_ix
+      vim.api.nvim_win_set_cursor(window, closest_pt)
+    end
+end
+
+function alpha.redraw(conf, state)
+  conf = conf or current_config
+  state = state or current_state
+  if state.open then
+    alpha.draw(conf, state)
+  end
+end
+
+function alpha.close(_, state)
+  state = state or current_state
+  state.open = false
+  cursor_ix = 1
+  cursor_jumps = {}
+  cursor_jumps_press = {}
+  vim.api.nvim_del_augroup_by_name('alpha_temp')
+  vim.api.nvim_exec_autocmds('User', {pattern = 'AlphaClosed'})
+end
 
 function alpha.start(on_vimenter, conf)
     local window = vim.api.nvim_get_current_win()
-
-    alpha.move_cursor = function()
-        local cursor = vim.api.nvim_win_get_cursor(window)
-        local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
-        cursor_ix = closest_ix
-        vim.api.nvim_win_set_cursor(window, closest_pt)
-    end
 
     local buffer
     if on_vimenter then
@@ -517,83 +618,59 @@ function alpha.start(on_vimenter, conf)
 
     conf = conf or current_config
 
-    enable_alpha(conf)
-
     local state = {
         line = 0,
         buffer = buffer,
         window = window,
         win_width = 0,
+        open = false,
     }
-    local function draw()
-        for k in pairs(cursor_jumps) do
-            cursor_jumps[k] = nil
-        end
-        for k in pairs(cursor_jumps_press) do
-            cursor_jumps_press[k] = nil
-        end
-        state.win_width = vim.api.nvim_win_get_width(state.window)
-        state.line = 0
-        -- this is for redraws. i guess the cursor 'moves'
-        -- when the screen is cleared and then redrawn
-        -- so we save the index before that happens
-        local ix = cursor_ix
-        vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
-        vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
-        layout(conf, state)
-        vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
-        vim.api.nvim_buf_set_keymap(
-            state.buffer,
-            "n",
-            "<CR>",
-            "<cmd>lua require('alpha').press()<CR>",
-            { noremap = false, silent = true }
-        )
-        vim.api.nvim_buf_set_keymap(
-            state.buffer,
-            "n",
-            "<M-CR>",
-            "<cmd>lua require('alpha').queue_press()<CR>",
-            { noremap = false, silent = true }
-        )
-        vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
-    end
-    alpha.redraw = draw
-    alpha.close = function()
-        cursor_ix = 1
-        cursor_jumps = {}
-        cursor_jumps_press = {}
-        alpha.redraw = noop
-        vim.cmd([[au! alpha_temp]])
-        vim.cmd([[doautocmd User AlphaClosed]])
-    end
-    draw()
-    vim.cmd([[doautocmd User AlphaReady]])
+
+    current_state = state
+
+    enable_alpha(conf, state)
+
+    alpha.draw(conf, state)
+
+    vim.api.nvim_exec_autocmds('User', {pattern = 'AlphaReady'})
     keymaps(conf, state)
 end
 
 function alpha.setup(config)
     vim.validate {
       config = { config, "table" },
-      layout = {config.layout, "table"},
+      layout = { config.layout, "table" },
     }
+
+    config.opts = vim.tbl_extend('keep', if_nil(config.opts, {}), { autostart = true })
+
     current_config = config
 
-    --[[
-    vim.api.nvim_add_user_command('Alpha', function () alpha.start(false) end, {bang = true})
-    vim.api.nvim_add_user_command('AlphaRedraw', alpha.redraw, {bang = true})
-    ]]
-    vim.cmd([[
-        command! Alpha lua require'alpha'.start(false)
-        command! AlphaRedraw lua require('alpha').redraw()
-        augroup alpha_start
-        au!
-        autocmd VimEnter * nested lua require'alpha'.start(true)
-        augroup END
-    ]])
+    vim.api.nvim_create_user_command('Alpha', function () alpha.start(false) end, {
+      bang = true,
+      desc = 'require"alpha".start(false)',
+    })
+
+    vim.api.nvim_create_user_command('AlphaRedraw', alpha.redraw, {
+      bang = true,
+      desc = 'require"alpha".redraw()',
+    })
+
+    local group_id = vim.api.nvim_create_augroup('alpha_start', { clear = true })
+    vim.api.nvim_create_autocmd('VimEnter', {
+      group = group_id,
+      pattern = '*',
+      nested = true,
+      callback = function()
+        if current_config.opts.autostart then
+          alpha.start(true)
+        end
+      end
+    })
 end
 
 alpha.layout_element = layout_element
 alpha.keymaps_element = keymaps_element
 
 return alpha
+
