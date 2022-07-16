@@ -430,53 +430,35 @@ local alpha_window_opts = {
   signcolumn = 'no',
 }
 
-local function get_window_opts(window)
-  return {
-    wrap = vim.wo[window].wrap,
-    colorcolumn = vim.wo[window].colorcolumn,
-    foldlevel = vim.wo[window].foldlevel,
-    foldcolumn = vim.wo[window].foldcolumn,
-    cursorcolumn = vim.wo[window].cursorcolumn,
-    cursorline = vim.wo[window].cursorline,
-    number = vim.wo[window].number,
-    relativenumber = vim.wo[window].relativenumber,
-    list = vim.wo[window].list,
-    spell = vim.wo[window].spell,
-    signcolumn = vim.wo[window].signcolumn,
-  }
-end
-
-local function set_window_opts(window, window_opts)
-  for name, value in pairs(window_opts) do
-    vim.api.nvim_win_set_option(window, name, value)
-    vim.wo[window][name] = value
-  end
-end
-
 -- stylua: ignore start
 local function enable_alpha(conf, state)
-    -- vim.opt_local behaves inconsistently for window options, it seems.
-    -- I don't have the patience to sort out a better way to do this
-    -- or seperate out the buffer local options.
+    local eventignore = vim.opt.eventignore
     if conf.opts.noautocmd then
-      vim.bo.autocmd = false
+        vim.opt.eventignore = 'all'
     end
 
-    vim.bo.bufhidden = 'wipe'
-    vim.bo.buflisted = false
-    vim.bo.matchpairs = ''
-    vim.bo.swapfile = false
-    vim.bo.buftype = 'nofile'
-    vim.bo.filetype = 'alpha'
+    vim.opt_local.bufhidden = 'wipe'
+    vim.opt_local.buflisted = false
+    vim.opt_local.matchpairs = ''
+    vim.opt_local.swapfile = false
+    vim.opt_local.buftype = 'nofile'
+    vim.opt_local.filetype = 'alpha'
+    vim.opt_local.synmaxcol = 0
+    vim.opt_local.wrap = false
+    vim.opt_local.colorcolumn = ''
+    vim.opt_local.foldlevel = 999
+    vim.opt_local.foldcolumn = '0'
+    vim.opt_local.cursorcolumn = false
+    vim.opt_local.cursorline = false
+    vim.opt_local.number = false
+    vim.opt_local.relativenumber = false
+    vim.opt_local.list = false
+    vim.opt_local.spell = false
+    vim.opt_local.signcolumn = 'no'
 
-    set_window_opts(state.window, alpha_window_opts)
-
-    -- https://github.com/neovim/neovim/issues/14670
-    -- vim.wo.signcolumn = 'no'
-    -- vim.wo.synmaxcol = vim.go.synmaxcol
-
-    vim.cmd([[setlocal synmaxcol&]])
-    -- vim.cmd([[setlocal signcolumn='no']])
+    if conf.opts.noautocmd then
+        vim.opt.eventignore = eventignore
+    end
 
     local group_id = vim.api.nvim_create_augroup('alpha_temp', { clear = true })
 
@@ -606,8 +588,7 @@ function alpha.close(_, state)
   cursor_jumps = {}
   cursor_jumps_press = {}
   vim.api.nvim_del_augroup_by_name('alpha_temp')
-  vim.cmd([[doautocmd User AlphaClosed]])
-  set_window_opts(state.window, state.previous_window_opts)
+  vim.api.nvim_exec_autocmds('User', {pattern = 'AlphaClosed'})
 end
 
 function alpha.start(on_vimenter, conf)
@@ -643,7 +624,6 @@ function alpha.start(on_vimenter, conf)
         window = window,
         win_width = 0,
         open = false,
-        previous_window_opts = get_window_opts(window),
     }
 
     current_state = state
@@ -652,20 +632,17 @@ function alpha.start(on_vimenter, conf)
 
     alpha.draw(conf, state)
 
-    vim.cmd([[doautocmd User AlphaReady]])
+    vim.api.nvim_exec_autocmds('User', {pattern = 'AlphaReady'})
     keymaps(conf, state)
 end
 
 function alpha.setup(config)
     vim.validate {
       config = { config, "table" },
-      layout = {config.layout, "table"},
+      layout = { config.layout, "table" },
     }
 
-    config.opts = config.opts or { autostart = true }
-    if config.opts.autostart == nil then
-      config.opts.autostart = true
-    end
+    config.opts = vim.tbl_extend('keep', if_nil(config.opts, {}), { autostart = true })
 
     current_config = config
 
