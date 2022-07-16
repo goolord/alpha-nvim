@@ -336,6 +336,19 @@ local function layout(conf, state)
     end
 end
 
+local version = vim.version()
+local set_buffer_keymap
+
+if version.major > 0 or version.minor >= 7 then
+    set_buffer_keymap = function(buffer, mode, lhs, rhs, opts)
+        opts = opts or {}
+        opts.buffer = buffer
+        vim.keymap.set(mode, lhs, rhs, opts)
+    end
+else
+    set_buffer_keymap = vim.api.nvim_buf_set_keymap
+end
+
 local keymaps_element = {}
 
 keymaps_element.text = noop
@@ -345,11 +358,11 @@ function keymaps_element.button(el, conf, state)
     if el.opts and el.opts.keymap then
         if type(el.opts.keymap[1]) == "table" then
             for _, map in el.opts.keymap do
-                vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+                set_buffer_keymap(state.buffer, map[1], map[2], map[3], map[4])
             end
         else
             local map = el.opts.keymap
-            vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+            set_buffer_keymap(state.buffer, map[1], map[2], map[3], map[4])
         end
     end
 end
