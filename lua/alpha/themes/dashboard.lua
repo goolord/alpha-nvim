@@ -41,8 +41,8 @@ local leader = "SPC"
 
 --- @param sc string
 --- @param txt string
---- @param keybind string optional
---- @param keybind_opts table optional
+--- @param keybind string? optional
+--- @param keybind_opts table? optional
 local function button(sc, txt, keybind, keybind_opts)
     local sc_ = sc:gsub("%s", ""):gsub(leader, "<leader>")
 
