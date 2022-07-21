@@ -67,8 +67,8 @@ local mru_opts = {
 }
 
 --- @param start number
---- @param cwd string optional
---- @param items_number number optional number of items to generate, default = 10
+--- @param cwd string? optional
+--- @param items_number number? optional number of items to generate, default = 10
 local function mru(start, cwd, items_number, opts)
     opts = opts or mru_opts
     items_number = if_nil(items_number, 10)

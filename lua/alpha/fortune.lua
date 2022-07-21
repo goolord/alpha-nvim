@@ -609,7 +609,7 @@ local fortune_list = {
 }
 
 --- @return table
---- @param max_width number optional
+--- @param opts number|table? optional
 --- returns an array of strings
 local main = function(opts)
     local options = {

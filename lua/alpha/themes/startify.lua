@@ -23,8 +23,8 @@ local leader = "SPC"
 
 --- @param sc string
 --- @param txt string
---- @param keybind string optional
---- @param keybind_opts table optional
+--- @param keybind string? optional
+--- @param keybind_opts table? optional
 local function button(sc, txt, keybind, keybind_opts)
     local sc_ = sc:gsub("%s", ""):gsub(leader, "<leader>")
 
@@ -113,8 +113,8 @@ local mru_opts = {
 }
 
 --- @param start number
---- @param cwd string optional
---- @param items_number number optional number of items to generate, default = 10
+--- @param cwd string? optional
+--- @param items_number number? optional number of items to generate, default = 10
 local function mru(start, cwd, items_number, opts)
     opts = opts or mru_opts
     items_number = if_nil(items_number, 10)
