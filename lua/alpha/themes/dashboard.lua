@@ -7,8 +7,8 @@ local default_terminal = {
     height = 8,
     opts = {
         redraw = true,
-        window_config = {}
-    }
+        window_config = {},
+    },
 }
 
 local default_header = {

@@ -1,4 +1,4 @@
-local alpha = require('alpha')
+local alpha = require("alpha")
 
 local M = {}
 
@@ -8,7 +8,7 @@ function M.open_window(el)
     local row = math.floor(height / 5)
     local col = math.floor((vim.o.columns - width) / 2)
 
-    local opts = vim.tbl_extend('keep', (el.opts and el.opts.window_config) or {}, {
+    local opts = vim.tbl_extend("keep", (el.opts and el.opts.window_config) or {}, {
         relative = "editor",
         row = row,
         col = col,
@@ -28,16 +28,14 @@ function M.run_command(cmd, el)
         return
     end
 
-    vim.loop
-        .new_async(vim.schedule_wrap(function()
-            local wininfo = M.open_window(el)
-            vim.api.nvim_command("terminal " .. cmd)
-            vim.api.nvim_command("wincmd j")
-            vim.api.nvim_buf_set_option(wininfo[1], "buflisted", false)
-            vim.api.nvim_win_set_var(0, "alpha_section_terminal", wininfo)
-            vim.api.nvim_command('let b:term_title ="alpha_terminal" ')
-        end))
-        :send()
+    vim.loop.new_async(vim.schedule_wrap(function()
+        local wininfo = M.open_window(el)
+        vim.api.nvim_command("terminal " .. cmd)
+        vim.api.nvim_command("wincmd j")
+        vim.api.nvim_buf_set_option(wininfo[1], "buflisted", false)
+        vim.api.nvim_win_set_var(0, "alpha_section_terminal", wininfo)
+        vim.api.nvim_command('let b:term_title ="alpha_terminal" ')
+    end)):send()
 end
 
 function M.close_window()
@@ -47,9 +45,11 @@ function M.close_window()
     end
 end
 
-vim.api.nvim_create_autocmd('User', {
-    pattern = 'AlphaClosed',
-    callback = function () M.close_window() end,
+vim.api.nvim_create_autocmd("User", {
+    pattern = "AlphaClosed",
+    callback = function()
+        M.close_window()
+    end,
 })
 
 function alpha.layout_element.terminal(el, _, _)
@@ -60,7 +60,6 @@ function alpha.layout_element.terminal(el, _, _)
     return {}, {}
 end
 
-function alpha.keymaps_element.terminal(_, _, _)
-end
+function alpha.keymaps_element.terminal(_, _, _) end
 
 return M

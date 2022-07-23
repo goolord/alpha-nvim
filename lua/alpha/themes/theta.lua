@@ -2,7 +2,7 @@
 
 local path_ok, plenary_path = pcall(require, "plenary.path")
 if not path_ok then
-  return
+    return
 end
 
 local dashboard = require("alpha.themes.dashboard")
@@ -100,14 +100,14 @@ local function mru(start, cwd, items_number, opts)
             short_fn = vim.fn.fnamemodify(fn, ":~")
         end
 
-        if(#short_fn > target_width) then
-          short_fn = plenary_path.new(short_fn):shorten(1, {-2, -1})
-          if(#short_fn > target_width) then
-            short_fn = plenary_path.new(short_fn):shorten(1, {-1})
-          end
+        if #short_fn > target_width then
+            short_fn = plenary_path.new(short_fn):shorten(1, { -2, -1 })
+            if #short_fn > target_width then
+                short_fn = plenary_path.new(short_fn):shorten(1, { -1 })
+            end
         end
 
-        local shortcut = tostring(i+start-1)
+        local shortcut = tostring(i + start - 1)
 
         local file_button_el = file_button(fn, shortcut, short_fn)
         tbl[i] = file_button_el
@@ -136,43 +136,42 @@ local default_header = {
     },
 }
 
-
 local section_mru = {
-  type = "group",
-  val = {
-    {
-      type = "text",
-      val = "Recent files",
-      opts = {
-        hl = "SpecialComment",
-        shrink_margin = false,
-        position = "center",
-      },
+    type = "group",
+    val = {
+        {
+            type = "text",
+            val = "Recent files",
+            opts = {
+                hl = "SpecialComment",
+                shrink_margin = false,
+                position = "center",
+            },
+        },
+        { type = "padding", val = 1 },
+        {
+            type = "group",
+            val = function()
+                return { mru(0, cdir) }
+            end,
+            opts = { shrink_margin = false },
+        },
     },
-    { type = "padding", val = 1 },
-    {
-      type = "group",
-      val = function()
-        return { mru(0, cdir) }
-      end,
-      opts = { shrink_margin = false },
-    },
-  }
 }
 
 local buttons = {
-  type = "group",
-  val = {
-    { type = "text", val = "Quick links", opts = { hl = "SpecialComment", position = "center" } },
-    { type = "padding", val = 1 },
-    dashboard.button("e", "  New file", "<cmd>ene<CR>"),
-    dashboard.button("SPC f f", "  Find file"),
-    dashboard.button("SPC f g", "  Live grep"),
-    dashboard.button("c", "  Configuration", "<cmd>cd ~/.config/nvim/ <CR>"),
-    dashboard.button( "u", "  Update plugins" , "<cmd>PackerSync<CR>"),
-    dashboard.button( "q", "  Quit" , "<cmd>qa<CR>"),
-  },
-  position = "center",
+    type = "group",
+    val = {
+        { type = "text", val = "Quick links", opts = { hl = "SpecialComment", position = "center" } },
+        { type = "padding", val = 1 },
+        dashboard.button("e", "  New file", "<cmd>ene<CR>"),
+        dashboard.button("SPC f f", "  Find file"),
+        dashboard.button("SPC f g", "  Live grep"),
+        dashboard.button("c", "  Configuration", "<cmd>cd ~/.config/nvim/ <CR>"),
+        dashboard.button("u", "  Update plugins", "<cmd>PackerSync<CR>"),
+        dashboard.button("q", "  Quit", "<cmd>qa<CR>"),
+    },
+    position = "center",
 }
 
 local config = {

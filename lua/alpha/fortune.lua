@@ -617,10 +617,10 @@ local main = function(opts)
         fortune_list = fortune_list,
     }
 
-    if type(opts) == 'number' then
+    if type(opts) == "number" then
         options.max_width = opts
-    elseif type(opts) == 'table' then
-        options = vim.tbl_extend('force', options, opts)
+    elseif type(opts) == "table" then
+        options = vim.tbl_extend("force", options, opts)
     end
 
     local fortune = get_fortune(options.fortune_list)

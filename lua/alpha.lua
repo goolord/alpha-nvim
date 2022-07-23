@@ -552,29 +552,29 @@ end
 
 function alpha.move_cursor(window)
     if current_state.open then
-      local cursor = vim.api.nvim_win_get_cursor(window)
-      local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
-      cursor_ix = closest_ix
-      vim.api.nvim_win_set_cursor(window, closest_pt)
+        local cursor = vim.api.nvim_win_get_cursor(window)
+        local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
+        cursor_ix = closest_ix
+        vim.api.nvim_win_set_cursor(window, closest_pt)
     end
 end
 
 function alpha.redraw(conf, state)
-  conf = conf or current_config
-  state = state or current_state
-  if state.open then
-    alpha.draw(conf, state)
-  end
+    conf = conf or current_config
+    state = state or current_state
+    if state.open then
+        alpha.draw(conf, state)
+    end
 end
 
 function alpha.close(_, state)
-  state = state or current_state
-  state.open = false
-  cursor_ix = 1
-  cursor_jumps = {}
-  cursor_jumps_press = {}
-  vim.api.nvim_del_augroup_by_name('alpha_temp')
-  vim.api.nvim_exec_autocmds('User', {pattern = 'AlphaClosed'})
+    state = state or current_state
+    state.open = false
+    cursor_ix = 1
+    cursor_jumps = {}
+    cursor_jumps_press = {}
+    vim.api.nvim_del_augroup_by_name("alpha_temp")
+    vim.api.nvim_exec_autocmds("User", { pattern = "AlphaClosed" })
 end
 
 function alpha.start(on_vimenter, conf)
@@ -618,40 +618,42 @@ function alpha.start(on_vimenter, conf)
 
     alpha.draw(conf, state)
 
-    vim.api.nvim_exec_autocmds('User', {pattern = 'AlphaReady'})
+    vim.api.nvim_exec_autocmds("User", { pattern = "AlphaReady" })
     keymaps(conf, state)
 end
 
 function alpha.setup(config)
-    vim.validate {
-      config = { config, "table" },
-      layout = { config.layout, "table" },
-    }
+    vim.validate({
+        config = { config, "table" },
+        layout = { config.layout, "table" },
+    })
 
-    config.opts = vim.tbl_extend('keep', if_nil(config.opts, {}), { autostart = true })
+    config.opts = vim.tbl_extend("keep", if_nil(config.opts, {}), { autostart = true })
 
     current_config = config
 
-    vim.api.nvim_create_user_command('Alpha', function () alpha.start(false) end, {
-      bang = true,
-      desc = 'require"alpha".start(false)',
+    vim.api.nvim_create_user_command("Alpha", function()
+        alpha.start(false)
+    end, {
+        bang = true,
+        desc = 'require"alpha".start(false)',
     })
 
-    vim.api.nvim_create_user_command('AlphaRedraw', alpha.redraw, {
-      bang = true,
-      desc = 'require"alpha".redraw()',
+    vim.api.nvim_create_user_command("AlphaRedraw", alpha.redraw, {
+        bang = true,
+        desc = 'require"alpha".redraw()',
     })
 
-    local group_id = vim.api.nvim_create_augroup('alpha_start', { clear = true })
-    vim.api.nvim_create_autocmd('VimEnter', {
-      group = group_id,
-      pattern = '*',
-      nested = true,
-      callback = function()
-        if current_config.opts.autostart then
-          alpha.start(true)
-        end
-      end
+    local group_id = vim.api.nvim_create_augroup("alpha_start", { clear = true })
+    vim.api.nvim_create_autocmd("VimEnter", {
+        group = group_id,
+        pattern = "*",
+        nested = true,
+        callback = function()
+            if current_config.opts.autostart then
+                alpha.start(true)
+            end
+        end,
     })
 end
 
@@ -659,4 +661,3 @@ alpha.layout_element = layout_element
 alpha.keymaps_element = keymaps_element
 
 return alpha
-
