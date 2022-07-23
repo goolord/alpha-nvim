@@ -416,20 +416,6 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
     end
 end
 
-local alpha_window_opts = {
-  wrap = false,
-  colorcolumn = '',
-  foldlevel = 999,
-  foldcolumn = '0',
-  cursorcolumn = false,
-  cursorline = false,
-  number = false,
-  relativenumber = false,
-  list = false,
-  spell = false,
-  signcolumn = 'no',
-}
-
 -- stylua: ignore start
 local function enable_alpha(conf, state)
     local eventignore = vim.opt.eventignore
