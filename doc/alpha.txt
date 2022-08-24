@@ -13,7 +13,7 @@ CONTENTS                                                        *alpha-contents*
 ==============================================================================
 INTRO                                                              *alpha-intro*
 
-alpha is a plugin that shows a customizable greeter screen when neovim is
+alpha is a plugin that shows a programmable greeter screen when neovim is
 launched.
 
 ==============================================================================
