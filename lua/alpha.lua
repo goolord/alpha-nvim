@@ -472,6 +472,16 @@ local function enable_alpha(conf, state)
               pattern = '*',
               callback = function() alpha.redraw(conf, state) end,
             })
+            vim.api.nvim_create_autocmd('CursorMoved', {
+              group = group_id,
+              pattern = '*',
+              callback = function()
+                  local width = vim.api.nvim_win_get_width(state.window)
+                  if width ~= state.width
+                      then alpha.redraw(conf, state)
+                      end
+              end,
+            })
         end
 
         if conf.opts.setup then
