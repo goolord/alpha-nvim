@@ -166,14 +166,17 @@ COLORS                                                            *alpha-colors*
 
 Highlighting is handled internally by the neovim api.
 
-You can highlight a button shortcut by supplying a highlight group to the 
-button option x.opt.hl_shortcut
+Most elements accept `opts.hl = "hl_group"` or an array of
+`{'hl_group', start_col, end_col}`
 
-You can highlight most elements by supplying an array of
-{'hl_group', start_col, end_col}
+for multiline elements, you supply a 2 dimensional array of
+`{'hl_group', start_col, end_col}`
 
-for multiline elements, you supply an array of an array of
-{'hl_group', start_col, end_col}
+You can highlight a button shortcut by supplying a highlight group to the
+option `x.opt.hl_shortcut`
+
+the builtin themes currently highlight with builtin highlight groups
+like `Number` and `Keyword`
 
 ==============================================================================
 AUTOCMDS                                                        *alpha-autocmds*
