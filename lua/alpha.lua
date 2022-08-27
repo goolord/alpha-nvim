@@ -20,12 +20,26 @@ local current_state
 local function noop() end
 
 function alpha.press()
-    for queued_cursor_ix, _ in pairs(cursor_jumps_press_queue) do
-        cursor_jumps_press[queued_cursor_ix]()
-    end
     -- only press under the cursor if there's no queue
     if vim.tbl_count(cursor_jumps_press_queue) == 0 then
         cursor_jumps_press[cursor_ix]()
+    end
+    for queued_cursor_ix, _ in pairs(cursor_jumps_press_queue) do
+        cursor_jumps_press[queued_cursor_ix]()
+    end
+end
+
+local function draw_press(row, col)
+    vim.api.nvim_buf_set_option(current_state.buffer, "modifiable", true)
+    vim.api.nvim_buf_set_text(current_state.buffer, row - 1, col, row - 1, col + 1, { "*" })
+    vim.api.nvim_buf_set_option(current_state.buffer, "modifiable", false)
+end
+
+local function draw_presses()
+    for _, loc in pairs(cursor_jumps_press_queue) do
+        local row = loc[1]
+        local col = loc[2]
+        draw_press(row, col)
     end
 end
 
@@ -33,17 +47,17 @@ function alpha.queue_press()
     if cursor_jumps_press_queue[cursor_ix] then
         cursor_jumps_press_queue[cursor_ix] = nil
     else
-        cursor_jumps_press_queue[cursor_ix] = true
 
         -- temporary, find a way to do this in a pure, data-oriented way
         local cursor = vim.api.nvim_win_get_cursor(0)
         local row = cursor[1]
         local col = cursor[2]
-        vim.api.nvim_buf_set_option(0, "modifiable", true)
-        vim.api.nvim_buf_set_text(0, row - 1, col, row - 1, col + 1, { "*" })
-        vim.api.nvim_buf_set_option(0, "modifiable", false)
-        local height = vim.api.nvim_win_get_height(0)
-        vim.api.nvim_win_set_cursor(0, { math.min(row + 1, height + 2), col })
+
+        cursor_jumps_press_queue[cursor_ix] = {row,col}
+
+        draw_press(row,col)
+        local height = current_state.line
+        vim.api.nvim_win_set_cursor(0, { math.min(row + 1, height), col })
     end
 end
 
@@ -401,8 +415,7 @@ local function closest_cursor_jump(cursor, cursors, prev_cursor)
             end
         end
     end
-    if
-        not min -- top or bottom
+    if not min -- top or bottom
     then
         if direction then
             return 1, cursors[1]
@@ -449,38 +462,38 @@ local function enable_alpha(conf, state)
     local group_id = vim.api.nvim_create_augroup('alpha_temp', { clear = true })
 
     vim.api.nvim_create_autocmd('BufUnload', {
-      group = group_id,
-      pattern = '<buffer>',
-      callback = alpha.close,
+        group = group_id,
+        pattern = '<buffer>',
+        callback = alpha.close,
     })
 
     vim.api.nvim_create_autocmd('CursorMoved', {
-      group = group_id,
-      pattern = '<buffer>',
-      callback = function() alpha.move_cursor(state.window) end,
+        group = group_id,
+        pattern = '<buffer>',
+        callback = function() alpha.move_cursor(state.window) end,
     })
 
     if conf.opts then
         if if_nil(conf.opts.redraw_on_resize, true) then
             vim.api.nvim_create_autocmd('VimResized', {
-              group = group_id,
-              pattern = '*',
-              callback = function() alpha.redraw(conf, state) end,
+                group = group_id,
+                pattern = '*',
+                callback = function() alpha.redraw(conf, state) end,
             })
-            vim.api.nvim_create_autocmd({ 'BufLeave','WinEnter','WinNew','WinClosed' }, {
-              group = group_id,
-              pattern = '*',
-              callback = function() alpha.redraw(conf, state) end,
+            vim.api.nvim_create_autocmd({ 'BufLeave', 'WinEnter', 'WinNew', 'WinClosed' }, {
+                group = group_id,
+                pattern = '*',
+                callback = function() alpha.redraw(conf, state) end,
             })
             vim.api.nvim_create_autocmd('CursorMoved', {
-              group = group_id,
-              pattern = '*',
-              callback = function()
-                  local width = vim.api.nvim_win_get_width(state.window)
-                  if width ~= state.width
-                      then alpha.redraw(conf, state)
-                      end
-              end,
+                group = group_id,
+                pattern = '*',
+                callback = function()
+                    local width = vim.api.nvim_win_get_width(state.window)
+                    if width ~= state.width
+                    then alpha.redraw(conf, state)
+                    end
+                end,
             })
         end
 
@@ -491,6 +504,7 @@ local function enable_alpha(conf, state)
 
     state.open = true
 end
+
 -- stylua: ignore end
 
 -- stylua: ignore start
@@ -507,32 +521,29 @@ local function should_skip_alpha()
     for _, arg in pairs(vim.v.argv) do
         -- whitelisted arguments
         -- always open
-        if  arg == "--startuptime"
-            then return false
+        if arg == "--startuptime"
+        then return false
         end
 
         -- blacklisted arguments
         -- always skip
-        if  arg == "-b"
+        if arg == "-b"
             -- commands, typically used for scripting
             or arg == "-c" or vim.startswith(arg, "+")
             or arg == "-S"
-            then return true
+        then return true
         end
     end
 
     -- base case: don't skip
     return false
 end
+
 -- stylua: ignore end
 
 function alpha.draw(conf, state)
-    for k in pairs(cursor_jumps) do
-        cursor_jumps[k] = nil
-    end
-    for k in pairs(cursor_jumps_press) do
-        cursor_jumps_press[k] = nil
-    end
+    cursor_jumps = {}
+    cursor_jumps_press = {}
     state.win_width = vim.api.nvim_win_get_width(state.window)
     state.line = 0
     -- this is for redraws. i guess the cursor 'moves'
@@ -557,7 +568,10 @@ function alpha.draw(conf, state)
         "<cmd>lua require('alpha').queue_press()<CR>",
         { noremap = false, silent = true }
     )
-    vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
+    if vim.api.nvim_get_current_win() == state.window then
+        vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
+    end
+    draw_presses()
 end
 
 function alpha.move_cursor(window)
@@ -582,7 +596,7 @@ function alpha.close(_, state)
     state.open = false
     cursor_ix = 1
     cursor_jumps = {}
-    cursor_jumps_press = {}
+    -- cursor_jumps_press = {}
     vim.api.nvim_del_augroup_by_name("alpha_temp")
     vim.api.nvim_exec_autocmds("User", { pattern = "AlphaClosed" })
 end
