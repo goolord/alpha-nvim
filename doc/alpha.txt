@@ -29,7 +29,7 @@ CONFIGURATION                                              *alpha-configuration*
 
 the following is documentation for the types alpha uses for configuration
 
-config: 
+config:
 >
  config = {
     -- required
@@ -47,7 +47,7 @@ config:
         -- ran once before the first draw
         setup = function
 
-        -- when true, 
+        -- when true,
         -- use 'noautocmd' when setting 'alpha' buffer local options.
         -- this can help performance, but it will prevent the
         -- FileType autocmd from firing, which may break integration
@@ -59,7 +59,7 @@ config:
 <
 button:
 >
- { 
+ {
     -- required
 
     -- element type
@@ -95,7 +95,7 @@ button:
 text:
 >
 
- { 
+ {
     -- required
 
     -- element type
@@ -285,7 +285,7 @@ How to disable the tabline in alpha buffer?~
     autocmd User AlphaReady set showtabline=0 | autocmd BufUnload <buffer> set showtabline=2
 
 How do I make a theme with no buttons?~
-    
+
     alpha needs to know where to place the cursor, falling back to {1,0}
     negatively impacted performance, so if you want to use a theme with no
     buttons, either create an empty button

@@ -642,14 +642,14 @@ function alpha.setup(config)
 
     current_config = config
 
-    vim.api.nvim_create_user_command("Alpha", function()
+    vim.api.nvim_create_user_command("Alpha", function(_)
         alpha.start(false)
     end, {
         bang = true,
         desc = 'require"alpha".start(false)',
     })
 
-    vim.api.nvim_create_user_command("AlphaRedraw", alpha.redraw, {
+    vim.api.nvim_create_user_command("AlphaRedraw", function(_) alpha.redraw() end, {
         bang = true,
         desc = 'require"alpha".redraw()',
     })
