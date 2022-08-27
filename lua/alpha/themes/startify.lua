@@ -228,9 +228,10 @@ local config = {
         margin = 3,
         redraw_on_resize = false,
         setup = function()
-            vim.cmd([[
-            autocmd alpha_temp DirChanged * lua require('alpha').redraw()
-            ]])
+            vim.api.nvim_create_autocmd('DirChanged', {
+                pattern = '*',
+                callback = function () require('alpha').redraw() end,
+            })
         end,
     },
 }
