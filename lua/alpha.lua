@@ -27,6 +27,7 @@ function alpha.press()
     for queued_cursor_ix, _ in pairs(cursor_jumps_press_queue) do
         cursor_jumps_press[queued_cursor_ix]()
     end
+    cursor_jumps_press = {}
 end
 
 local function draw_press(row, col)
@@ -596,7 +597,6 @@ function alpha.close(_, state)
     state.open = false
     cursor_ix = 1
     cursor_jumps = {}
-    -- cursor_jumps_press = {}
     vim.api.nvim_del_augroup_by_name("alpha_temp")
     vim.api.nvim_exec_autocmds("User", { pattern = "AlphaClosed" })
 end

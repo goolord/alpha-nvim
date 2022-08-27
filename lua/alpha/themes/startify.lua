@@ -180,7 +180,7 @@ local section = {
             {
                 type = "group",
                 val = function()
-                    return { mru(0) }
+                    return { mru(10) }
                 end,
             },
         },
@@ -194,7 +194,7 @@ local section = {
             {
                 type = "group",
                 val = function()
-                    return { mru(10, vim.fn.getcwd()) }
+                    return { mru(0, vim.fn.getcwd()) }
                 end,
                 opts = { shrink_margin = false },
             },
@@ -218,8 +218,8 @@ local config = {
         section.header,
         { type = "padding", val = 2 },
         section.top_buttons,
-        section.mru,
         section.mru_cwd,
+        section.mru,
         { type = "padding", val = 1 },
         section.bottom_buttons,
         section.footer,
