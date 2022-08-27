@@ -555,20 +555,6 @@ function alpha.draw(conf, state)
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
     layout(conf, state)
     vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
-    vim.api.nvim_buf_set_keymap(
-        state.buffer,
-        "n",
-        "<CR>",
-        "<cmd>lua require('alpha').press()<CR>",
-        { noremap = false, silent = true }
-    )
-    vim.api.nvim_buf_set_keymap(
-        state.buffer,
-        "n",
-        "<M-CR>",
-        "<cmd>lua require('alpha').queue_press()<CR>",
-        { noremap = false, silent = true }
-    )
     if vim.api.nvim_get_current_win() == state.window then
         vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
     end
@@ -635,6 +621,9 @@ function alpha.start(on_vimenter, conf)
         win_width = 0,
         open = false,
     }
+
+    vim.keymap.set("n", "<CR>", function() alpha.press() end, { noremap = false, silent = true, buffer = state.buffer })
+    vim.keymap.set("n", "<M-CR>", function() alpha.queue_press() end, { noremap = false, silent = true, buffer = state.buffer })
 
     current_state = state
 
