@@ -29,7 +29,7 @@ local function icon(fn)
     return nwd.get_icon(fn, ext, { default = true })
 end
 
-local function file_button(fn, sc, short_fn)
+local function file_button(fn, sc, short_fn,autocd)
     short_fn = short_fn or fn
     local ico_txt
     local fb_hl = {}
@@ -49,7 +49,8 @@ local function file_button(fn, sc, short_fn)
     else
         ico_txt = ""
     end
-    local file_button_el = dashboard.button(sc, ico_txt .. short_fn, "<cmd>e " .. fn .. " <CR>")
+    local cd_cmd = (autocd and " | cd %:p:h" or "")
+    local file_button_el = dashboard.button(sc, ico_txt .. short_fn, "<cmd>e " .. fn .. cd_cmd .." <CR>")
     local fn_start = short_fn:match(".*[/\\]")
     if fn_start ~= nil then
         table.insert(fb_hl, { "Comment", #ico_txt - 2, #fn_start + #ico_txt })
@@ -64,6 +65,7 @@ local mru_opts = {
     ignore = function(path, ext)
         return (string.find(path, "COMMIT_EDITMSG")) or (vim.tbl_contains(default_mru_ignore, ext))
     end,
+    autocd = false
 }
 
 --- @param start number
@@ -109,7 +111,7 @@ local function mru(start, cwd, items_number, opts)
 
         local shortcut = tostring(i + start - 1)
 
-        local file_button_el = file_button(fn, shortcut, short_fn)
+        local file_button_el = file_button(fn, shortcut, short_fn,opts.autocd)
         tbl[i] = file_button_el
     end
     return {
@@ -119,7 +121,7 @@ local function mru(start, cwd, items_number, opts)
     }
 end
 
-local default_header = {
+local header = {
     type = "text",
     val = {
         [[                               __                ]],
@@ -177,7 +179,7 @@ local buttons = {
 local config = {
     layout = {
         { type = "padding", val = 2 },
-        default_header,
+        header,
         { type = "padding", val = 2 },
         section_mru,
         { type = "padding", val = 2 },
@@ -195,6 +197,10 @@ local config = {
 }
 
 return {
+    header = header,
+    buttons = buttons,
+    mru_opts = mru_opts,
     config = config,
     nvim_web_devicons = nvim_web_devicons,
+
 }

@@ -75,7 +75,7 @@ local function icon(fn)
     return nwd.get_icon(fn, ext, { default = true })
 end
 
-local function file_button(fn, sc, short_fn)
+local function file_button(fn, sc, short_fn,autocd)
     short_fn = if_nil(short_fn, fn)
     local ico_txt
     local fb_hl = {}
@@ -94,7 +94,8 @@ local function file_button(fn, sc, short_fn)
     else
         ico_txt = ""
     end
-    local file_button_el = button(sc, ico_txt .. short_fn, "<cmd>e " .. fn .. " <CR>")
+    local cd_cmd = (autocd and " | cd %:p:h" or "")
+    local file_button_el = button(sc, ico_txt .. short_fn, "<cmd>e " .. fn .. cd_cmd .." <CR>")
     local fn_start = short_fn:match(".*[/\\]")
     if fn_start ~= nil then
         table.insert(fb_hl, { "Comment", #ico_txt - 2, #fn_start + #ico_txt - 2 })
@@ -109,6 +110,7 @@ local mru_opts = {
     ignore = function(path, ext)
         return (string.find(path, "COMMIT_EDITMSG")) or (vim.tbl_contains(default_mru_ignore, ext))
     end,
+    autocd = false
 }
 
 --- @param start number
@@ -142,7 +144,7 @@ local function mru(start, cwd, items_number, opts)
         else
             short_fn = fnamemodify(fn, ":~")
         end
-        local file_button_el = file_button(fn, tostring(i + start - 1), short_fn)
+        local file_button_el = file_button(fn, tostring(i + start - 1), short_fn,opts.autocd)
         tbl[i] = file_button_el
     end
     return {
