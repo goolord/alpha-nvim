@@ -27,7 +27,6 @@ function alpha.press()
     for queued_cursor_ix, _ in pairs(cursor_jumps_press_queue) do
         cursor_jumps_press[queued_cursor_ix]()
     end
-    cursor_jumps_press = {}
 end
 
 local function draw_press(row, col)
