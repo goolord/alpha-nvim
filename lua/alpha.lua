@@ -344,9 +344,9 @@ local function layout(conf, state)
         list_extend(text, text_el)
         list_extend(hl, hl_el)
     end
-    vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, text)
+    pcall(vim.api.nvim_buf_set_lines, state.buffer, 0, -1, false, text)
     for _, hl_line in pairs(hl) do
-        vim.api.nvim_buf_add_highlight(hl_line[1], hl_line[2], hl_line[3], hl_line[4], hl_line[5], hl_line[6])
+        pcall(vim.api.nvim_buf_add_highlight, hl_line[1], hl_line[2], hl_line[3], hl_line[4], hl_line[5], hl_line[6])
     end
 end
 
@@ -359,7 +359,7 @@ function keymaps_element.button(el, conf, state)
     if el.opts and el.opts.keymap then
         if type(el.opts.keymap[1]) == "table" then
             for _, map in el.opts.keymap do
-                vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+                pcall(vim.api.nvim_buf_set_keymap, state.buffer, map[1], map[2], map[3], map[4])
             end
         else
             local map = el.opts.keymap
@@ -550,10 +550,10 @@ function alpha.draw(conf, state)
     -- when the screen is cleared and then redrawn
     -- so we save the index before that happens
     local ix = cursor_ix
-    vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
-    vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
+    pcall(vim.api.nvim_buf_set_option, state.buffer, "modifiable", true)
+    pcall(vim.api.nvim_buf_set_lines, state.buffer, 0, -1, false, {})
     layout(conf, state)
-    vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
+    pcall(vim.api.nvim_buf_set_option, state.buffer, "modifiable", false)
     if vim.api.nvim_get_current_win() == state.window then
         if #cursor_jumps ~= 0 then
             vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
@@ -600,7 +600,7 @@ function alpha.start(on_vimenter, conf)
     else
         if vim.bo.ft ~= "alpha" then
             buffer = vim.api.nvim_create_buf(false, true)
-            vim.api.nvim_win_set_buf(window, buffer)
+            pcall(vim.api.nvim_win_set_buf, window, buffer)
         else
             buffer = vim.api.nvim_get_current_buf()
             vim.api.nvim_buf_delete(buffer, {})
