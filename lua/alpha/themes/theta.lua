@@ -199,6 +199,7 @@ local config = {
 return {
     header = header,
     buttons = buttons,
+    mru = mru,
     mru_opts = mru_opts,
     config = config,
     nvim_web_devicons = nvim_web_devicons,
