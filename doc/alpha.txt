@@ -228,7 +228,7 @@ Example with the startify theme:
 >
     use {
         "goolord/alpha-nvim",
-        requires = { 'kyazdani42/nvim-web-devicons' },
+        requires = { 'nvim-tree/nvim-web-devicons' },
         config = function ()
             local alpha = require'alpha'
             local startify = require'alpha.themes.startify'

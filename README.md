@@ -10,7 +10,7 @@ With packer:
 ```lua
 use {
     'goolord/alpha-nvim',
-    requires = { 'kyazdani42/nvim-web-devicons' },
+    requires = { 'nvim-tree/nvim-web-devicons' },
     config = function ()
         require'alpha'.setup(require'alpha.themes.startify'.config)
     end
@@ -20,7 +20,7 @@ use {
 ```lua
 require "paq" {
     "goolord/alpha-nvim";
-    "kyazdani42/nvim-web-devicons";
+    "nvim-tree/nvim-web-devicons";
 }
 require'alpha'.setup(require'alpha.themes.startify'.config)
 ```
@@ -39,7 +39,7 @@ use {
 ```lua
 require "paq" {
     "goolord/alpha-nvim";
-    "kyazdani42/nvim-web-devicons";
+    "nvim-tree/nvim-web-devicons";
 }
 require'alpha'.setup(require'alpha.themes.dashboard'.config)
 ```
