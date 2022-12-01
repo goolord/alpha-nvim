@@ -20,12 +20,14 @@ local current_state
 local function noop() end
 
 function alpha.press()
-    -- only press under the cursor if there's no queue
-    if vim.tbl_count(cursor_jumps_press_queue) == 0 then
+    -- only press under the cursor if there's no queue and if press is not nil
+    if vim.tbl_count(cursor_jumps_press_queue) == 0 and cursor_jumps_press[cursor_ix] ~= nil then
         cursor_jumps_press[cursor_ix]()
     end
     for queued_cursor_ix, _ in pairs(cursor_jumps_press_queue) do
-        cursor_jumps_press[queued_cursor_ix]()
+        if cursor_jumps_press[queued_cursor_ix] ~= nil then
+            cursor_jumps_press[queued_cursor_ix]()
+        end
     end
 end
 
