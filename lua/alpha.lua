@@ -124,7 +124,7 @@ end
 --     return trimmed
 -- end
 
-function alpha.highlight(state, end_ln, hl, left)
+function alpha.highlight(state, end_ln, hl, left, el)
     local hl_type = type(hl)
     local hl_tbl = {}
     if hl_type == "string" then
@@ -136,9 +136,14 @@ function alpha.highlight(state, end_ln, hl, left)
     if hl_type == "table" then
         for _, hl_section in pairs(hl) do
             local col_end
-            if hl_section[3] == -1 then
-                col_end = -1
-            else col_end = left + hl_section[3]
+            if hl_section[3] < 0 then
+                if type(el.val) == "string" then
+                    col_end = left + #el.val + hl_section[3] + 1
+                else
+                    col_end = -1
+                end
+            else
+                col_end = left + hl_section[3]
             end
             table.insert(hl_tbl, {
                 state.buffer,
@@ -183,7 +188,7 @@ function layout_element.text(el, conf, state)
             -- end
         end
         if el.opts and el.opts.hl then
-            hl = alpha.highlight(state, end_ln, el.opts.hl, padding.left)
+            hl = alpha.highlight(state, end_ln, el.opts.hl, padding.left, el)
         end
         state.line = end_ln
         return val, hl
@@ -209,7 +214,7 @@ function layout_element.text(el, conf, state)
             end
         end
         if el.opts and el.opts.hl then
-            hl = alpha.highlight(state, state.line, el.opts.hl, padding.left)
+            hl = alpha.highlight(state, state.line, el.opts.hl, padding.left, el)
         end
         state.line = state.line + 1
         return val, hl
@@ -299,18 +304,18 @@ function layout_element.button(el, conf, state)
             hl = el.opts.hl_shortcut
         end
         if el.opts.align_shortcut == "right" then
-            hl = alpha.highlight(state, state.line, hl, #el.val + padding.center)
+            hl = alpha.highlight(state, state.line, hl, #el.val + padding.center, el)
         else
-            hl = alpha.highlight(state, state.line, hl, padding.left)
+            hl = alpha.highlight(state, state.line, hl, padding.left, el)
         end
     end
 
     if el.opts and el.opts.hl then
         local left = padding.left
         if el.opts.align_shortcut == "left" then
-            left = left + strdisplaywidth(el.opts.shortcut) + 2
+            left = left + strdisplaywidth(el.opts.shortcut)
         end
-        list_extend(hl, alpha.highlight(state, state.line, el.opts.hl, left))
+        list_extend(hl, alpha.highlight(state, state.line, el.opts.hl, left, el))
     end
     state.line = state.line + 1
     return val, hl

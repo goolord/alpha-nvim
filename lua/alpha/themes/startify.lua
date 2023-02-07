@@ -75,7 +75,7 @@ local function icon(fn)
     return nwd.get_icon(fn, ext, { default = true })
 end
 
-local function file_button(fn, sc, short_fn,autocd)
+local function file_button(fn, sc, short_fn, autocd)
     short_fn = if_nil(short_fn, fn)
     local ico_txt
     local fb_hl = {}
@@ -84,11 +84,11 @@ local function file_button(fn, sc, short_fn,autocd)
         local hl_option_type = type(nvim_web_devicons.highlight)
         if hl_option_type == "boolean" then
             if hl and nvim_web_devicons.highlight then
-                table.insert(fb_hl, { hl, 0, 1 })
+                table.insert(fb_hl, { hl, 0, #ico })
             end
         end
         if hl_option_type == "string" then
-            table.insert(fb_hl, { nvim_web_devicons.highlight, 0, 1 })
+            table.insert(fb_hl, { nvim_web_devicons.highlight, 0, #ico })
         end
         ico_txt = ico .. "  "
     else
@@ -98,7 +98,7 @@ local function file_button(fn, sc, short_fn,autocd)
     local file_button_el = button(sc, ico_txt .. short_fn, "<cmd>e " .. fn .. cd_cmd .." <CR>")
     local fn_start = short_fn:match(".*[/\\]")
     if fn_start ~= nil then
-        table.insert(fb_hl, { "Comment", #ico_txt - 2, #fn_start + #ico_txt - 2 })
+        table.insert(fb_hl, { "Comment", #ico_txt, #fn_start + #ico_txt })
     end
     file_button_el.opts.hl = fb_hl
     return file_button_el

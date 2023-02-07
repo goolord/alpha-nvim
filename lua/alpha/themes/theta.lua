@@ -39,11 +39,11 @@ local function file_button(fn, sc, short_fn,autocd)
         local hl_option_type = type(nvim_web_devicons.highlight)
         if hl_option_type == "boolean" then
             if hl and nvim_web_devicons.highlight then
-                table.insert(fb_hl, { hl, 0, 3 })
+                table.insert(fb_hl, { hl, 0, #ico })
             end
         end
         if hl_option_type == "string" then
-            table.insert(fb_hl, { nvim_web_devicons.highlight, 0, 3 })
+            table.insert(fb_hl, { nvim_web_devicons.highlight, 0, #ico })
         end
         ico_txt = ico .. "  "
     else
