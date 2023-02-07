@@ -663,7 +663,7 @@ function alpha.setup(config)
     vim.api.nvim_create_user_command("AlphaRedraw", function(_)
         local buffer = vim.api.nvim_get_current_buf()
         local alpha_prime = vim.tbl_get(alpha_map, buffer) or head(alpha_map)
-        alpha.redraw(alpha_prime.conf, alpha_prime.state)
+        alpha.redraw(alpha_prime.config, alpha_prime.state)
     end, {
         bang = true,
         desc = 'require"alpha".redraw()',
