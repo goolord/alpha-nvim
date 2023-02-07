@@ -14,8 +14,12 @@ local cursor_jumps = {}
 local cursor_jumps_press = {}
 local cursor_jumps_press_queue = {}
 
-local current_config
-local current_state
+-- map of buffer -> state/config
+local alpha_map = {}
+local function head(t)
+    local next,_,_ = pairs(t)
+    return next(t)
+end
 
 local function noop() end
 
@@ -29,21 +33,21 @@ function alpha.press()
     end
 end
 
-local function draw_press(row, col)
-    vim.api.nvim_buf_set_option(current_state.buffer, "modifiable", true)
-    vim.api.nvim_buf_set_text(current_state.buffer, row - 1, col, row - 1, col + 1, { "*" })
-    vim.api.nvim_buf_set_option(current_state.buffer, "modifiable", false)
+local function draw_press(row, col, state)
+    vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
+    vim.api.nvim_buf_set_text(state.buffer, row - 1, col, row - 1, col + 1, { "*" })
+    vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
 end
 
-local function draw_presses()
+local function draw_presses(state)
     for _, loc in pairs(cursor_jumps_press_queue) do
         local row = loc[1]
         local col = loc[2]
-        draw_press(row, col)
+        draw_press(row, col, state)
     end
 end
 
-function alpha.queue_press()
+function alpha.queue_press(state)
     if cursor_jumps_press_queue[cursor_ix] then
         cursor_jumps_press_queue[cursor_ix] = nil
     else
@@ -55,8 +59,8 @@ function alpha.queue_press()
 
         cursor_jumps_press_queue[cursor_ix] = {row,col}
 
-        draw_press(row,col)
-        local height = current_state.line
+        draw_press(row,col,state)
+        local height = state.line
         vim.api.nvim_win_set_cursor(0, { math.min(row + 1, height), col })
     end
 end
@@ -470,7 +474,7 @@ local function enable_alpha(conf, state)
     vim.api.nvim_create_autocmd('CursorMoved', {
         group = group_id,
         pattern = '<buffer>',
-        callback = function() alpha.move_cursor(state.window) end,
+        callback = function() alpha.move_cursor(0) end,
     })
 
     if conf.opts then
@@ -502,7 +506,6 @@ local function enable_alpha(conf, state)
         end
     end
 
-    state.open = true
 end
 
 -- stylua: ignore end
@@ -559,11 +562,11 @@ function alpha.draw(conf, state)
             vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
         end
     end
-    draw_presses()
+    draw_presses(state)
 end
 
 function alpha.move_cursor(window)
-    if current_state.open and #cursor_jumps ~= 0 then
+    if #cursor_jumps ~= 0 then
             local cursor = vim.api.nvim_win_get_cursor(window)
             local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
             cursor_ix = closest_ix
@@ -572,19 +575,14 @@ function alpha.move_cursor(window)
 end
 
 function alpha.redraw(conf, state)
-    conf = conf or current_config
-    state = state or current_state
-    if state.open then
-        alpha.draw(conf, state)
-    end
+    alpha.draw(conf, state)
 end
 
-function alpha.close(_, state)
-    state = state or current_state
-    state.open = false
+function alpha.close(ev)
+    alpha_map[ev.buf] = nil
     cursor_ix = 1
     cursor_jumps = {}
-    vim.api.nvim_del_augroup_by_name("alpha_temp")
+    vim.api.nvim_del_augroup_by_id(ev.group)
     vim.api.nvim_exec_autocmds("User", { pattern = "AlphaClosed" })
 end
 
@@ -613,7 +611,7 @@ function alpha.start(on_vimenter, conf)
         return
     end
 
-    conf = conf or current_config
+    conf = conf or vim.tbl_get(alpha_map, buffer, 'config')
 
     local state = {
         line = 0,
@@ -623,10 +621,10 @@ function alpha.start(on_vimenter, conf)
         open = false,
     }
 
-    vim.keymap.set("n", "<CR>", function() alpha.press() end, { noremap = false, silent = true, buffer = state.buffer })
-    vim.keymap.set("n", "<M-CR>", function() alpha.queue_press() end, { noremap = false, silent = true, buffer = state.buffer })
+    alpha_map[buffer] = { state = state, config = conf }
 
-    current_state = state
+    vim.keymap.set("n", "<CR>", function() alpha.press() end, { noremap = false, silent = true, buffer = state.buffer })
+    vim.keymap.set("n", "<M-CR>", function() alpha.queue_press(state) end, { noremap = false, silent = true, buffer = state.buffer })
 
     enable_alpha(conf, state)
 
@@ -644,8 +642,6 @@ function alpha.setup(config)
 
     config.opts = vim.tbl_extend("keep", if_nil(config.opts, {}), { autostart = true })
 
-    current_config = config
-
     vim.api.nvim_create_user_command("Alpha", function(_)
         alpha.start(false)
     end, {
@@ -653,7 +649,11 @@ function alpha.setup(config)
         desc = 'require"alpha".start(false)',
     })
 
-    vim.api.nvim_create_user_command("AlphaRedraw", function(_) alpha.redraw() end, {
+    vim.api.nvim_create_user_command("AlphaRedraw", function(_)
+        local buffer = vim.api.nvim_get_current_buf()
+        local alpha_prime = vim.tbl_get(alpha_map, buffer) or head(alpha_map)
+        alpha.redraw(alpha_prime.conf, alpha_prime.state)
+    end, {
         bang = true,
         desc = 'require"alpha".redraw()',
     })
@@ -664,8 +664,8 @@ function alpha.setup(config)
         pattern = "*",
         nested = true,
         callback = function()
-            if current_config.opts.autostart then
-                alpha.start(true)
+            if config.opts.autostart then
+                alpha.start(true, config)
             end
         end,
     })
