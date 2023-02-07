@@ -135,13 +135,18 @@ function alpha.highlight(state, end_ln, hl, left)
     -- TODO: support multiple lines
     if hl_type == "table" then
         for _, hl_section in pairs(hl) do
+            local col_end
+            if hl_section[3] == -1 then
+                col_end = -1
+            else col_end = left + hl_section[3]
+            end
             table.insert(hl_tbl, {
                 state.buffer,
                 -1,
                 hl_section[1],
                 state.line,
                 left + hl_section[2],
-                left + hl_section[3],
+                col_end,
             })
         end
     end
