@@ -653,6 +653,8 @@ function alpha.setup(config)
 
     config.opts = vim.tbl_extend("keep", if_nil(config.opts, {}), { autostart = true })
 
+    alpha.default_config = config
+
     vim.api.nvim_create_user_command("Alpha", function(_)
         alpha.start(false, config)
     end, {
