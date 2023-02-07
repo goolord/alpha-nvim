@@ -110,7 +110,7 @@ function alpha.pad_margin(tbl, state, margin, shrink)
     local padding = spaces(left)
     local padded = {}
     for k, v in pairs(tbl) do
-        padded[k] = padding .. v .. padding
+        padded[k] = padding .. v
     end
     return padded, left
 end
