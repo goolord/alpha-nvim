@@ -653,10 +653,10 @@ function alpha.setup(config)
 
     config.opts = vim.tbl_extend("keep", if_nil(config.opts, {}), { autostart = true })
 
-    alpha.config = config
+    alpha.default_config = config
 
     vim.api.nvim_create_user_command("Alpha", function(_)
-        alpha.start(false, alpha.config)
+        alpha.start(false, config)
     end, {
         bang = true,
         desc = 'require"alpha".start(false)',
@@ -677,8 +677,8 @@ function alpha.setup(config)
         pattern = "*",
         nested = true,
         callback = function()
-            if alpha.config.opts.autostart then
-                alpha.start(true, alpha.config)
+            if config.opts.autostart then
+                alpha.start(true, config)
             end
         end,
     })
