@@ -18,7 +18,7 @@ local cursor_jumps_press_queue = {}
 local alpha_map = {}
 local function head(t)
     local next,_,_ = pairs(t)
-    return next(t)
+    return t[next(t)]
 end
 
 local function noop() end
