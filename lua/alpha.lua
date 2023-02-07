@@ -474,6 +474,7 @@ local function enable_alpha(conf, state)
     vim.api.nvim_create_autocmd('CursorMoved', {
         group = group_id,
         pattern = '<buffer>',
+        -- FIXME: many windows can be associated with
         callback = function() alpha.move_cursor(0) end,
     })
 
