@@ -299,7 +299,7 @@ function layout_element.button(el, conf, state)
     cursor_jumps_press[#cursor_jumps_press + 1] = el.on_press
     if el.opts and el.opts.hl_shortcut then
         if type(el.opts.hl_shortcut) == "string" then
-            hl = { { el.opts.hl_shortcut, 0, strdisplaywidth(el.opts.shortcut) + 1 } }
+            hl = { { el.opts.hl_shortcut, 0, #el.opts.shortcut + 1 } }
         else
             hl = el.opts.hl_shortcut
         end
@@ -313,7 +313,7 @@ function layout_element.button(el, conf, state)
     if el.opts and el.opts.hl then
         local left = padding.left
         if el.opts.align_shortcut == "left" then
-            left = left + strdisplaywidth(el.opts.shortcut)
+            left = left + #el.opts.shortcut
         end
         list_extend(hl, alpha.highlight(state, state.line, el.opts.hl, left, el))
     end
@@ -360,7 +360,7 @@ local function layout(conf, state)
     end
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, text)
     for _, hl_line in pairs(hl) do
-        vim.api.nvim_buf_add_highlight(hl_line[1], hl_line[2], hl_line[3], hl_line[4], hl_line[5], hl_line[6])
+        vim.api.nvim_buf_add_highlight(hl_line[1], hl_line[2], hl_line[3], hl_line[4], math.max(hl_line[5], 0), math.min(hl_line[6], state.win_width))
     end
 end
 
@@ -481,6 +481,12 @@ local function enable_alpha(conf, state)
         callback = alpha.close,
     })
 
+    vim.api.nvim_create_autocmd({'WinClosed'}, {
+        group = group_id,
+        pattern = '<buffer>',
+        callback = alpha.handle_window,
+    })
+
     vim.api.nvim_create_autocmd('CursorMoved', {
         group = group_id,
         pattern = '<buffer>',
@@ -586,6 +592,12 @@ function alpha.move_cursor(window)
 end
 
 function alpha.redraw(conf, state)
+    if (conf == nil) and (state == nil) then
+        local buffer = vim.api.nvim_get_current_buf()
+        local alpha_prime = vim.tbl_get(alpha_map, buffer) or head(alpha_map)
+        conf = alpha_prime.config
+        state = alpha_prime.state
+    end
     alpha.draw(conf, state)
 end
 
@@ -663,9 +675,7 @@ function alpha.setup(config)
     })
 
     vim.api.nvim_create_user_command("AlphaRedraw", function(_)
-        local buffer = vim.api.nvim_get_current_buf()
-        local alpha_prime = vim.tbl_get(alpha_map, buffer) or head(alpha_map)
-        alpha.redraw(alpha_prime.config, alpha_prime.state)
+        alpha.redraw()
     end, {
         bang = true,
         desc = 'require"alpha".redraw()',
@@ -686,5 +696,19 @@ end
 
 alpha.layout_element = layout_element
 alpha.keymaps_element = keymaps_element
+
+function alpha.handle_window(x)
+    local alpha_instance = alpha_map[x.buf]
+    local current_win = vim.api.nvim_get_current_win()
+    if alpha_instance then
+        local wins = vim.tbl_filter(function(win)
+            return (vim.api.nvim_win_get_buf(win) == x.buf) and (win ~= current_win)
+        end
+            , vim.api.nvim_list_wins()
+        )
+        print(vim.inspect(wins))
+        alpha_instance.state.window = wins[1]
+    end
+end
 
 return alpha
