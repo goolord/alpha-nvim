@@ -304,7 +304,7 @@ function layout_element.button(el, conf, state)
             hl = el.opts.hl_shortcut
         end
         if el.opts.align_shortcut == "right" then
-            hl = alpha.highlight(state, state.line, hl, #el.val + padding.center, el)
+            hl = alpha.highlight(state, state.line, hl, #el.val + math.max(0,padding.center), el)
         else
             hl = alpha.highlight(state, state.line, hl, padding.left, el)
         end
@@ -360,7 +360,7 @@ local function layout(conf, state)
     end
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, text)
     for _, hl_line in pairs(hl) do
-        vim.api.nvim_buf_add_highlight(hl_line[1], hl_line[2], hl_line[3], hl_line[4], math.max(hl_line[5], 0), math.min(hl_line[6], state.win_width))
+        vim.api.nvim_buf_add_highlight(hl_line[1], hl_line[2], hl_line[3], hl_line[4], math.max(hl_line[5], 0), hl_line[6])
     end
 end
 
@@ -706,7 +706,6 @@ function alpha.handle_window(x)
         end
             , vim.api.nvim_list_wins()
         )
-        print(vim.inspect(wins))
         alpha_instance.state.window = wins[1]
     end
 end
