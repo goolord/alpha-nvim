@@ -635,7 +635,7 @@ function alpha.start(on_vimenter, conf)
         return
     end
 
-    conf = conf or vim.tbl_get(alpha_map, buffer, 'config')
+    conf = conf or vim.tbl_get(alpha_map, buffer, 'config') or alpha.default_config
 
     local state = {
         line = 0,
