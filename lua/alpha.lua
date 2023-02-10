@@ -595,6 +595,7 @@ function alpha.redraw(conf, state)
     if (conf == nil) and (state == nil) then
         local buffer = vim.api.nvim_get_current_buf()
         local alpha_prime = vim.tbl_get(alpha_map, buffer) or head(alpha_map)
+        if alpha_prime == nil then return end
         conf = alpha_prime.config
         state = alpha_prime.state
     end
