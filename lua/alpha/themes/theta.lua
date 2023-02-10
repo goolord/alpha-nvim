@@ -201,8 +201,9 @@ return {
     header = header,
     buttons = buttons,
     mru = mru,
-    mru_opts = mru_opts,
     config = config,
+    -- theme specific config
+    mru_opts = mru_opts,
+    leader = dashboard.leader,
     nvim_web_devicons = nvim_web_devicons,
-
 }

@@ -74,6 +74,12 @@ button:
 
     -- optional
     opts = {
+        -- define a buffer-local keymap for this element
+        -- accepts the arguments for 'nvim_set_keymap' as an array
+        -- normaly pairs with an 'on_press' function that feeds the lhs
+        -- keys (see alpha.dashboard.button implementation)
+        keymap = { {mode}, {lhs}, {rhs}, {*opts} }
+
         position = "left" | "center" | "right",
         hl = "hl_group" | {{"hl_group", 0, -1}}
 
@@ -88,6 +94,14 @@ button:
         -- how wide to pad the button.
         -- useful if position = "center"
         width = 50,
+        -- when `shrink_margin` is true, the margin will
+        -- shrink when the window width is too small to display
+        -- the full width margin + the full element.
+        -- 'dashboard' has this set to true, since it has huge margins and
+        -- small layout elements, and 'startify' has this set to
+        -- false, since it has huge layout elements and a small margin
+        -- defaults to true
+        shrink_margin = true | false
     }
  }
 <
@@ -186,6 +200,40 @@ alpha supports the following autocmds
 
 there is an option to use *:noautocmd* when setting alpha's buffer local options
 see |alpha-configuration|
+
+==============================================================================
+THEME OPTIONS                                              *alpha-theme-options*
+
+theta/startify:
+>
+ mru_opts = {
+    -- return 'true' for paths which should not appear as entries in the MRU
+    -- menu. defaults to
+    ignore = function(path, ext)
+        return (string.find(path, "COMMIT_EDITMSG")) or (vim.tbl_contains(default_mru_ignore, ext))
+    end,
+    -- when 'true', selecting an item from the MRU menu will automatically
+    -- change your working directory to the parent directory of the entry.
+    -- defaults to
+    autocd = false
+ }
+
+ nvim_web_devicons = {
+     -- enable / disable icons in the MRU menu entries
+     -- defaults to
+     enabled = true,
+     -- enable / disable highlighting for the icons in the MRU menu entries
+     -- defaults to
+     highlight = true,
+ }
+<
+
+theta/dashboard:
+>
+ -- string: replaces `leader` "leader" in the button keymaps.
+ -- note: does not replace how it's displayed, so you'll want to
+ -- redfine the `dashboard.section.buttons.val` table
+ leader = "SPC"
 
 ==============================================================================
 EXAMPLE                                                          *alpha-example*
