@@ -14,8 +14,8 @@ local cursor_jumps = {}
 local cursor_jumps_press = {}
 local cursor_jumps_press_queue = {}
 
--- map of buffer -> state/config
-local alpha_map = {}
+-- map of buffer -> state
+local alpha_state = {}
 local function head(t)
     local next,_,_ = pairs(t)
     return t[next(t)]
@@ -594,22 +594,24 @@ end
 function alpha.redraw(conf, state)
     if (conf == nil) and (state == nil) then
         local buffer = vim.api.nvim_get_current_buf()
-        local alpha_prime = vim.tbl_get(alpha_map, buffer) or head(alpha_map)
+        local alpha_prime = vim.tbl_get(alpha_state, buffer) or head(alpha_state)
         if alpha_prime == nil then return end
-        conf = alpha_prime.config
-        state = alpha_prime.state
+        conf = alpha.default_config
+        state = alpha_prime
     end
     alpha.draw(conf, state)
 end
 
 function alpha.close(ev)
-    alpha_map[ev.buf] = nil
+    alpha_state[ev.buf] = nil
     cursor_ix = 1
     cursor_jumps = {}
     vim.api.nvim_del_augroup_by_id(ev.group)
     vim.api.nvim_exec_autocmds("User", { pattern = "AlphaClosed" })
 end
 
+-- @param on_vimenter: ?bool optional
+-- @param fon: ?table optional
 function alpha.start(on_vimenter, conf)
     local window = vim.api.nvim_get_current_win()
 
@@ -635,7 +637,7 @@ function alpha.start(on_vimenter, conf)
         return
     end
 
-    conf = conf or vim.tbl_get(alpha_map, buffer, 'config') or alpha.default_config
+    conf = conf or alpha.default_config
 
     local state = {
         line = 0,
@@ -645,7 +647,7 @@ function alpha.start(on_vimenter, conf)
         open = false,
     }
 
-    alpha_map[buffer] = { state = state, config = conf }
+    alpha_state[buffer] = state
 
     vim.keymap.set("n", "<CR>", function() alpha.press() end, { noremap = false, silent = true, buffer = state.buffer })
     vim.keymap.set("n", "<M-CR>", function() alpha.queue_press(state) end, { noremap = false, silent = true, buffer = state.buffer })
@@ -699,7 +701,7 @@ alpha.layout_element = layout_element
 alpha.keymaps_element = keymaps_element
 
 function alpha.handle_window(x)
-    local alpha_instance = alpha_map[x.buf]
+    local alpha_instance = alpha_state[x.buf]
     local current_win = vim.api.nvim_get_current_win()
     if alpha_instance then
         local wins = vim.tbl_filter(function(win)
@@ -707,7 +709,7 @@ function alpha.handle_window(x)
         end
             , vim.api.nvim_list_wins()
         )
-        alpha_instance.state.window = wins[1]
+        alpha_instance.window = wins[1]
     end
 end
 
