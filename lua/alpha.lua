@@ -564,7 +564,7 @@ end
 function alpha.draw(conf, state)
     cursor_jumps = {}
     cursor_jumps_press = {}
-    state.win_width = vim.api.nvim_win_get_width(state.window)
+    state.win_width = vim.api.nvim_win_get_width(state.window or 0)
     state.line = 0
     -- this is for redraws. i guess the cursor 'moves'
     -- when the screen is cleared and then redrawn
