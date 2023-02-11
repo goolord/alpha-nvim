@@ -303,7 +303,7 @@ Example with the startify theme:
             startify.section.bottom_buttons.val = {
                 startify.button( "q", "  Quit NVIM" , ":qa<CR>"),
             }
-            startify.section.footer = {
+            startify.section.footer.val = {
                 { type = "text", val = "footer" },
             }
             -- ignore filetypes in MRU

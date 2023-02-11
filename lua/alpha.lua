@@ -52,8 +52,7 @@ function alpha.queue_press(state)
         cursor_jumps_press_queue[cursor_ix] = nil
     else
 
-        -- temporary, find a way to do this in a pure, data-oriented way
-        local cursor = vim.api.nvim_win_get_cursor(0)
+        local cursor = vim.api.nvim_win_get_cursor(state.window)
         local row = cursor[1]
         local col = cursor[2]
 
@@ -167,62 +166,47 @@ function alpha.resolve(to, el, opts, state)
 end
 
 function layout_element.text(el, conf, state)
-    if type(el.val) == "table" then
-        local end_ln = state.line + #el.val
-        local val = el.val
-        local hl = {}
-        local padding = { left = 0 }
-        if conf.opts and conf.opts.margin and el.opts and (el.opts.position ~= "center") then
-            local left
-            val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(el.opts.shrink_margin, true))
-            padding.left = padding.left + left
-        end
-        if el.opts then
-            if el.opts.position == "center" then
-                local left
-                val, left = alpha.align_center(val, state)
-                padding.left = padding.left + left
-            end
-            -- if el.opts.wrap == "overflow" then
-            --     val = trim(val, state)
-            -- end
-        end
-        if el.opts and el.opts.hl then
-            hl = alpha.highlight(state, end_ln, el.opts.hl, padding.left, el)
-        end
-        state.line = end_ln
-        return val, hl
-    end
-
-    if type(el.val) == "string" then
-        local val = {}
-        local hl = {}
-        for s in el.val:gmatch("[^\r\n]+") do
-            val[#val + 1] = s
-        end
-        local padding = { left = 0 }
-        if conf.opts and conf.opts.margin and (not el.opts or el.opts.position ~= "center") then
-            local left
-            val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(el.opts and el.opts.shrink_margin, true))
-            padding.left = padding.left + left
-        end
-        if el.opts then
-            if el.opts.position == "center" then
-                local left
-                val, left = alpha.align_center(val, state)
-                padding.left = padding.left + left
-            end
-        end
-        if el.opts and el.opts.hl then
-            hl = alpha.highlight(state, state.line, el.opts.hl, padding.left, el)
-        end
-        state.line = state.line + 1
-        return val, hl
-    end
-
     if type(el.val) == "function" then
         return alpha.resolve(layout_element.text, el, conf, state)
     end
+    local val
+    if type(el.val) == "string" then
+        val = {}
+        for s in el.val:gmatch("[^\r\n]+") do
+            val[#val + 1] = s
+        end
+    else
+        val = el.val
+    end
+    local hl = {}
+    local padding = { left = 0 }
+    local margin = vim.tbl_get(conf, 'opts', 'margin')
+    local position = vim.tbl_get(el, 'opts', 'position')
+    if margin and (position ~= "center") then
+        local left
+        val, left = alpha.pad_margin(val, state, margin, if_nil(vim.tbl_get(el, 'opts', 'shrink_margin'), true))
+        padding.left = padding.left + left
+    end
+    if position == "center" then
+        local left
+        val, left = alpha.align_center(val, state)
+        padding.left = padding.left + left
+    end
+    local el_hl = vim.tbl_get(el, 'opts', 'hl')
+    if type(el.val) == "string" then
+        if el_hl then
+            hl = alpha.highlight(state, state.line, el_hl, padding.left, el)
+        end
+        state.line = state.line + 1
+    else
+        local end_ln = state.line + #el.val
+        if el_hl then
+            hl = alpha.highlight(state, end_ln, el_hl, padding.left, el)
+        end
+        state.line = end_ln
+    end
+    return val, hl
+
 end
 
 function layout_element.padding(el, conf, state)
@@ -562,6 +546,9 @@ end
 -- stylua: ignore end
 
 function alpha.draw(conf, state)
+    -- TODO: figure out why this can happen
+    if state.window == nil then return end
+
     cursor_jumps = {}
     cursor_jumps_press = {}
     state.win_width = vim.api.nvim_win_get_width(state.window or 0)
