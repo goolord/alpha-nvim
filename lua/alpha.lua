@@ -664,6 +664,8 @@ function alpha.setup(config)
     end, {
         bang = true,
         desc = 'require"alpha".start(false)',
+        nargs = 0,
+        bar = true,
     })
 
     vim.api.nvim_create_user_command("AlphaRedraw", function(_)
@@ -671,6 +673,8 @@ function alpha.setup(config)
     end, {
         bang = true,
         desc = 'require"alpha".redraw()',
+        nargs = 0,
+        bar = true,
     })
 
     local group_id = vim.api.nvim_create_augroup("alpha_start", { clear = true })
