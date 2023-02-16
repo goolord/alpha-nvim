@@ -39,7 +39,7 @@ local function button(sc, txt, keybind, keybind_opts)
     }
     if keybind then
         keybind_opts = if_nil(keybind_opts, { noremap = true, silent = true, nowait = true })
-        opts.keymap = { "n", sc_, keybind, { noremap = false, silent = true, nowait = true } }
+        opts.keymap = { "n", sc_, keybind, keybind_opts }
     end
 
     local function on_press()
