@@ -27,6 +27,10 @@ function M.run_command(cmd, el)
     if cmd == nil then
         return
     end
+    
+    if type(cmd) == 'function' then
+        cmd = cmd()
+    end
 
     vim.loop.new_async(vim.schedule_wrap(function()
         local wininfo = M.open_window(el)
