@@ -27,7 +27,7 @@ function M.run_command(cmd, el)
     if cmd == nil then
         return
     end
-    
+
     if type(cmd) == 'function' then
         cmd = cmd()
     end

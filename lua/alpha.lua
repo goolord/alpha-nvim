@@ -315,7 +315,19 @@ function layout_element.group(el, conf, state)
     if type(el.val) == "table" then
         local text_tbl = {}
         local hl_tbl = {}
+        local priority = if_nil(vim.tbl_get(el, 'opts', 'priority'), 1)
+        local inherit = vim.tbl_get(el, 'opts', 'inherit')
         for _, v in pairs(el.val) do
+            if inherit then
+                if v.opts then
+                    local vpriority = if_nil(vim.tbl_get(v, 'opts', 'priority'), 0)
+                    if priority > vpriority then
+                        v.opts = vim.tbl_extend("force", v.opts, inherit)
+                    end
+                else
+                    v.opts = inherit
+                end
+            end
             local text, hl = layout_element[v.type](v, conf, state)
             if text then
                 list_extend(text_tbl, text)

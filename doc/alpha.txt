@@ -145,6 +145,11 @@ group:
     opts = {
         -- number of newlines inbetween each element
         spacing = 1
+        -- this table will extend the opts table of each entry of 'val'
+        -- keeping the entry from 'inherit'
+        -- unless the val.[n].opts.priority is >= opts.priority
+        inherit = {}
+        priority = 1 -- defaults to 1, see above
     }
  }
 <
