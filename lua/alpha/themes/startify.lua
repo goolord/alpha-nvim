@@ -148,9 +148,9 @@ local function mru(start, cwd, items_number, opts)
         tbl[i] = file_button_el
     end
     return {
-        type = "group",
+        type = "columns",
         val = tbl,
-        opts = {},
+        opts = { spacing = 2 },
     }
 end
 

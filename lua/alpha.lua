@@ -23,6 +23,14 @@ end
 
 local function noop() end
 
+local function zero_padding()
+    return {
+        left = 0,
+        center = 0,
+        right = 0,
+    }
+end
+
 function alpha.press()
     -- only press under the cursor if there's no queue
     if vim.tbl_count(cursor_jumps_press_queue) == 0 then
@@ -179,7 +187,7 @@ function layout_element.text(el, conf, state)
         val = el.val
     end
     local hl = {}
-    local padding = { left = 0 }
+    local padding = zero_padding()
     local margin = vim.tbl_get(conf, 'opts', 'margin')
     local position = vim.tbl_get(el, 'opts', 'position')
     if margin and (position ~= "center") then
@@ -229,11 +237,7 @@ end
 function layout_element.button(el, conf, state)
     local val = {}
     local hl = {}
-    local padding = {
-        left = 0,
-        center = 0,
-        right = 0,
-    }
+    local padding = zero_padding()
     local opts = vim.tbl_get(el, 'opts')
     local shortcut = vim.tbl_get(opts, 'shortcut')
     local width = vim.tbl_get(opts, 'width')
@@ -346,6 +350,58 @@ function layout_element.group(el, conf, state)
     end
 end
 
+local function zip_with_default(default, ...)
+    local arrays, ans = {...}, {}
+    local index = 0
+    local max_len = 0
+    for _,t in ipairs(arrays) do
+        if max_len < #t then
+            max_len = #t
+        end
+    end
+    return
+    function()
+        index = index + 1
+        for i,t in ipairs(arrays) do
+            ans[i] = t[index] or default
+            if index > max_len then return end
+        end
+        return index, unpack(ans)
+    end
+end
+
+function layout_element.columns(el, conf, state)
+    if type(el.val) == "function" then
+        return alpha.resolve(layout_element.columns, el, conf, state)
+    end
+
+    if type(el.val) == "table" then
+        local text_tbl = {}
+        local hl_tbl = {}
+        local last_line
+        for i, v in ipairs(el.val) do
+            local conf_ = deepcopy(conf)
+            if i ~= 1 and conf_.opts then conf_.opts.margin = nil end
+            last_line = state.line
+            local text, hl = layout_element[v.type](v, conf_, state)
+            state.line = last_line
+            local longest = longest_line(text_tbl)
+            local spacing = if_nil(vim.tbl_get(el, 'opts', 'spacing'), 0)
+            for index, left_text, right_text in zip_with_default('', text_tbl, text) do
+                print('i', index, 'left: ', left_text, 'right: ', right_text)
+                local width_l = strdisplaywidth(left_text)
+                if left_text == ''
+                    then text_tbl[index] = right_text
+                    else text_tbl[index] = left_text .. spaces(longest - width_l) .. spaces(spacing) .. right_text
+                end
+            end
+        end
+        state.line = last_line
+        return text_tbl, hl_tbl
+    end
+end
+
+
 local function layout(conf, state)
     -- this is my way of hacking pattern matching
     -- you index the table by its "type"
@@ -383,6 +439,18 @@ end
 function keymaps_element.group(el, conf, state)
     if type(el.val) == "function" then
         alpha.resolve(keymaps_element.group, el, conf, state)
+    end
+
+    if type(el.val) == "table" then
+        for _, v in pairs(el.val) do
+            keymaps_element[v.type](v, conf, state)
+        end
+    end
+end
+
+function keymaps_element.columns(el, conf, state)
+    if type(el.val) == "function" then
+        alpha.resolve(keymaps_element.columns, el, conf, state)
     end
 
     if type(el.val) == "table" then
