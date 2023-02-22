@@ -155,7 +155,7 @@ terminal:
  {
     -- required
     type = "terminal"
-    command = "string" -- the shell command to run
+    command = "string" | function -- the shell command to run
     -- command size can be fixed, or calculated by mutating these
     width = 0 -- number
     height = 0 -- number
