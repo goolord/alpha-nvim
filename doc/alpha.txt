@@ -202,6 +202,9 @@ AUTOCMDS                                                        *alpha-autocmds*
 
 alpha supports the following autocmds
 - `autocmd User AlphaReady`
+  meaning: alpha buffer has been loaded and has completed the first draw
+- `autocmd User AlphaClosed`
+  meaning: alpha buffer was unloaded
 
 there is an option to use *:noautocmd* when setting alpha's buffer local options
 see |alpha-configuration|
