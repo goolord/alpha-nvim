@@ -563,8 +563,6 @@ function alpha.draw(conf, state)
     -- TODO: figure out why this can happen
     if state.window == nil then return end
 
-    vim.api.nvim_buf_clear_namespace(state.buffer, -1, 0, -1)
-
     cursor_jumps = {}
     cursor_jumps_press = {}
     state.win_width = vim.api.nvim_win_get_width(state.window or 0)
@@ -574,6 +572,7 @@ function alpha.draw(conf, state)
     -- so we save the index before that happens
     local ix = cursor_ix
     vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
+    vim.api.nvim_buf_clear_namespace(state.buffer, -1, 0, -1)
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
     layout(conf, state)
     vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
