@@ -563,6 +563,8 @@ function alpha.draw(conf, state)
     -- TODO: figure out why this can happen
     if state.window == nil then return end
 
+    vim.api.nvim_buf_clear_namespace(state.buffer, -1, 0, -1)
+
     cursor_jumps = {}
     cursor_jumps_press = {}
     state.win_width = vim.api.nvim_win_get_width(state.window or 0)
