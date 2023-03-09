@@ -131,27 +131,35 @@ function alpha.highlight(state, end_ln, hl, left, el)
             table.insert(hl_tbl, { state.buffer, -1, hl, i, 0, -1 })
         end
     end
-    -- TODO: support multiple lines
     if hl_type == "table" then
-        for _, hl_section in pairs(hl) do
-            local col_end
-            if hl_section[3] < 0 then
-                if type(el.val) == "string" then
-                    col_end = left + #el.val + hl_section[3] + 1
+        local function single_line(the_hl, line)
+            for _, hl_section in pairs(the_hl) do
+                local col_end
+                if hl_section[3] < 0 then
+                    if type(el.val) == "string" then
+                        col_end = left + #el.val + hl_section[3] + 1
+                    else
+                        col_end = -1
+                    end
                 else
-                    col_end = -1
+                    col_end = left + hl_section[3]
                 end
-            else
-                col_end = left + hl_section[3]
+                table.insert(hl_tbl, {
+                    state.buffer,
+                    -1,
+                    hl_section[1],
+                    state.line + line,
+                    left + hl_section[2],
+                    col_end,
+                })
             end
-            table.insert(hl_tbl, {
-                state.buffer,
-                -1,
-                hl_section[1],
-                state.line,
-                left + hl_section[2],
-                col_end,
-            })
+        end
+        if hl[1] and hl[1][1] and type(hl[1][1]) == "table" then
+            for ix, hl_line in ipairs(hl) do
+                single_line(hl_line, ix-1)
+            end
+        else
+            single_line(hl, 0)
         end
     end
     return hl_tbl
