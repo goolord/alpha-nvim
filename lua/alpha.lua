@@ -217,6 +217,7 @@ function layout_element.text(el, conf, state)
 
 end
 
+---@diagnostic disable-next-line: unused-local
 function layout_element.padding(el, conf, state)
     local lines = 0
     if type(el.val) == "function" then
@@ -375,6 +376,7 @@ local keymaps_element = {}
 keymaps_element.text = noop
 keymaps_element.padding = noop
 
+---@diagnostic disable-next-line: unused-local
 function keymaps_element.button(el, conf, state)
     if el.opts and el.opts.keymap then
         if type(el.opts.keymap[1]) == "table" then
@@ -636,8 +638,11 @@ function alpha.start(on_vimenter, conf)
             buffer = vim.api.nvim_create_buf(false, true)
             vim.api.nvim_win_set_buf(window, buffer)
         else
-            buffer = vim.api.nvim_get_current_buf()
-            vim.api.nvim_buf_delete(buffer, {})
+            ---@diagnostic disable-next-line: param-type-mismatch
+            if not pcall(vim.cmd, 'e #') then
+                buffer = vim.api.nvim_get_current_buf()
+                vim.api.nvim_buf_delete(buffer, {})
+            end
             return
         end
     end
