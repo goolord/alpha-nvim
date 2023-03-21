@@ -56,14 +56,15 @@ vim.api.nvim_create_autocmd("User", {
     end,
 })
 
-function alpha.layout_element.terminal(el, _, _)
+function alpha.layout_element.terminal(el, conf, state)
     if el.opts and (el.opts.redraw == nil or el.opts.redraw) then
         el.opts.redraw = false
         M.run_command(el.command, el)
     end
-    return {}, {}
+    return alpha.layout_element.padding({ type = "padding", val = el.height }, conf, state)
 end
 
-function alpha.keymaps_element.terminal(_, _, _) end
+function alpha.keymaps_element.terminal(_, _, _)
+end
 
 return M
