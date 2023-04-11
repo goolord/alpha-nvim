@@ -57,10 +57,11 @@ config:
 
         -- table of default keymaps
         keymap = {
-            -- string | string[]: key combinations used to press an item.
+            -- nil | string | string[]: key combinations used to press an
+            -- item.
             press = '<CR>',
-            -- string | string[]: key combination used to select an item to
-            press later.
+            -- nil | string | string[]: key combination used to select an item to
+            -- press later.
             press_queue = '<M-CR>'
         }
     }
