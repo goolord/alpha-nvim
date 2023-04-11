@@ -664,8 +664,12 @@ function alpha.start(on_vimenter, conf)
 
     alpha_state[buffer] = state
 
-    vim.keymap.set("n", "<CR>", function() alpha.press() end, { noremap = false, silent = true, buffer = state.buffer })
-    vim.keymap.set("n", "<M-CR>", function() alpha.queue_press(state) end, { noremap = false, silent = true, buffer = state.buffer })
+    if conf.opts.keymap.press then
+        vim.keymap.set("n", conf.opts.keymap.press, function() alpha.press() end, { noremap = false, silent = true, buffer = state.buffer })
+    end
+    if conf.opts.keymap.queue_press then
+        vim.keymap.set("n", conf.opts.keymap.queue_press, function() alpha.queue_press(state) end, { noremap = false, silent = true, buffer = state.buffer })
+    end
 
     enable_alpha(conf, state)
 
@@ -681,7 +685,17 @@ function alpha.setup(config)
         layout = { config.layout, "table" },
     })
 
-    config.opts = vim.tbl_extend("keep", if_nil(config.opts, {}), { autostart = true })
+    config.opts = vim.tbl_extend(
+        "keep",
+        if_nil(config.opts, {}),
+        {
+            autostart = true,
+            keymap = {
+                press = "<CR>",
+                queue_press = "<M-CR>",
+            }
+        }
+    )
 
     alpha.default_config = config
 
