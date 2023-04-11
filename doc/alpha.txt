@@ -57,9 +57,9 @@ config:
 
         -- table of default keymaps
         keymap = {
-            -- string: key combination used to press an item (button).
+            -- string | string[]: key combinations used to press an item.
             press = '<CR>',
-            -- string: key combination used to select an item (button) to
+            -- string | string[]: key combination used to select an item to
             press later.
             press_queue = '<M-CR>'
         }

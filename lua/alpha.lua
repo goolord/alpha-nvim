@@ -79,6 +79,20 @@ local function spaces(n)
     return str_rep(" ", n)
 end
 
+---@param keymaps nil | string | string[]
+---@return string[]
+local function convert_keymaps(keymaps)
+    if not keymaps then
+        return {}
+    end
+
+    if type(keymaps) ~= "table" then
+        keymaps = { keymaps }
+    end
+
+    return keymaps
+end
+
 function alpha.align_center(tbl, state)
     -- longest line used to calculate the center.
     -- which doesn't quite give a 'justfieid' look, but w.e
@@ -664,11 +678,11 @@ function alpha.start(on_vimenter, conf)
 
     alpha_state[buffer] = state
 
-    if conf.opts.keymap.press then
-        vim.keymap.set("n", conf.opts.keymap.press, function() alpha.press() end, { noremap = false, silent = true, buffer = state.buffer })
+    for _, k in ipairs(convert_keymaps(conf.opts.keymap.press)) do
+        vim.keymap.set("n", k, function() alpha.press() end, { noremap = false, silent = true, buffer = state.buffer })
     end
-    if conf.opts.keymap.queue_press then
-        vim.keymap.set("n", conf.opts.keymap.queue_press, function() alpha.queue_press(state) end, { noremap = false, silent = true, buffer = state.buffer })
+    for _, k in ipairs(convert_keymaps(conf.opts.keymap.queue_press)) do
+        vim.keymap.set("n", k, function() alpha.queue_press(state) end, { noremap = false, silent = true, buffer = state.buffer })
     end
 
     enable_alpha(conf, state)
