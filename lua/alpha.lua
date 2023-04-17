@@ -81,8 +81,8 @@ end
 
 ---@param keymaps nil | string | string[]
 ---@return string[]
-local function convert_keymaps(keymaps)
-    if not keymaps then
+local function normalize_keymaps(keymaps)
+    if keymaps == nil then
         return {}
     end
 
@@ -679,10 +679,10 @@ function alpha.start(on_vimenter, conf)
 
     alpha_state[buffer] = state
 
-    for _, k in ipairs(convert_keymaps(conf.opts.keymap.press)) do
+    for _, k in ipairs(normalize_keymaps(conf.opts.keymap.press)) do
         vim.keymap.set("n", k, function() alpha.press() end, { noremap = false, silent = true, buffer = state.buffer })
     end
-    for _, k in ipairs(convert_keymaps(conf.opts.keymap.queue_press)) do
+    for _, k in ipairs(normalize_keymaps(conf.opts.keymap.queue_press)) do
         vim.keymap.set("n", k, function() alpha.queue_press(state) end, { noremap = false, silent = true, buffer = state.buffer })
     end
 
