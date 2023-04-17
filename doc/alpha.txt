@@ -54,6 +54,16 @@ config:
         -- with other plguins.
         -- default: false (disabled)
         noautocmd = bool
+
+        -- table of default keymaps
+        keymap = {
+            -- nil | string | string[]: key combinations used to press an
+            -- item.
+            press = '<CR>',
+            -- nil | string | string[]: key combination used to select an item to
+            -- press later.
+            press_queue = '<M-CR>'
+        }
     }
  }
 <
