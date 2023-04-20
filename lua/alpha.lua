@@ -390,16 +390,25 @@ local keymaps_element = {}
 keymaps_element.text = noop
 keymaps_element.padding = noop
 
+local function buf_set_keymap(buf, mode, lhs, rhs, opts)
+    opts = opts or {}
+    if type(rhs) == 'function' then
+        opts.callback = rhs
+        rhs = ''
+    end
+    vim.api.nvim_buf_set_keymap(buf, mode, lhs, rhs, opts)
+end
+
 ---@diagnostic disable-next-line: unused-local
 function keymaps_element.button(el, conf, state)
     if el.opts and el.opts.keymap then
         if type(el.opts.keymap[1]) == "table" then
             for _, map in el.opts.keymap do
-                vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+                buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
             end
         else
             local map = el.opts.keymap
-            vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+            buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
         end
     end
 end
