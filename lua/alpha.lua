@@ -499,21 +499,21 @@ local function enable_alpha(conf, state)
 
     vim.api.nvim_create_autocmd('BufUnload', {
         group = group_id,
-        buffer = state.buffer,
+        pattern = '<buffer>',
         callback = alpha.close,
     })
 
-    vim.api.nvim_create_autocmd('WinClosed', {
+    vim.api.nvim_create_autocmd({'WinClosed'}, {
         group = group_id,
-        buffer = state.buffer,
+        pattern = '<buffer>',
         callback = alpha.handle_window,
     })
 
     vim.api.nvim_create_autocmd('CursorMoved', {
         group = group_id,
-        buffer = state.buffer,
+        pattern = '<buffer>',
         -- FIXME: many windows can be associated with
-        callback = function() alpha.move_cursor(state.window) end,
+        callback = function() alpha.move_cursor(0) end,
     })
 
     if conf.opts then
@@ -609,7 +609,6 @@ function alpha.draw(conf, state)
 end
 
 function alpha.move_cursor(window)
-    window = window or 0
     if #cursor_jumps ~= 0 then
             local cursor = vim.api.nvim_win_get_cursor(window)
             local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
