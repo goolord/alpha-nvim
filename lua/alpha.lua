@@ -313,8 +313,7 @@ function layout_element.button(el, conf, state)
     end
 
     local row = state.line + 1
-    local _, count_spaces = string.find(val[1], "%s*")
-    local col = ((el.opts and el.opts.cursor) or 0) + count_spaces
+    local col = ((el.opts and el.opts.cursor) or 0) + padding.left
     cursor_jumps[#cursor_jumps + 1] = { row, col }
     cursor_jumps_press[#cursor_jumps_press + 1] = el.on_press
     if el.opts and el.opts.hl_shortcut then
