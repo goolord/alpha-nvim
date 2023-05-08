@@ -545,7 +545,7 @@ local function enable_alpha(conf, state)
                 pattern = '*',
                 callback = function()
                     local width = vim.api.nvim_win_get_width(active_window(state))
-                    if width ~= state.width
+                    if width ~= state.win_width
                     then alpha.redraw(conf, state)
                     end
                 end,
