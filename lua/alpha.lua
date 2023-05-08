@@ -627,8 +627,9 @@ function alpha.move_cursor(window)
     if #cursor_jumps ~= 0 then
             local cursor = vim.api.nvim_win_get_cursor(window)
             local closest_ix, closest_pt = closest_cursor_jump(cursor, cursor_jumps, cursor_jumps[cursor_ix])
+            local closest_pt_vc = vim.fn.virtcol2col(window, closest_pt[1], closest_pt[2])
             cursor_ix = closest_ix
-            vim.api.nvim_win_set_cursor(window, closest_pt)
+            vim.api.nvim_win_set_cursor(window, {closest_pt[1], closest_pt_vc - 2})
     end
 end
 
