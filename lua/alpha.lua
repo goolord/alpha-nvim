@@ -23,17 +23,6 @@ end
 
 local function noop() end
 
-local function active_window(state)
-    local curr_win = vim.api.nvim_get_current_win()
-    local win
-    if vim.tbl_contains(state.windows, curr_win) then
-        win = curr_win
-    else
-        win = state.windows[1]
-    end
-    return win
-end
-
 function alpha.press()
     -- only press under the cursor if there's no queue
     if vim.tbl_count(cursor_jumps_press_queue) == 0 then
@@ -63,7 +52,7 @@ function alpha.queue_press(state)
         cursor_jumps_press_queue[cursor_ix] = nil
     else
 
-        local cursor = vim.api.nvim_win_get_cursor(active_window(state))
+        local cursor = vim.api.nvim_win_get_cursor(state.window)
         local row = cursor[1]
         local col = cursor[2]
 
@@ -140,7 +129,7 @@ function alpha.pad_margin(tbl, state, margin, shrink)
 end
 
 -- function trim(tbl, state)
---     local win_width = vim.api.nvim_win_get_width(state.windows[1])
+--     local win_width = vim.api.nvim_win_get_width(state.window)
 --     local trimmed = {}
 --     for k,v in ipairs(tbl) do
 --         trimmed[k] = string.sub(v, 1, win_width)
@@ -510,36 +499,21 @@ local function enable_alpha(conf, state)
 
     vim.api.nvim_create_autocmd('BufUnload', {
         group = group_id,
-        buffer = state.buffer,
+        pattern = '<buffer>',
         callback = alpha.close,
-    })
-
-    vim.api.nvim_create_autocmd('WinEnter', {
-        group = group_id,
-        buffer = state.buffer,
-        callback = function ()
-            state.windows =
-                vim.tbl_filter(
-                    function(w)
-                        return vim.fn.winbufnr(w) == state.buffer
-                    end,
-                    vim.api.nvim_list_wins()
-                )
-        end,
     })
 
     vim.api.nvim_create_autocmd({'WinClosed'}, {
         group = group_id,
-        buffer = state.buffer,
+        pattern = '<buffer>',
         callback = alpha.handle_window,
     })
 
     vim.api.nvim_create_autocmd('CursorMoved', {
         group = group_id,
-        buffer = state.buffer,
-        callback = function()
-            alpha.move_cursor(active_window(state))
-        end,
+        pattern = '<buffer>',
+        -- FIXME: many windows can be associated with
+        callback = function() alpha.move_cursor(0) end,
     })
 
     if conf.opts then
@@ -558,7 +532,7 @@ local function enable_alpha(conf, state)
                 group = group_id,
                 pattern = '*',
                 callback = function()
-                    local width = vim.api.nvim_win_get_width(active_window(state))
+                    local width = vim.api.nvim_win_get_width(state.window)
                     if width ~= state.width
                     then alpha.redraw(conf, state)
                     end
@@ -611,11 +585,11 @@ end
 
 function alpha.draw(conf, state)
     -- TODO: figure out why this can happen
-    if #state.windows == 0 then return end
+    if state.window == nil then return end
 
     cursor_jumps = {}
     cursor_jumps_press = {}
-    state.win_width = vim.api.nvim_win_get_width(active_window(state) or 0)
+    state.win_width = vim.api.nvim_win_get_width(state.window or 0)
     state.line = 0
     -- this is for redraws. i guess the cursor 'moves'
     -- when the screen is cleared and then redrawn
@@ -626,9 +600,9 @@ function alpha.draw(conf, state)
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
     layout(conf, state)
     vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
-    if vim.api.nvim_get_current_win() == active_window(state) then
+    if vim.api.nvim_get_current_win() == state.window then
         if #cursor_jumps ~= 0 then
-            vim.api.nvim_win_set_cursor(active_window(state), cursor_jumps[ix])
+            vim.api.nvim_win_set_cursor(state.window, cursor_jumps[ix])
         end
     end
     draw_presses(state)
@@ -697,7 +671,7 @@ function alpha.start(on_vimenter, conf)
     local state = {
         line = 0,
         buffer = buffer,
-        windows = { window },
+        window = window,
         win_width = 0,
         open = false,
     }
@@ -756,6 +730,7 @@ function alpha.setup(config)
         nargs = 0,
         bar = true,
     })
+
     local group_id = vim.api.nvim_create_augroup("alpha_start", { clear = true })
     vim.api.nvim_create_autocmd("VimEnter", {
         group = group_id,
