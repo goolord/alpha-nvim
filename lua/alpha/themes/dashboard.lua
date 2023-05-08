@@ -49,7 +49,7 @@ local function button(sc, txt, keybind, keybind_opts)
     local opts = {
         position = "center",
         shortcut = sc,
-        cursor = 5,
+        cursor = 3,
         width = 50,
         align_shortcut = "right",
         hl_shortcut = "Keyword",
