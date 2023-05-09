@@ -26,7 +26,7 @@ local function noop() end
 local function active_window(state)
     local curr_win = vim.api.nvim_get_current_win()
     local win
-    if vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(curr_win), 'filetype') == 'alpha' then
+    if vim.api.nvim_win_get_buf(curr_win) == state.buf then
         win = curr_win
     else
         win = state.windows[1]
