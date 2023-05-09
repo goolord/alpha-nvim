@@ -529,10 +529,33 @@ local function enable_alpha(conf, state)
 
     if conf.opts then
         if if_nil(conf.opts.redraw_on_resize, true) then
-            vim.api.nvim_create_autocmd('WinResized', {
-                group = group_id,
-                callback = function() alpha.redraw(conf, state) end,
-            })
+            if vim.version().api_level >= 11 then
+                vim.api.nvim_create_autocmd('WinResized', {
+                    group = group_id,
+                    callback = function() alpha.redraw(conf, state) end,
+                })
+            else
+                vim.api.nvim_create_autocmd('VimResized', {
+                    group = group_id,
+                    pattern = '*',
+                    callback = function() alpha.redraw(conf, state) end,
+                })
+                vim.api.nvim_create_autocmd({ 'BufLeave', 'WinEnter', 'WinNew', 'WinClosed' }, {
+                    group = group_id,
+                    pattern = '*',
+                    callback = function() alpha.redraw(conf, state) end,
+                })
+                vim.api.nvim_create_autocmd('CursorMoved', {
+                    group = group_id,
+                    pattern = '*',
+                    callback = function()
+                        local width = vim.api.nvim_win_get_width(active_window(state))
+                        if width ~= state.win_width
+                        then alpha.redraw(conf, state)
+                        end
+                    end,
+                })
+            end
         end
 
         if conf.opts.setup then
