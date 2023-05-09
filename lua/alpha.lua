@@ -26,7 +26,7 @@ local function noop() end
 local function active_window(state)
     local curr_win = vim.api.nvim_get_current_win()
     local win
-    if vim.api.nvim_win_get_buf(curr_win) == state.buf then
+    if vim.api.nvim_win_get_buf(curr_win) == state.buffer then
         win = curr_win
     else
         win = state.windows[1]
