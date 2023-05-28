@@ -37,7 +37,9 @@ end
 function alpha.press()
     -- only press under the cursor if there's no queue
     if vim.tbl_count(cursor_jumps_press_queue) == 0 then
+      if cursor_jumps_press[cursor_ix] then
         cursor_jumps_press[cursor_ix]()
+      end
     end
     for queued_cursor_ix, _ in pairs(cursor_jumps_press_queue) do
         cursor_jumps_press[queued_cursor_ix]()
