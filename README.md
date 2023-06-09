@@ -43,6 +43,7 @@ return {
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     opts = { require'alpha.themes.dashboard'.config }
 }
+```
 With packer:
 ```lua
 use {
