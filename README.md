@@ -10,7 +10,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 return {
     'goolord/alpha-nvim',
-	event = "VimEnter",
+    event = "VimEnter",
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     opts = { require'alpha.themes.startify'.config }
 }
@@ -39,7 +39,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 return {
     'goolord/alpha-nvim',
-	event = "VimEnter",
+    event = "VimEnter",
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     opts = { require'alpha.themes.dashboard'.config }
 }
