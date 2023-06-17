@@ -405,11 +405,13 @@ function keymaps_element.button(el, conf, state)
     if el.opts and el.opts.keymap then
         if type(el.opts.keymap[1]) == "table" then
             for _, map in el.opts.keymap do
-                vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+                map[4].buffer = state.buffer
+                vim.keymap.set(map[1], map[2], map[3], map[4])
             end
         else
             local map = el.opts.keymap
-            vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
+            map[4].buffer = state.buffer
+            vim.keymap.set(map[1], map[2], map[3], map[4])
         end
     end
 end

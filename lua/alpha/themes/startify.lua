@@ -23,7 +23,7 @@ local leader = "SPC"
 
 --- @param sc string
 --- @param txt string
---- @param keybind string? optional
+--- @param keybind string?|function optional
 --- @param keybind_opts table? optional
 local function button(sc, txt, keybind, keybind_opts)
     local sc_ = sc:gsub("%s", ""):gsub(leader, "<leader>")
@@ -42,9 +42,14 @@ local function button(sc, txt, keybind, keybind_opts)
         opts.keymap = { "n", sc_, keybind, keybind_opts }
     end
 
-    local function on_press()
+    local function on_press_string()
         local key = vim.api.nvim_replace_termcodes(keybind .. "<Ignore>", true, false, true)
         vim.api.nvim_feedkeys(key, "t", false)
+    end
+
+    local on_press = on_press_string
+    if type(keybind) == 'function' then
+        on_press = keybind
     end
 
     return {
