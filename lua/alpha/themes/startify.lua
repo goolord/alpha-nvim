@@ -110,7 +110,9 @@ local mru_opts = {
     ignore = function(path, ext)
         return (string.find(path, "COMMIT_EDITMSG")) or (vim.tbl_contains(default_mru_ignore, ext))
     end,
-    autocd = false
+    autocd = false,
+    mru_cwd_start = 10,
+    mru_start = 0,
 }
 
 --- @param start number
@@ -182,7 +184,7 @@ local section = {
             {
                 type = "group",
                 val = function()
-                    return { mru(10) }
+                    return { mru(mru_opts.mru_start) }
                 end,
             },
         },
@@ -196,7 +198,7 @@ local section = {
             {
                 type = "group",
                 val = function()
-                    return { mru(0, vim.fn.getcwd()) }
+                    return { mru(mru_opts.mru_cwd_start, vim.fn.getcwd()) }
                 end,
                 opts = { shrink_margin = false },
             },
