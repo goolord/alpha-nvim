@@ -3,12 +3,18 @@ local alpha = require("alpha")
 local M = {}
 
 function M.open_window(el)
-    local width = el.width
-    local height = el.height
+    local window_config = el.opts and el.opts.window_config or {}
+    if type(window_config) == 'function' then
+      window_config = window_config()
+    end
+
+    local width = window_config.width or el.width
+    local height = window_config.height or el.height
+
     local row = math.floor(height / 5)
     local col = math.floor((vim.o.columns - width) / 2)
 
-    local opts = vim.tbl_extend("keep", (el.opts and el.opts.window_config) or {}, {
+    local opts = vim.tbl_extend("keep", window_config, {
         relative = "editor",
         row = row,
         col = col,
