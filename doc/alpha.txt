@@ -274,7 +274,7 @@ For the default configuration, see the Quick Start guide in the README.md
          }
          dashboard.section.buttons.val = {
              dashboard.button( "e", "  New file" , ":ene <BAR> startinsert <CR>"),
-             dashboard.button( "q", "  Quit NVIM" , ":qa<CR>"),
+             dashboard.button( "q", "󰅚  Quit NVIM" , ":qa<CR>"),
          }
          local handle = io.popen('fortune')
          local fortune = handle:read("*a")
@@ -319,7 +319,7 @@ Example with the startify theme:
             -- startify.nvim_web_devicons.highlight = 'Keyword'
             --
             startify.section.bottom_buttons.val = {
-                startify.button( "q", "  Quit NVIM" , ":qa<CR>"),
+                startify.button( "q", "󰅚  Quit NVIM" , ":qa<CR>"),
             }
             startify.section.footer.val = {
                 { type = "text", val = "footer" },
