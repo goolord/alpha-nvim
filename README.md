@@ -12,7 +12,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
     'goolord/alpha-nvim',
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function ()
-        require'alpha.themes.startify'.config 
+        require'alpha'.setup(require'alpha.themes.startify'.config)
     end
 };
 ```
@@ -41,7 +41,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 {
     'goolord/alpha-nvim',
     config = function ()
-        require'alpha.themes.dashboard'.config 
+        require'alpha'.setup(require'alpha.themes.dashboard'.config)
     end
 };
 ```
