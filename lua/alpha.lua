@@ -572,8 +572,15 @@ local function should_skip_alpha()
     -- don't start when opening a file
     if vim.fn.argc() > 0 then return true end
 
-    -- skip stdin
-    if vim.fn.line2byte("$") ~= -1 then return true end
+    -- Do not open alpha if the current buffer has any lines (something opened explicitly).
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+    if #lines > 1 or (#lines == 1 and lines[1]:len() > 0) then return true end
+
+    -- Skip when there are several listed buffers.
+    local listed_buffers = vim.tbl_filter(function (buf_id)
+        return vim.fn.buflisted(buf_id) == 1
+    end, vim.api.nvim_list_bufs())
+    if #listed_buffers > 1 then return true end
 
     -- Handle nvim -M
     if not vim.o.modifiable then return true end
