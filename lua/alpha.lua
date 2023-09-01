@@ -573,7 +573,7 @@ local function should_skip_alpha()
     if vim.fn.argc() > 0 then return true end
 
     -- Do not open alpha if the current buffer has any lines (something opened explicitly).
-    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+    local lines = vim.api.nvim_buf_get_lines(0, 0, 2, false)
     if #lines > 1 or (#lines == 1 and lines[1]:len() > 0) then return true end
 
     -- Skip when there are several listed buffers.
