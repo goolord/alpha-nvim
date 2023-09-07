@@ -46,6 +46,7 @@ end
 
 local function draw_press(row, col, state)
     vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
+    -- todo: represent this in the alpha layout, somehow
     vim.api.nvim_buf_set_text(state.buffer, row - 1, col, row - 1, col + 1, { "*" })
     vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
 end
@@ -585,6 +586,7 @@ local function should_skip_alpha()
     -- Handle nvim -M
     if not vim.o.modifiable then return true end
 
+    ---@diagnostic disable-next-line: undefined-field
     for _, arg in pairs(vim.v.argv) do
         -- whitelisted arguments
         -- always open
@@ -734,10 +736,10 @@ function alpha.setup(config)
         if_nil(config.opts, {}),
         {
             autostart = true,
-            keymap = {
+            keymap = vim.tbl_extend("keep", if_nil(vim.tbl_get(config, "opts", "keymap"), {}), {
                 press = "<CR>",
                 queue_press = "<M-CR>",
-            }
+            })
         }
     )
 
