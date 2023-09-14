@@ -578,10 +578,12 @@ local function should_skip_alpha()
     if #lines > 1 or (#lines == 1 and lines[1]:len() > 0) then return true end
 
     -- Skip when there are several listed buffers.
-    local listed_buffers = vim.tbl_filter(function (buf_id)
-        return vim.fn.buflisted(buf_id) == 1
-    end, vim.api.nvim_list_bufs())
-    if #listed_buffers > 1 then return true end
+    for _, buf_id in pairs(vim.api.nvim_list_bufs()) do
+        local bufinfo = vim.fn.getbufinfo(buf_id)
+        if bufinfo.listed == 1 and #bufinfo.windows > 0
+            then return true
+        end
+    end
 
     -- Handle nvim -M
     if not vim.o.modifiable then return true end
