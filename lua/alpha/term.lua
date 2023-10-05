@@ -2,28 +2,30 @@ local alpha = require("alpha")
 
 local M = {}
 
-function M.open_window(el)
-    local width = el.width
-    local height = el.height
-    local row = math.floor(height / 5)
-    local col = math.floor((vim.o.columns - width) / 2)
+function M.open_window(el, state, line)
+    local parent_win = state.windows[1]
+    local position = M.calc_position(parent_win, el, state, line)
 
-    local opts = vim.tbl_extend("keep", (el.opts and el.opts.window_config) or {}, {
+    local win_config = vim.tbl_extend("keep", (el.opts and el.opts.window_config) or {}, {
         relative = "editor",
-        row = row,
-        col = col,
-        width = width,
-        height = height,
+        row = position.row,
+        col = position.col,
+        width = el.width,
+        height = el.height,
         style = "minimal",
+        focusable = false,
+        noautocmd = true,
+        zindex = 1,
     })
 
     local bufnr = vim.api.nvim_create_buf(false, true)
-    local winid = vim.api.nvim_open_win(bufnr, true, opts)
+    local winid = vim.api.nvim_open_win(bufnr, true, win_config)
     vim.api.nvim_win_set_option(winid, "winhl", "Normal:Normal")
     return { bufnr, winid }
 end
 
-function M.run_command(cmd, el)
+function M.run_command(cmd, el, state, line)
+    el.parent_id = state.windows[1]
     if cmd == nil then
         return
     end
@@ -33,33 +35,52 @@ function M.run_command(cmd, el)
     end
 
     vim.loop.new_async(vim.schedule_wrap(function()
-        local wininfo = M.open_window(el)
+        local wininfo = M.open_window(el, state, line)
+        el.wininfo = wininfo
+        vim.api.nvim_create_autocmd("User", {
+            pattern = "AlphaClosed",
+            callback = function()
+                vim.api.nvim_buf_delete(wininfo[1], { force = true })
+            end,
+        })
         vim.api.nvim_command("terminal " .. cmd)
         vim.api.nvim_command("wincmd j")
         vim.api.nvim_buf_set_option(wininfo[1], "buflisted", false)
-        vim.api.nvim_win_set_var(0, "alpha_section_terminal", wininfo)
         vim.api.nvim_command('let b:term_title ="alpha_terminal" ')
     end)):send()
 end
 
-function M.close_window()
-    local ok, wininfo = pcall(vim.api.nvim_win_get_var, 0, "alpha_section_terminal")
-    if ok and vim.api.nvim_buf_is_loaded(wininfo[1]) then
-        vim.api.nvim_buf_delete(wininfo[1], { force = true })
-    end
+function M.calc_position(parent_id, el, state, line)
+    local parent_win_width = state.win_width
+    local position = vim.api.nvim_win_get_position(parent_id)
+    local res = {}
+    res.row = math.floor(position[1] + line)
+    res.col = math.floor(((parent_win_width - el.width) / 2) + position[2])
+    return res
 end
 
-vim.api.nvim_create_autocmd("User", {
-    pattern = "AlphaClosed",
-    callback = function()
-        M.close_window()
-    end,
-})
+function M.reposition(el, state, line)
+    local parent_id = el.parent_id
+    if parent_id == nil then
+        return
+    end
+
+    local new_position = M.calc_position(parent_id, el, state, line)
+    local term_id = el.wininfo[2]
+    local win_config = vim.api.nvim_win_get_config(term_id)
+    win_config.row = new_position.row
+    win_config.col = new_position.col
+
+    vim.api.nvim_win_set_config(term_id, win_config)
+end
 
 function alpha.layout_element.terminal(el, conf, state)
+    local line = state.line
     if el.opts and (el.opts.redraw == nil or el.opts.redraw) then
         el.opts.redraw = false
-        M.run_command(el.command, el)
+        M.run_command(el.command, el, state, line)
+    else
+        M.reposition(el, state, line)
     end
     return alpha.layout_element.padding({ type = "padding", val = el.height }, conf, state)
 end

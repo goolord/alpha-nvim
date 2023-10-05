@@ -46,6 +46,7 @@ end
 
 local function draw_press(row, col, state)
     vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
+    -- todo: represent this in the alpha layout, somehow
     vim.api.nvim_buf_set_text(state.buffer, row - 1, col, row - 1, col + 1, { "*" })
     vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
 end
@@ -572,12 +573,22 @@ local function should_skip_alpha()
     -- don't start when opening a file
     if vim.fn.argc() > 0 then return true end
 
-    -- skip stdin
-    if vim.fn.line2byte("$") ~= -1 then return true end
+    -- Do not open alpha if the current buffer has any lines (something opened explicitly).
+    local lines = vim.api.nvim_buf_get_lines(0, 0, 2, false)
+    if #lines > 1 or (#lines == 1 and lines[1]:len() > 0) then return true end
+
+    -- Skip when there are several listed buffers.
+    for _, buf_id in pairs(vim.api.nvim_list_bufs()) do
+        local bufinfo = vim.fn.getbufinfo(buf_id)
+        if bufinfo.listed == 1 and #bufinfo.windows > 0
+            then return true
+        end
+    end
 
     -- Handle nvim -M
     if not vim.o.modifiable then return true end
 
+    ---@diagnostic disable-next-line: undefined-field
     for _, arg in pairs(vim.v.argv) do
         -- whitelisted arguments
         -- always open
@@ -727,10 +738,10 @@ function alpha.setup(config)
         if_nil(config.opts, {}),
         {
             autostart = true,
-            keymap = {
+            keymap = vim.tbl_extend("keep", if_nil(vim.tbl_get(config, "opts", "keymap"), {}), {
                 press = "<CR>",
                 queue_press = "<M-CR>",
-            }
+            })
         }
     )
 
