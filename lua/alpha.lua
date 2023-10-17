@@ -404,14 +404,8 @@ keymaps_element.padding = noop
 ---@diagnostic disable-next-line: unused-local
 function keymaps_element.button(el, conf, state)
     if el.opts and el.opts.keymap then
-        if type(el.opts.keymap[1]) == "table" then
-            for _, map in el.opts.keymap do
-                vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
-            end
-        else
-            local map = el.opts.keymap
-            vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
-        end
+        el.opts.keymap[4] = vim.tbl_extend("force", el.opts.keymap[4] or {}, { buffer = state.buffer })
+        vim.keymap.set(unpack(el.opts.keymap))
     end
 end
 
