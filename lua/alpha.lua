@@ -764,6 +764,19 @@ function alpha.setup(config)
         nargs = 0,
         bar = true,
     })
+    vim.api.nvim_create_user_command("AlphaRemap", function(_)
+        local buffer = vim.api.nvim_get_current_buf()
+        local alpha_prime = vim.tbl_get(alpha_state, buffer) or head(alpha_state)
+        if alpha_prime == nil then return end
+        local conf = alpha.default_config
+        local state = alpha_prime
+        keymaps(conf, state)
+    end, {
+        bang = true,
+        desc = 'manually set keymaps',
+        nargs = 0,
+        bar = true,
+    })
     local group_id = vim.api.nvim_create_augroup("alpha_start", { clear = true })
     vim.api.nvim_create_autocmd("VimEnter", {
         group = group_id,
