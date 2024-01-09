@@ -508,6 +508,18 @@ local function enable_alpha(conf, state)
 
     local group_id = vim.api.nvim_create_augroup('alpha_temp', { clear = true })
 
+    if conf.close_on_tabnew
+    then
+        vim.api.nvim_create_autocmd('Tabnew', {
+            group = group_id,
+            buffer = state.buffer,
+            callback = function(ev)
+                vim.api.nvim_buf_delete(ev.buf, {})
+                alpha.close(ev)
+            end,
+        })
+    end
+
     vim.api.nvim_create_autocmd('BufUnload', {
         group = group_id,
         buffer = state.buffer,
