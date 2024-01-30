@@ -269,7 +269,7 @@ function layout_element.button(el, conf, state)
         center = 0,
         right = 0,
     }
-    local opts = vim.tbl_get(el, 'opts')
+    local opts = vim.tbl_get(el, 'opts') or {}
     local shortcut = vim.tbl_get(opts, 'shortcut')
     local width = vim.tbl_get(opts, 'width')
     if shortcut then
@@ -295,8 +295,8 @@ function layout_element.button(el, conf, state)
     -- margin
     if vim.tbl_get(conf, 'opts', 'margin') and (vim.tbl_get(opts, 'position') ~= "center") then
         local left
-        val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(el.opts.shrink_margin, true))
-        if el.opts.align_shortcut == "right" then
+        val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(vim.tbl_get(opts, 'shrink_margin'), true))
+        if vim.tbl_get(opts, 'align_shortcut') == "right" then
             padding.center = padding.center + left
         else
             padding.left = padding.left + left
