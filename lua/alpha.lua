@@ -508,6 +508,11 @@ local function enable_alpha(conf, state)
         callback = alpha.close,
     })
 
+    vim.api.nvim_create_autocmd('SessionLoadPost', {
+        group = group_id,
+        callback = alpha.close,
+    })
+
     vim.api.nvim_create_autocmd({'WinClosed'}, {
         group = group_id,
         buffer = state.buffer,
