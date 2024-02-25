@@ -502,9 +502,14 @@ local function enable_alpha(conf, state)
 
     local group_id = vim.api.nvim_create_augroup('alpha_temp', { clear = true })
 
-    vim.api.nvim_create_autocmd({'BufUnload', 'SessionLoadPost'}, {
+    vim.api.nvim_create_autocmd('BufUnload', {
         group = group_id,
         buffer = state.buffer,
+        callback = alpha.close,
+    })
+
+    vim.api.nvim_create_autocmd('SessionLoadPost', {
+        group = group_id,
         callback = alpha.close,
     })
 
