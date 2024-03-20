@@ -9,7 +9,11 @@ local dashboard = require("alpha.themes.dashboard")
 local cdir = vim.fn.getcwd()
 local if_nil = vim.F.if_nil
 
-local nvim_web_devicons = {
+local M = {}
+
+M.leader = dashboard.leader
+
+M.nvim_web_devicons = {
     enabled = true,
     highlight = true,
 }
@@ -29,10 +33,11 @@ local function icon(fn)
     return nwd.get_icon(fn, ext, { default = true })
 end
 
-local function file_button(fn, sc, short_fn,autocd)
+local function file_button(fn, sc, short_fn, autocd)
     short_fn = short_fn or fn
     local ico_txt
     local fb_hl = {}
+    local nvim_web_devicons = M.nvim_web_devicons
 
     if nvim_web_devicons.enabled then
         local ico, hl = icon(fn)
@@ -50,7 +55,8 @@ local function file_button(fn, sc, short_fn,autocd)
         ico_txt = ""
     end
     local cd_cmd = (autocd and " | cd %:p:h" or "")
-    local file_button_el = dashboard.button(sc, ico_txt .. short_fn, "<cmd>e " .. vim.fn.fnameescape(fn) .. cd_cmd .." <CR>")
+    local file_button_el =
+        dashboard.button(sc, ico_txt .. short_fn, "<cmd>e " .. vim.fn.fnameescape(fn) .. cd_cmd .. " <CR>")
     local fn_start = short_fn:match(".*[/\\]")
     if fn_start ~= nil then
         table.insert(fb_hl, { "Comment", #ico_txt - 2, #fn_start + #ico_txt })
@@ -61,18 +67,18 @@ end
 
 local default_mru_ignore = { "gitcommit" }
 
-local mru_opts = {
+M.mru_opts = {
     ignore = function(path, ext)
         return (string.find(path, "COMMIT_EDITMSG")) or (vim.tbl_contains(default_mru_ignore, ext))
     end,
-    autocd = false
+    autocd = false,
 }
 
 --- @param start number
 --- @param cwd string? optional
 --- @param items_number number? optional number of items to generate, default = 10
-local function mru(start, cwd, items_number, opts)
-    opts = opts or mru_opts
+function M.mru(start, cwd, items_number, opts)
+    opts = opts or M.mru_opts
     items_number = if_nil(items_number, 10)
 
     local oldfiles = {}
@@ -111,7 +117,7 @@ local function mru(start, cwd, items_number, opts)
 
         local shortcut = tostring(i + start - 1)
 
-        local file_button_el = file_button(fn, shortcut, short_fn,opts.autocd)
+        local file_button_el = file_button(fn, shortcut, short_fn, opts.autocd)
         tbl[i] = file_button_el
     end
     return {
@@ -121,7 +127,7 @@ local function mru(start, cwd, items_number, opts)
     }
 end
 
-local header = {
+M.header = {
     type = "text",
     val = {
         [[                                  __]],
@@ -154,14 +160,14 @@ local section_mru = {
         {
             type = "group",
             val = function()
-                return { mru(0, cdir) }
+                return { M.mru(0, cdir) }
             end,
             opts = { shrink_margin = false },
         },
     },
 }
 
-local buttons = {
+M.buttons = {
     type = "group",
     val = {
         { type = "text", val = "Quick links", opts = { hl = "SpecialComment", position = "center" } },
@@ -176,37 +182,28 @@ local buttons = {
     position = "center",
 }
 
-local config = {
+M.config = {
     layout = {
         { type = "padding", val = 2 },
-        header,
+        M.header,
         { type = "padding", val = 2 },
         section_mru,
         { type = "padding", val = 2 },
-        buttons,
+        M.buttons,
     },
     opts = {
         margin = 5,
         setup = function()
-            vim.api.nvim_create_autocmd('DirChanged', {
-                pattern = '*',
+            vim.api.nvim_create_autocmd("DirChanged", {
+                pattern = "*",
                 group = "alpha_temp",
-                callback = function ()
-                    require('alpha').redraw()
-                    vim.cmd('AlphaRemap')
+                callback = function()
+                    require("alpha").redraw()
+                    vim.cmd("AlphaRemap")
                 end,
             })
         end,
     },
 }
 
-return {
-    header = header,
-    buttons = buttons,
-    mru = mru,
-    config = config,
-    -- theme specific config
-    mru_opts = mru_opts,
-    leader = dashboard.leader,
-    nvim_web_devicons = nvim_web_devicons,
-}
+return M

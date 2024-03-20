@@ -19,14 +19,16 @@ local default_header = {
     },
 }
 
-local leader = "SPC"
+local M = {}
+
+M.leader = "SPC"
 
 --- @param sc string
 --- @param txt string
 --- @param keybind string? optional
 --- @param keybind_opts table? optional
-local function button(sc, txt, keybind, keybind_opts)
-    local sc_ = sc:gsub("%s", ""):gsub(leader, "<leader>")
+function M.button(sc, txt, keybind, keybind_opts)
+    local sc_ = sc:gsub("%s", ""):gsub(M.leader, "<leader>")
 
     local opts = {
         position = "left",
@@ -55,7 +57,7 @@ local function button(sc, txt, keybind, keybind_opts)
     }
 end
 
-local nvim_web_devicons = {
+M.nvim_web_devicons = {
     enabled = true,
     highlight = true,
 }
@@ -69,18 +71,19 @@ local function get_extension(fn)
     return ext
 end
 
-local function icon(fn)
+function M.icon(fn)
     local nwd = require("nvim-web-devicons")
     local ext = get_extension(fn)
     return nwd.get_icon(fn, ext, { default = true })
 end
 
-local function file_button(fn, sc, short_fn, autocd)
+function M.file_button(fn, sc, short_fn, autocd)
     short_fn = if_nil(short_fn, fn)
     local ico_txt
     local fb_hl = {}
+    local nvim_web_devicons = M.nvim_web_devicons
     if nvim_web_devicons.enabled then
-        local ico, hl = icon(fn)
+        local ico, hl = M.icon(fn)
         local hl_option_type = type(nvim_web_devicons.highlight)
         if hl_option_type == "boolean" then
             if hl and nvim_web_devicons.highlight then
@@ -95,7 +98,7 @@ local function file_button(fn, sc, short_fn, autocd)
         ico_txt = ""
     end
     local cd_cmd = (autocd and " | cd %:p:h" or "")
-    local file_button_el = button(sc, ico_txt .. short_fn, "<cmd>e " .. vim.fn.fnameescape(fn) .. cd_cmd .." <CR>")
+    local file_button_el = M.button(sc, ico_txt .. short_fn, "<cmd>e " .. vim.fn.fnameescape(fn) .. cd_cmd .. " <CR>")
     local fn_start = short_fn:match(".*[/\\]")
     if fn_start ~= nil then
         table.insert(fb_hl, { "Comment", #ico_txt, #fn_start + #ico_txt })
@@ -106,18 +109,18 @@ end
 
 local default_mru_ignore = { "gitcommit" }
 
-local mru_opts = {
+M.mru_opts = {
     ignore = function(path, ext)
         return (string.find(path, "COMMIT_EDITMSG")) or (vim.tbl_contains(default_mru_ignore, ext))
     end,
-    autocd = false
+    autocd = false,
 }
 
 --- @param start number
 --- @param cwd string? optional
 --- @param items_number number? optional number of items to generate, default = 10
-local function mru(start, cwd, items_number, opts)
-    opts = opts or mru_opts
+function M.mru(start, cwd, items_number, opts)
+    opts = opts or M.mru_opts
     items_number = if_nil(items_number, 10)
     local oldfiles = {}
     for _, v in pairs(vim.v.oldfiles) do
@@ -144,7 +147,7 @@ local function mru(start, cwd, items_number, opts)
         else
             short_fn = fnamemodify(fn, ":~")
         end
-        local file_button_el = file_button(fn, tostring(i + start - 1), short_fn,opts.autocd)
+        local file_button_el = M.file_button(fn, tostring(i + start - 1), short_fn, opts.autocd)
         tbl[i] = file_button_el
     end
     return {
@@ -158,12 +161,12 @@ local function mru_title()
     return "MRU " .. vim.fn.getcwd()
 end
 
-local section = {
+M.section = {
     header = default_header,
     top_buttons = {
         type = "group",
         val = {
-            button("e", "New file", "<cmd>ene <CR>"),
+            M.button("e", "New file", "<cmd>ene <CR>"),
         },
     },
     -- note about MRU: currently this is a function,
@@ -182,7 +185,7 @@ local section = {
             {
                 type = "group",
                 val = function()
-                    return { mru(10) }
+                    return { M.mru(10) }
                 end,
             },
         },
@@ -196,7 +199,7 @@ local section = {
             {
                 type = "group",
                 val = function()
-                    return { mru(0, vim.fn.getcwd()) }
+                    return { M.mru(0, vim.fn.getcwd()) }
                 end,
                 opts = { shrink_margin = false },
             },
@@ -205,7 +208,7 @@ local section = {
     bottom_buttons = {
         type = "group",
         val = {
-            button("q", "Quit", "<cmd>q <CR>"),
+            M.button("q", "Quit", "<cmd>q <CR>"),
         },
     },
     footer = {
@@ -214,45 +217,32 @@ local section = {
     },
 }
 
-local config = {
+M.config = {
     layout = {
         { type = "padding", val = 1 },
-        section.header,
+        M.section.header,
         { type = "padding", val = 2 },
-        section.top_buttons,
-        section.mru_cwd,
-        section.mru,
+        M.section.top_buttons,
+        M.section.mru_cwd,
+        M.section.mru,
         { type = "padding", val = 1 },
-        section.bottom_buttons,
-        section.footer,
+        M.section.bottom_buttons,
+        M.section.footer,
     },
     opts = {
         margin = 3,
         redraw_on_resize = false,
         setup = function()
-            vim.api.nvim_create_autocmd('DirChanged', {
-                pattern = '*',
+            vim.api.nvim_create_autocmd("DirChanged", {
+                pattern = "*",
                 group = "alpha_temp",
-                callback = function ()
-                    require('alpha').redraw()
-                    vim.cmd('AlphaRemap')
+                callback = function()
+                    require("alpha").redraw()
+                    vim.cmd("AlphaRemap")
                 end,
             })
         end,
     },
 }
 
-return {
-    icon = icon,
-    button = button,
-    file_button = file_button,
-    mru = mru,
-    mru_opts = mru_opts,
-    section = section,
-    config = config,
-    -- theme config
-    nvim_web_devicons = nvim_web_devicons,
-    leader = leader,
-    -- deprecated
-    opts = config,
-}
+return M

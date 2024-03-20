@@ -37,14 +37,16 @@ local footer = {
     },
 }
 
-local leader = "SPC"
+local M = {}
+
+M.leader = "SPC"
 
 --- @param sc string
 --- @param txt string
 --- @param keybind string? optional
 --- @param keybind_opts table? optional
-local function button(sc, txt, keybind, keybind_opts)
-    local sc_ = sc:gsub("%s", ""):gsub(leader, "<leader>")
+function M.button(sc, txt, keybind, keybind_opts)
+    local sc_ = sc:gsub("%s", ""):gsub(M.leader, "<leader>")
 
     local opts = {
         position = "center",
@@ -75,45 +77,40 @@ end
 local buttons = {
     type = "group",
     val = {
-        button("e", "  New file", "<cmd>ene <CR>"),
-        button("SPC f f", "󰈞  Find file"),
-        button("SPC f h", "󰊄  Recently opened files"),
-        button("SPC f r", "  Frecency/MRU"),
-        button("SPC f g", "󰈬  Find word"),
-        button("SPC f m", "  Jump to bookmarks"),
-        button("SPC s l", "  Open last session"),
+        M.button("e", "  New file", "<cmd>ene <CR>"),
+        M.button("SPC f f", "󰈞  Find file"),
+        M.button("SPC f h", "󰊄  Recently opened files"),
+        M.button("SPC f r", "  Frecency/MRU"),
+        M.button("SPC f g", "󰈬  Find word"),
+        M.button("SPC f m", "  Jump to bookmarks"),
+        M.button("SPC s l", "  Open last session"),
     },
     opts = {
         spacing = 1,
     },
 }
 
-local section = {
+M.section = {
     terminal = default_terminal,
     header = default_header,
     buttons = buttons,
     footer = footer,
 }
 
-local config = {
+M.config = {
     layout = {
         { type = "padding", val = 2 },
-        section.header,
+        M.section.header,
         { type = "padding", val = 2 },
-        section.buttons,
-        section.footer,
+        M.section.buttons,
+        M.section.footer,
     },
     opts = {
         margin = 5,
     },
 }
 
-return {
-    button = button,
-    section = section,
-    config = config,
-    -- theme config
-    leader = leader,
-    -- deprecated
-    opts = config,
-}
+--deprecated
+M.opts = M.config
+
+return M
