@@ -191,7 +191,10 @@ local config = {
             vim.api.nvim_create_autocmd('DirChanged', {
                 pattern = '*',
                 group = "alpha_temp",
-                callback = function () require('alpha').redraw() end,
+                callback = function ()
+                    require('alpha').redraw()
+                    vim.cmd('AlphaRemap')
+                end,
             })
         end,
     },

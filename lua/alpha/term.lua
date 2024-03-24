@@ -40,7 +40,9 @@ function M.run_command(cmd, el, state, line)
         vim.api.nvim_create_autocmd("User", {
             pattern = "AlphaClosed",
             callback = function()
-                vim.api.nvim_buf_delete(wininfo[1], { force = true })
+                if vim.api.nvim_buf_is_valid(wininfo[1]) then
+                    vim.api.nvim_buf_delete(wininfo[1], { force = true })
+                end
             end,
         })
         vim.api.nvim_command("terminal " .. cmd)

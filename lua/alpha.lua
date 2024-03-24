@@ -269,7 +269,7 @@ function layout_element.button(el, conf, state)
         center = 0,
         right = 0,
     }
-    local opts = vim.tbl_get(el, 'opts')
+    local opts = vim.tbl_get(el, 'opts') or {}
     local shortcut = vim.tbl_get(opts, 'shortcut')
     local width = vim.tbl_get(opts, 'width')
     if shortcut then
@@ -295,8 +295,8 @@ function layout_element.button(el, conf, state)
     -- margin
     if vim.tbl_get(conf, 'opts', 'margin') and (vim.tbl_get(opts, 'position') ~= "center") then
         local left
-        val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(el.opts.shrink_margin, true))
-        if el.opts.align_shortcut == "right" then
+        val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(vim.tbl_get(opts, 'shrink_margin'), true))
+        if vim.tbl_get(opts, 'align_shortcut') == "right" then
             padding.center = padding.center + left
         else
             padding.left = padding.left + left
@@ -404,14 +404,8 @@ keymaps_element.padding = noop
 ---@diagnostic disable-next-line: unused-local
 function keymaps_element.button(el, conf, state)
     if el.opts and el.opts.keymap then
-        if type(el.opts.keymap[1]) == "table" then
-            for _, map in el.opts.keymap do
-                vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
-            end
-        else
-            local map = el.opts.keymap
-            vim.api.nvim_buf_set_keymap(state.buffer, map[1], map[2], map[3], map[4])
-        end
+        el.opts.keymap[4] = vim.tbl_extend("force", el.opts.keymap[4] or {}, { buffer = state.buffer })
+        vim.keymap.set(unpack(el.opts.keymap))
     end
 end
 
@@ -511,6 +505,11 @@ local function enable_alpha(conf, state)
     vim.api.nvim_create_autocmd('BufUnload', {
         group = group_id,
         buffer = state.buffer,
+        callback = alpha.close,
+    })
+
+    vim.api.nvim_create_autocmd('SessionLoadPost', {
+        group = group_id,
         callback = alpha.close,
     })
 
@@ -761,6 +760,19 @@ function alpha.setup(config)
     end, {
         bang = true,
         desc = 'require"alpha".redraw()',
+        nargs = 0,
+        bar = true,
+    })
+    vim.api.nvim_create_user_command("AlphaRemap", function(_)
+        local buffer = vim.api.nvim_get_current_buf()
+        local alpha_prime = vim.tbl_get(alpha_state, buffer) or head(alpha_state)
+        if alpha_prime == nil then return end
+        local conf = alpha.default_config
+        local state = alpha_prime
+        keymaps(conf, state)
+    end, {
+        bang = true,
+        desc = 'manually set keymaps',
         nargs = 0,
         bar = true,
     })

@@ -6,6 +6,9 @@ share or snipe some custom themes @ https://github.com/goolord/alpha-nvim/discus
 ## Quick Start
 #### vim-startify theme
 ![glamor shot](https://user-images.githubusercontent.com/24906808/133367667-0f73e9e1-ea75-46d1-8e1b-ff0ecfeafeb1.png)
+<details>
+<summary>EXAMPLES</summary>
+
 With [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
@@ -34,8 +37,13 @@ require "paq" {
 }
 require'alpha'.setup(require'alpha.themes.startify'.config)
 ```
+</details>
+
 #### dashboard-nvim theme
 ![glamor shot](https://user-images.githubusercontent.com/24906808/132604236-4f20adc4-706c-49b4-b473-ebfd6a7f0784.png)
+<details>
+<summary>EXAMPLES</summary>
+
 With [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
@@ -62,6 +70,49 @@ require "paq" {
 }
 require'alpha'.setup(require'alpha.themes.dashboard'.config)
 ```
+</details>
+
+#### Theta theme
+<details>
+<summary>EXAMPLES</summary>
+
+With [lazy.nvim](https://github.com/folke/lazy.nvim):
+```lua
+{
+    'goolord/alpha-nvim',
+    dependencies = {
+        'nvim-tree/nvim-web-devicons',
+        'nvim-lua/plenary.nvim'
+    },
+    config = function ()
+        require'alpha'.setup(require'alpha.themes.theta'.config)
+    end
+};
+```
+With packer:
+```lua
+use {
+    'goolord/alpha-nvim',
+    requires = {
+        'nvim-tree/nvim-web-devicons',
+        'nvim-lua/plenary.nvim'
+    },
+    config = function ()
+        require'alpha'.setup(require'alpha.themes.dashboard'.config)
+    end
+}
+```
+..or using paq:
+```lua
+require "paq" {
+    "goolord/alpha-nvim";
+    "nvim-tree/nvim-web-devicons";
+    'nvim-lua/plenary.nvim';
+}
+require'alpha'.setup(require'alpha.themes.dashboard'.config)
+```
+</details>
+
 if you want sessions, see 
 - https://github.com/Shatur/neovim-session-manager
 - :h :mks
