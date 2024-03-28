@@ -15,8 +15,12 @@ local list_extend = vim.list_extend
 --- @param max_width number
 --- @return table
 local format_line = function(line, max_width)
+    local bufstart = "│ "
+    local bufend = "│ "
+
     if line == "" then
-        return { " " }
+        return { bufstart .. string.rep(" ", max_width - 3) .. bufend }
+        -- return { " " }
     end
 
     local formatted_line = {}
@@ -28,27 +32,32 @@ local format_line = function(line, max_width)
         table.insert(words, word)
     end
 
-    local bufstart = " "
     local buffer = bufstart
     for i, word in ipairs(words) do
-        if (#buffer + #word) <= max_width then
+        local width = max_width + 1
+        if (#buffer + #word) <= max_width - 2 then
             buffer = buffer .. word .. " "
             if i == #words then
+                buffer = (string.format("%-" .. width .. "s", buffer) .. bufend)
+                -- buffer = buffer .. bufend
                 table.insert(formatted_line, buffer:sub(1, -2))
             end
         else
+            buffer = (string.format("%-" .. width .. "s", buffer) .. bufend)
             table.insert(formatted_line, buffer:sub(1, -2))
             buffer = bufstart .. word .. " "
             if i == #words then
+                buffer = (string.format("%-" .. width .. "s", buffer) .. bufend)
                 table.insert(formatted_line, buffer:sub(1, -2))
             end
         end
     end
+
     -- right-justify text if the line begins with -
     if line:sub(1, 1) == "-" then
         for i, val in ipairs(formatted_line) do
-            local space = string.rep(" ", max_width - #val - 2)
-            formatted_line[i] = space .. val:sub(2, -1)
+            local space = string.rep(" ", max_width - #line - 4)
+            formatted_line[i] = bufstart .. space .. line .. " " .. bufend
         end
     end
     return formatted_line
@@ -59,11 +68,17 @@ end
 --- @return table
 local format_fortune = function(fortune, max_width)
     -- Converts list of strings to one formatted string (with linebreaks)
-    local formatted_fortune = { " " } -- adds spacing between alpha-menu and footer
+    -- local formatted_fortune = { " " } -- adds spacing between alpha-menu and footer
+
+    local formatted_fortune = { "┌" .. string.rep("─", max_width - 2) .. "┐" }
+
     for _, line in ipairs(fortune) do
         local formatted_line = format_line(line, max_width)
         formatted_fortune = list_extend(formatted_fortune, formatted_line)
     end
+    -- formatted_fortune = list_extend(formatted_fortune, {" "})
+    formatted_fortune = list_extend(formatted_fortune, { "└" .. string.rep("─", max_width - 2) .. "┘" })
+
     return formatted_fortune
 end
 
