@@ -26,10 +26,11 @@ end
 local function icon(fn)
     local nwd = require("nvim-web-devicons")
     local ext = get_extension(fn)
-    return nwd.get_icon(fn, ext, { default = true })
+    local filename = fn:match(".*[/\\](.*)")
+    return nwd.get_icon(filename, ext, { default = true })
 end
 
-local function file_button(fn, sc, short_fn,autocd)
+local function file_button(fn, sc, short_fn, autocd)
     short_fn = short_fn or fn
     local ico_txt
     local fb_hl = {}
@@ -50,7 +51,8 @@ local function file_button(fn, sc, short_fn,autocd)
         ico_txt = ""
     end
     local cd_cmd = (autocd and " | cd %:p:h" or "")
-    local file_button_el = dashboard.button(sc, ico_txt .. short_fn, "<cmd>e " .. vim.fn.fnameescape(fn) .. cd_cmd .." <CR>")
+    local file_button_el =
+        dashboard.button(sc, ico_txt .. short_fn, "<cmd>e " .. vim.fn.fnameescape(fn) .. cd_cmd .. " <CR>")
     local fn_start = short_fn:match(".*[/\\]")
     if fn_start ~= nil then
         table.insert(fb_hl, { "Comment", #ico_txt - 2, #fn_start + #ico_txt })
@@ -65,7 +67,7 @@ local mru_opts = {
     ignore = function(path, ext)
         return (string.find(path, "COMMIT_EDITMSG")) or (vim.tbl_contains(default_mru_ignore, ext))
     end,
-    autocd = false
+    autocd = false,
 }
 
 --- @param start number
@@ -111,7 +113,7 @@ local function mru(start, cwd, items_number, opts)
 
         local shortcut = tostring(i + start - 1)
 
-        local file_button_el = file_button(fn, shortcut, short_fn,opts.autocd)
+        local file_button_el = file_button(fn, shortcut, short_fn, opts.autocd)
         tbl[i] = file_button_el
     end
     return {
@@ -188,12 +190,12 @@ local config = {
     opts = {
         margin = 5,
         setup = function()
-            vim.api.nvim_create_autocmd('DirChanged', {
-                pattern = '*',
+            vim.api.nvim_create_autocmd("DirChanged", {
+                pattern = "*",
                 group = "alpha_temp",
-                callback = function ()
-                    require('alpha').redraw()
-                    vim.cmd('AlphaRemap')
+                callback = function()
+                    require("alpha").redraw()
+                    vim.cmd("AlphaRemap")
                 end,
             })
         end,
