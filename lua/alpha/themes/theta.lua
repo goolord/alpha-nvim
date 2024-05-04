@@ -169,7 +169,7 @@ local buttons = {
         dashboard.button("e", "  New file", "<cmd>ene<CR>"),
         dashboard.button("SPC f f", "󰈞  Find file"),
         dashboard.button("SPC f g", "󰊄  Live grep"),
-        dashboard.button("c", "  Configuration", "<cmd>cd ~/.config/nvim/ <CR>"),
+        dashboard.button("c", "  Configuration", "<cmd>cd " .. (package.config:sub(1,1) == "\\" and "$LOCALAPPDATA/nvim/" or "~/.config/nvim/") .. " <CR>"),
         dashboard.button("u", "  Update plugins", "<cmd>Lazy sync<CR>"),
         dashboard.button("q", "󰅚  Quit", "<cmd>qa<CR>"),
     },
