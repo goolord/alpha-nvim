@@ -651,6 +651,9 @@ function alpha.move_cursor(window)
 end
 
 function alpha.redraw(conf, state)
+    if not vim.api.nvim_buf_is_valid(state.buffer) then
+        return
+    end
     if (conf == nil) and (state == nil) then
         local buffer = vim.api.nvim_get_current_buf()
         local alpha_prime = vim.tbl_get(alpha_state, buffer) or head(alpha_state)
