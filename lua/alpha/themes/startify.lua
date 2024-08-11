@@ -58,6 +58,7 @@ end
 local nvim_web_devicons = {
     enabled = true,
     highlight = true,
+    sessions = false,
 }
 
 local function get_extension(fn)
@@ -158,6 +159,48 @@ local function mru_title()
     return "MRU " .. vim.fn.getcwd()
 end
 
+local session_manager_exists, sess_man = pcall(require, "session_manager.utils")
+
+local session_buttons = {
+    type = "group",
+    val = {}
+}
+
+local sessions_group = {
+    type = "group",
+    val = {},
+}
+
+local num_sessions = 0
+
+if session_manager_exists then
+    local sessions = sess_man.get_sessions()
+    local ico
+    if nvim_web_devicons.sessions then
+        ico, _ = require("nvim-web-devicons").get_icon("", "cfg", { default = true })
+    end
+    for i,v in ipairs(sessions) do
+        local filename = v.dir.filename
+        if nvim_web_devicons.sessions then
+            filename = ico .. "  " .. filename
+        end
+        table.insert(session_buttons.val, button(
+            tostring(i - 1),
+            filename,
+            -- ico .. "  " .. v.dir.filename,
+            [[<cmd>lua require"session_manager.utils".load_session("]]
+            .. v.filename .. [[", true)<CR>]]
+        ))
+    end
+    num_sessions = #sessions
+    if num_sessions > 0 then
+        table.insert(sessions_group.val, { type = "padding", val = 1 })
+        table.insert(sessions_group.val, { type = "text", val = "Sessions",  opts = { hl = "SpecialComment" } })
+        table.insert(sessions_group.val, { type = "padding", val = 1 })
+        table.insert(sessions_group.val, session_buttons)
+    end
+end
+
 local section = {
     header = default_header,
     top_buttons = {
@@ -166,6 +209,7 @@ local section = {
             button("e", "New file", "<cmd>ene <CR>"),
         },
     },
+    sessions = sessions_group,
     -- note about MRU: currently this is a function,
     -- since that means we can get a fresh mru
     -- whenever there is a DirChanged. this is *really*
@@ -182,7 +226,7 @@ local section = {
             {
                 type = "group",
                 val = function()
-                    return { mru(10) }
+                    return { mru(10 + num_sessions) }
                 end,
             },
         },
@@ -196,7 +240,7 @@ local section = {
             {
                 type = "group",
                 val = function()
-                    return { mru(0, vim.fn.getcwd()) }
+                    return { mru(0 + num_sessions, vim.fn.getcwd()) }
                 end,
                 opts = { shrink_margin = false },
             },
@@ -220,6 +264,7 @@ local config = {
         section.header,
         { type = "padding", val = 2 },
         section.top_buttons,
+        section.sessions,
         section.mru_cwd,
         section.mru,
         { type = "padding", val = 1 },
@@ -256,3 +301,4 @@ return {
     -- deprecated
     opts = config,
 }
+
