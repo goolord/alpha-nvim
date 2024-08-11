@@ -236,13 +236,16 @@ theta/startify:
     autocd = false
  }
 
- nvim_web_devicons = {
+ file_icons = {
      -- enable / disable icons in the MRU menu entries
      -- defaults to
      enabled = true,
      -- enable / disable highlighting for the icons in the MRU menu entries
      -- defaults to
      highlight = true,
+     -- available: devicons, mini, to use nvim-web-devicons or mini.icons
+     -- if provider not loaded and enabled is true, it will try to use another provider
+     provider = "mini",
  }
 <
 
@@ -294,7 +297,7 @@ Example with the startify theme:
 >
     use {
         "goolord/alpha-nvim",
-        requires = { 'nvim-tree/nvim-web-devicons' },
+        requires = { 'echasnovski/mini.icons' },
         config = function ()
             local alpha = require'alpha'
             local startify = require'alpha.themes.startify'
@@ -313,10 +316,10 @@ Example with the startify theme:
             startify.section.mru.val = { { type = "padding", val = 0 } }
             -- disable MRU cwd
             startify.section.mru_cwd.val = { { type = "padding", val = 0 } }
-            -- disable nvim_web_devicons
-            startify.nvim_web_devicons.enabled = false
-            -- startify.nvim_web_devicons.highlight = false
-            -- startify.nvim_web_devicons.highlight = 'Keyword'
+            -- disable file_icons
+            startify.file_icons.enabled = false
+            -- startify.file_icons.highlight = false
+            -- startify.file_icons.highlight = 'Keyword'
             --
             startify.section.bottom_buttons.val = {
                 startify.button( "q", "󰅚  Quit NVIM" , ":qa<CR>"),
