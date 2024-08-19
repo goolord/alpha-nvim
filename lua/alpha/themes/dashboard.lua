@@ -41,7 +41,7 @@ local leader = "SPC"
 
 --- @param sc string
 --- @param txt string
---- @param keybind string? optional
+--- @param keybind string|function? optional
 --- @param keybind_opts table? optional
 local function button(sc, txt, keybind, keybind_opts)
     local sc_ = sc:gsub("%s", ""):gsub(leader, "<leader>")
@@ -56,12 +56,25 @@ local function button(sc, txt, keybind, keybind_opts)
     }
     if keybind then
         keybind_opts = if_nil(keybind_opts, { noremap = true, silent = true, nowait = true })
-        opts.keymap = { "n", sc_, keybind, keybind_opts }
+        -- opts.keymap = { "n", sc_, keybind, keybind_opts }
+        if type(keybind) == "function" then
+            -- Assuming you want to call the function directly in the keymap
+            local func_keymap = function()
+                pcall(keybind)
+            end
+            opts.keymap = { "n", sc_, func_keymap, keybind_opts }
+        else
+            opts.keymap = { "n", sc_, keybind, keybind_opts }
+        end
     end
 
     local function on_press()
-        local key = vim.api.nvim_replace_termcodes(keybind or sc_ .. "<Ignore>", true, false, true)
-        vim.api.nvim_feedkeys(key, "t", false)
+        if type(keybind) == "function" then
+            pcall(keybind)
+        else
+            local key = vim.api.nvim_replace_termcodes(keybind or sc_ .. "<Ignore>", true, false, true)
+            vim.api.nvim_feedkeys(key, "t", false)
+        end
     end
 
     return {
