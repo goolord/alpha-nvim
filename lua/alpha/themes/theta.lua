@@ -8,7 +8,6 @@ if not path_ok then
 end
 
 local dashboard = require("alpha.themes.dashboard")
-local cdir = vim.fn.getcwd()
 local if_nil = vim.F.if_nil
 
 local file_icons = {
@@ -160,7 +159,7 @@ local section_mru = {
         {
             type = "group",
             val = function()
-                return { mru(0, cdir) }
+                return { mru(0, vim.fn.getcwd()) }
             end,
             opts = { shrink_margin = false },
         },
