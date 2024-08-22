@@ -514,8 +514,13 @@ local function enable_alpha(conf, state)
             group = group_id,
             buffer = state.buffer,
             callback = function(ev)
-                vim.api.nvim_buf_delete(ev.buf, {})
-                alpha.close(ev)
+                local function check_and_delete_alpha_buf()
+                    alpha.close(ev)
+                    vim.api.nvim_buf_delete(ev.buf, {})
+                end
+
+                local timer = vim.loop.new_timer()
+                timer:start(1000, 0, vim.schedule_wrap(check_and_delete_alpha_buf))
             end,
         })
     end
