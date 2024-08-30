@@ -98,7 +98,7 @@ use {
         'nvim-lua/plenary.nvim'
     },
     config = function ()
-        require'alpha'.setup(require'alpha.themes.dashboard'.config)
+        require'alpha'.setup(require'alpha.themes.theta'.config)
     end
 }
 ```
@@ -109,7 +109,7 @@ require "paq" {
     "echasnovski/mini.icons";
     'nvim-lua/plenary.nvim';
 }
-require'alpha'.setup(require'alpha.themes.dashboard'.config)
+require'alpha'.setup(require'alpha.themes.theta'.config)
 ```
 </details>
 
