@@ -1,56 +1,61 @@
 -- originally authored by @AdamWhittingham
 
+local utils = require("alpha.utils")
+
 local path_ok, plenary_path = pcall(require, "plenary.path")
 if not path_ok then
     return
 end
 
 local dashboard = require("alpha.themes.dashboard")
-local cdir = vim.fn.getcwd()
 local if_nil = vim.F.if_nil
 
-local nvim_web_devicons = {
+local file_icons = {
     enabled = true,
     highlight = true,
+    -- available: devicons, mini, to use nvim-web-devicons or mini.icons
+    -- if provider not loaded and enabled is true, it will try to use another provider
+    provider = "mini",
 }
 
-local function get_extension(fn)
-    local match = fn:match("^.+(%..+)$")
-    local ext = ""
-    if match ~= nil then
-        ext = match:sub(2)
-    end
-    return ext
-end
-
 local function icon(fn)
-    local nwd = require("nvim-web-devicons")
-    local ext = get_extension(fn)
-    return nwd.get_icon(fn, ext, { default = true })
+    if file_icons.provider ~= "devicons" and file_icons.provider ~= "mini" then
+        vim.notify("Alpha: Invalid file icons provider: " .. file_icons.provider .. ", disable file icons", vim.log.levels.WARN)
+        file_icons.enabled = false
+        return "", ""
+    end
+
+    local ico, hl = utils.get_file_icon(file_icons.provider, fn)
+    if ico == "" then
+        file_icons.enabled = false
+        vim.notify("Alpha: Mini icons or devicons get icon failed, disable file icons", vim.log.levels.WARN)
+    end
+    return ico, hl
 end
 
-local function file_button(fn, sc, short_fn,autocd)
+local function file_button(fn, sc, short_fn, autocd)
     short_fn = short_fn or fn
     local ico_txt
     local fb_hl = {}
 
-    if nvim_web_devicons.enabled then
+    if file_icons.enabled then
         local ico, hl = icon(fn)
-        local hl_option_type = type(nvim_web_devicons.highlight)
+        local hl_option_type = type(file_icons.highlight)
         if hl_option_type == "boolean" then
-            if hl and nvim_web_devicons.highlight then
+            if hl and file_icons.highlight then
                 table.insert(fb_hl, { hl, 0, #ico })
             end
         end
         if hl_option_type == "string" then
-            table.insert(fb_hl, { nvim_web_devicons.highlight, 0, #ico })
+            table.insert(fb_hl, { file_icons.highlight, 0, #ico })
         end
         ico_txt = ico .. "  "
     else
         ico_txt = ""
     end
     local cd_cmd = (autocd and " | cd %:p:h" or "")
-    local file_button_el = dashboard.button(sc, ico_txt .. short_fn, "<cmd>e " .. vim.fn.fnameescape(fn) .. cd_cmd .." <CR>")
+    local file_button_el =
+        dashboard.button(sc, ico_txt .. short_fn, "<cmd>e " .. vim.fn.fnameescape(fn) .. cd_cmd .. " <CR>")
     local fn_start = short_fn:match(".*[/\\]")
     if fn_start ~= nil then
         table.insert(fb_hl, { "Comment", #ico_txt - 2, #fn_start + #ico_txt })
@@ -65,7 +70,7 @@ local mru_opts = {
     ignore = function(path, ext)
         return (string.find(path, "COMMIT_EDITMSG")) or (vim.tbl_contains(default_mru_ignore, ext))
     end,
-    autocd = false
+    autocd = false,
 }
 
 --- @param start number
@@ -86,7 +91,7 @@ local function mru(start, cwd, items_number, opts)
         else
             cwd_cond = vim.startswith(v, cwd)
         end
-        local ignore = (opts.ignore and opts.ignore(v, get_extension(v))) or false
+        local ignore = (opts.ignore and opts.ignore(v, utils.get_extension(v))) or false
         if (vim.fn.filereadable(v) == 1) and cwd_cond and not ignore then
             oldfiles[#oldfiles + 1] = v
         end
@@ -111,7 +116,7 @@ local function mru(start, cwd, items_number, opts)
 
         local shortcut = tostring(i + start - 1)
 
-        local file_button_el = file_button(fn, shortcut, short_fn,opts.autocd)
+        local file_button_el = file_button(fn, shortcut, short_fn, opts.autocd)
         tbl[i] = file_button_el
     end
     return {
@@ -154,7 +159,7 @@ local section_mru = {
         {
             type = "group",
             val = function()
-                return { mru(0, cdir) }
+                return { mru(0, vim.fn.getcwd()) }
             end,
             opts = { shrink_margin = false },
         },
@@ -169,7 +174,7 @@ local buttons = {
         dashboard.button("e", "  New file", "<cmd>ene<CR>"),
         dashboard.button("SPC f f", "󰈞  Find file"),
         dashboard.button("SPC f g", "󰊄  Live grep"),
-        dashboard.button("c", "  Configuration", "<cmd>cd ~/.config/nvim/ <CR>"),
+        dashboard.button("c", "  Configuration", "<cmd>cd stdpath('config')<CR>"),
         dashboard.button("u", "  Update plugins", "<cmd>Lazy sync<CR>"),
         dashboard.button("q", "󰅚  Quit", "<cmd>qa<CR>"),
     },
@@ -208,5 +213,7 @@ return {
     -- theme specific config
     mru_opts = mru_opts,
     leader = dashboard.leader,
-    nvim_web_devicons = nvim_web_devicons,
+    file_icons = file_icons,
+    -- deprecated
+    nvim_web_devicons = file_icons,
 }

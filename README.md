@@ -13,7 +13,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
     'goolord/alpha-nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    dependencies = { 'echasnovski/mini.icons' },
     config = function ()
         require'alpha'.setup(require'alpha.themes.startify'.config)
     end
@@ -23,7 +23,7 @@ With packer:
 ```lua
 use {
     'goolord/alpha-nvim',
-    requires = { 'nvim-tree/nvim-web-devicons' },
+    requires = { 'echasnovski/mini.icons' },
     config = function ()
         require'alpha'.setup(require'alpha.themes.startify'.config)
     end
@@ -33,7 +33,7 @@ use {
 ```lua
 require "paq" {
     "goolord/alpha-nvim";
-    "nvim-tree/nvim-web-devicons";
+    "echasnovski/mini.icons";
 }
 require'alpha'.setup(require'alpha.themes.startify'.config)
 ```
@@ -66,7 +66,7 @@ use {
 ```lua
 require "paq" {
     "goolord/alpha-nvim";
-    "nvim-tree/nvim-web-devicons";
+    "echasnovski/mini.icons";
 }
 require'alpha'.setup(require'alpha.themes.dashboard'.config)
 ```
@@ -81,7 +81,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 {
     'goolord/alpha-nvim',
     dependencies = {
-        'nvim-tree/nvim-web-devicons',
+        'echasnovski/mini.icons',
         'nvim-lua/plenary.nvim'
     },
     config = function ()
@@ -94,7 +94,7 @@ With packer:
 use {
     'goolord/alpha-nvim',
     requires = {
-        'nvim-tree/nvim-web-devicons',
+        'echasnovski/mini.icons',
         'nvim-lua/plenary.nvim'
     },
     config = function ()
@@ -106,19 +106,45 @@ use {
 ```lua
 require "paq" {
     "goolord/alpha-nvim";
-    "nvim-tree/nvim-web-devicons";
+    "echasnovski/mini.icons";
     'nvim-lua/plenary.nvim';
 }
 require'alpha'.setup(require'alpha.themes.dashboard'.config)
 ```
 </details>
 
-if you want sessions, see 
+if you want sessions, see
 - https://github.com/Shatur/neovim-session-manager
 - :h :mks
 
 this theme makes some assumptions about your default keybindings
 to customize the buttons, see :h alpha-example
+
+#### File Icons
+
+theta/startify theme support file icons, default is enabled and `mini` icon provider is used.
+
+- [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)
+- [mini-icons](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md)
+
+if you prefer `nvim-web-devicons` icon provider, use the following example with lazy.nvim:
+
+```
+  {
+    "goolord/alpha-nvim",
+    -- dependencies = { 'echasnovski/mini.icons' },
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      local startify = require("alpha.themes.startify")
+      -- available: devicons, mini, default is mini
+      -- if provider not loaded and enabled is true, it will try to use another provider
+      startify.file_icons.provider = "devicons"
+      require("alpha").setup(
+        startify.config
+      )
+    end,
+  },
+```
 
 ## Elevator pitch
 alpha is really a general purpose neovim ui library with some conveniences for writing a greeter ui.
