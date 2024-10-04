@@ -20,7 +20,10 @@ local file_icons = {
 
 local function icon(fn)
     if file_icons.provider ~= "devicons" and file_icons.provider ~= "mini" then
-        vim.notify("Alpha: Invalid file icons provider: " .. file_icons.provider .. ", disable file icons", vim.log.levels.WARN)
+        vim.notify(
+            "Alpha: Invalid file icons provider: " .. file_icons.provider .. ", disable file icons",
+            vim.log.levels.WARN
+        )
         file_icons.enabled = false
         return "", ""
     end
@@ -193,12 +196,12 @@ local config = {
     opts = {
         margin = 5,
         setup = function()
-            vim.api.nvim_create_autocmd('DirChanged', {
-                pattern = '*',
+            vim.api.nvim_create_autocmd("DirChanged", {
+                pattern = "*",
                 group = "alpha_temp",
-                callback = function ()
-                    require('alpha').redraw()
-                    vim.cmd('AlphaRemap')
+                callback = function()
+                    require("alpha").redraw()
+                    vim.cmd("AlphaRemap")
                 end,
             })
         end,
@@ -209,6 +212,7 @@ return {
     header = header,
     buttons = buttons,
     mru = mru,
+    section_mru = section_mru,
     config = config,
     -- theme specific config
     mru_opts = mru_opts,
