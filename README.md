@@ -129,7 +129,7 @@ theta/startify theme support file icons, default is enabled and `mini` icon prov
 
 if you prefer `nvim-web-devicons` icon provider, use the following example with lazy.nvim:
 
-```
+```lua
   {
     "goolord/alpha-nvim",
     -- dependencies = { 'echasnovski/mini.icons' },
