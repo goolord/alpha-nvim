@@ -20,7 +20,10 @@ local file_icons = {
 
 local function icon(fn)
     if file_icons.provider ~= "devicons" and file_icons.provider ~= "mini" then
-        vim.notify("Alpha: Invalid file icons provider: " .. file_icons.provider .. ", disable file icons", vim.log.levels.WARN)
+        vim.notify(
+            "Alpha: Invalid file icons provider: " .. file_icons.provider .. ", disable file icons",
+            vim.log.levels.WARN
+        )
         file_icons.enabled = false
         return "", ""
     end
@@ -78,7 +81,7 @@ local mru_opts = {
 --- @param items_number number? optional number of items to generate, default = 10
 local function mru(start, cwd, items_number, opts)
     opts = opts or mru_opts
-    items_number = if_nil(items_number, 10)
+    items_number = if_nil(items_number, 9)
 
     local oldfiles = {}
     for _, v in pairs(vim.v.oldfiles) do
@@ -99,6 +102,8 @@ local function mru(start, cwd, items_number, opts)
     local target_width = 35
 
     local tbl = {}
+    local shortcuts = { "a", "s", "d", "f", "g", "h", "j", "k", "l" }
+
     for i, fn in ipairs(oldfiles) do
         local short_fn
         if cwd then
@@ -111,14 +116,14 @@ local function mru(start, cwd, items_number, opts)
             short_fn = plenary_path.new(short_fn):shorten(1, { -2, -1 })
             if #short_fn > target_width then
                 short_fn = plenary_path.new(short_fn):shorten(1, { -1 })
-				-- still too long?
-				if #short_fn > target_width + 5 then
-					short_fn = short_fn:sub(1,target_width + 5) .. "…"
-				end
+                -- still too long?
+                if #short_fn > target_width + 5 then
+                    short_fn = short_fn:sub(1, target_width + 5) .. "…"
+                end
             end
         end
 
-        local shortcut = tostring(i + start - 1)
+        local shortcut = shortcuts[i + start]
 
         local file_button_el = file_button(fn, shortcut, short_fn, opts.autocd)
         tbl[i] = file_button_el
@@ -197,12 +202,12 @@ local config = {
     opts = {
         margin = 5,
         setup = function()
-            vim.api.nvim_create_autocmd('DirChanged', {
-                pattern = '*',
+            vim.api.nvim_create_autocmd("DirChanged", {
+                pattern = "*",
                 group = "alpha_temp",
-                callback = function ()
-                    require('alpha').redraw()
-                    vim.cmd('AlphaRemap')
+                callback = function()
+                    require("alpha").redraw()
+                    vim.cmd("AlphaRemap")
                 end,
             })
         end,
@@ -213,7 +218,7 @@ return {
     header = header,
     buttons = buttons,
     mru = mru,
-	section_mru = section_mru,
+    section_mru = section_mru,
     config = config,
     -- theme specific config
     mru_opts = mru_opts,
