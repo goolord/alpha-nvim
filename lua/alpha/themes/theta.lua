@@ -81,7 +81,7 @@ local mru_opts = {
 --- @param items_number number? optional number of items to generate, default = 10
 local function mru(start, cwd, items_number, opts)
     opts = opts or mru_opts
-    items_number = if_nil(items_number, 9)
+    items_number = if_nil(items_number, 10)
 
     local oldfiles = {}
     for _, v in pairs(vim.v.oldfiles) do
@@ -102,7 +102,7 @@ local function mru(start, cwd, items_number, opts)
     local target_width = 35
 
     local tbl = {}
-    local shortcuts = { "a", "s", "d", "f", "g", "h", "j", "k", "l" }
+    local shortcuts = { "q", "w", "e", "r", "t", "y", "u", "i", "o", "p" }
 
     for i, fn in ipairs(oldfiles) do
         local short_fn
