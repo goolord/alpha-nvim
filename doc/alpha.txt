@@ -86,7 +86,7 @@ button:
     opts = {
         -- define a buffer-local keymap for this element
         -- accepts the arguments for 'nvim_set_keymap' as an array
-        -- normaly pairs with an 'on_press' function that feeds the lhs
+        -- normally pairs with an 'on_press' function that feeds the lhs
         -- keys (see alpha.dashboard.button implementation)
         keymap = { {mode}, {lhs}, {rhs}, {*opts} }
 
