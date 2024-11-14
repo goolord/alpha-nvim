@@ -386,6 +386,11 @@ local function layout(conf, state)
     local hl = {}
     local text = {}
     for _, el in pairs(conf.layout) do
+        -- Convert strings with "\n" into tables
+        if el.type == "text" and type(el.val) == "string" then
+            ---@diagnostic disable-next-line: param-type-mismatch
+            el.val = el.val:find("\n") and vim.split(el.val, "\n") or el.val
+        end
         local text_el, hl_el = layout_element[el.type](el, conf, state)
         list_extend(text, text_el)
         list_extend(hl, hl_el)
