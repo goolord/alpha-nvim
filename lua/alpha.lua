@@ -727,8 +727,10 @@ function alpha.start(on_vimenter, conf)
 end
 
 function alpha.setup(config)
-    vim.validate("config", config, "table", false)
-    vim.validate("layout", config.layout, "table", false)
+    vim.validate({
+        config = { config, "table" },
+        layout = { config.layout, "table" },
+    })
 
     config.opts = vim.tbl_extend(
         "keep",
