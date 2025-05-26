@@ -729,7 +729,6 @@ end
 function alpha.setup(config)
     vim.validate("config", config, "table")
     vim.validate("layout", config.layout, "table")
-    })
 
     config.opts = vim.tbl_extend(
         "keep",
