@@ -727,10 +727,15 @@ function alpha.start(on_vimenter, conf)
 end
 
 function alpha.setup(config)
-    vim.validate({
-        config = { config, "table" },
-        layout = { config.layout, "table" },
-    })
+    if vim.fn.has('nvim-0.11') == 1 then
+        vim.validate("config", config, "table")
+        vim.validate("config.layout", config.layout, "table")
+    else
+        vim.validate({
+            config = { config, "table" },
+            layout = { config.layout, "table" },
+        })
+    end
 
     config.opts = vim.tbl_extend(
         "keep",
