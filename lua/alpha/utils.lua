@@ -53,4 +53,27 @@ function M.get_file_icon(provider, fn)
     return "", ""
 end
 
+--- @param hl (string | number)[][][] highlight
+--- @param text string[] text lines corresponding to the highlights
+--- @param utf16? boolean default: false
+--- @return (string | number)[][][]
+function M.charhl_to_bytehl(hl, text, utf16)
+    utf16 = utf16 or false
+
+    local new_hl = {}
+    for row, line_hl in ipairs(hl) do
+        new_hl[row] = {}
+
+        for i, item in ipairs(line_hl) do
+            local group = item[1]
+            local start_col = vim.fn.byteidx(text[row], item[2], utf16)
+            local end_col = vim.fn.byteidx(text[row], item[3], utf16)
+
+            new_hl[row][i] = { group, start_col, end_col }
+        end
+    end
+
+    return new_hl
+end
+
 return M
