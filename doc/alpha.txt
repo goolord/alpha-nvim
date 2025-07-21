@@ -201,6 +201,9 @@ Most elements accept `opts.hl = "hl_group"` or an array of
 for multiline elements, you supply a 2 dimensional array of
 `{'hl_group', start_col, end_col}`
 
+`start_col` and `end_col` is based on byte index not char index. See
+alpha.utils.charhl_to_bytehl for character-wise highlighting.
+
 You can highlight a button shortcut by supplying a highlight group to the
 option `x.opt.hl_shortcut`
 
