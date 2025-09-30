@@ -768,8 +768,6 @@ function alpha.setup(config)
 
     alpha.default_config = config
 
-    alpha.default_config = config
-
     vim.api.nvim_create_user_command("Alpha", function(_)
         alpha.start(false, config)
     end, {
