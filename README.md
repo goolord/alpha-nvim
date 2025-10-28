@@ -13,7 +13,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
     'goolord/alpha-nvim',
-    dependencies = { 'echasnovski/mini.icons' },
+    dependencies = { 'nvim-mini/mini.icons' },
     config = function ()
         require'alpha'.setup(require'alpha.themes.startify'.config)
     end
@@ -23,7 +23,7 @@ With packer:
 ```lua
 use {
     'goolord/alpha-nvim',
-    requires = { 'echasnovski/mini.icons' },
+    requires = { 'nvim-mini/mini.icons' },
     config = function ()
         require'alpha'.setup(require'alpha.themes.startify'.config)
     end
@@ -33,7 +33,7 @@ use {
 ```lua
 require "paq" {
     "goolord/alpha-nvim";
-    "echasnovski/mini.icons";
+    "nvim-mini/mini.icons";
 }
 require'alpha'.setup(require'alpha.themes.startify'.config)
 ```
@@ -66,7 +66,7 @@ use {
 ```lua
 require "paq" {
     "goolord/alpha-nvim";
-    "echasnovski/mini.icons";
+    "nvim-mini/mini.icons";
 }
 require'alpha'.setup(require'alpha.themes.dashboard'.config)
 ```
@@ -81,7 +81,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 {
     'goolord/alpha-nvim',
     dependencies = {
-        'echasnovski/mini.icons',
+        'nvim-mini/mini.icons',
         'nvim-lua/plenary.nvim'
     },
     config = function ()
@@ -94,7 +94,7 @@ With packer:
 use {
     'goolord/alpha-nvim',
     requires = {
-        'echasnovski/mini.icons',
+        'nvim-mini/mini.icons',
         'nvim-lua/plenary.nvim'
     },
     config = function ()
@@ -106,7 +106,7 @@ use {
 ```lua
 require "paq" {
     "goolord/alpha-nvim";
-    "echasnovski/mini.icons";
+    "nvim-mini/mini.icons";
     'nvim-lua/plenary.nvim';
 }
 require'alpha'.setup(require'alpha.themes.dashboard'.config)
@@ -114,25 +114,25 @@ require'alpha'.setup(require'alpha.themes.dashboard'.config)
 </details>
 
 if you want sessions, see
-- https://github.com/Shatur/neovim-session-manager
-- :h :mks
+- [`Shatur/neovim-session-manager`](https://github.com/Shatur/neovim-session-manager)
+- `:h :mks`
 
 this theme makes some assumptions about your default keybindings
-to customize the buttons, see :h alpha-example
+to customize the buttons, see `:h alpha-example`
 
 #### File Icons
 
 theta/startify theme support file icons, default is enabled and `mini` icon provider is used.
 
-- [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)
-- [mini-icons](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md)
+- [`nvim-tree/nvim-web-devicons`](https://github.com/nvim-tree/nvim-web-devicons)
+- [`nvim-mini/mini.icons`](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-icons.md)
 
-if you prefer `nvim-web-devicons` icon provider, use the following example with lazy.nvim:
+if you prefer `nvim-web-devicons` icon provider, use the following example with `lazy.nvim`:
 
 ```lua
   {
     "goolord/alpha-nvim",
-    -- dependencies = { 'echasnovski/mini.icons' },
+    -- dependencies = { 'nvim-mini/mini.icons' },
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
       local startify = require("alpha.themes.startify")
@@ -153,7 +153,7 @@ alpha "fully programmable". alpha is also the fastest greeter I've benchmarked (
 
 ## Profiling Results
 ![benchmark](https://user-images.githubusercontent.com/24906808/131830001-31523c86-fee2-4f90-b23d-4bd1e152a385.png)
-- using https://github.com/lewis6991/impatient.nvim
+- using [`lewis6991/impatient.nvim`](https://github.com/lewis6991/impatient.nvim)
 - only config! doesn't measure drawing, some startup plugins won't measure drawing either
 
 ## Special Thanks
