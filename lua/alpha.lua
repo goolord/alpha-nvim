@@ -284,7 +284,7 @@ function layout_element.button(el, conf, state)
             end
         end
         if opts.align_shortcut == "right" then
-            val = { concat({ el.val, spaces(padding.center), opts.shortcut }) }
+            val = { concat({ el.val, spaces(math.max(padding.center,1)), opts.shortcut }) }
         else
             val = { concat({ opts.shortcut, el.val, spaces(padding.right) }) }
         end
@@ -324,7 +324,7 @@ function layout_element.button(el, conf, state)
             hl = el.opts.hl_shortcut
         end
         if el.opts.align_shortcut == "right" then
-            hl = alpha.highlight(state, state.line, hl, #el.val + math.max(0,padding.center), el)
+            hl = alpha.highlight(state, state.line, hl, #el.val + math.max(padding.center,padding.left), el)
         else
             hl = alpha.highlight(state, state.line, hl, padding.left, el)
         end
