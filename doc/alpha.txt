@@ -55,6 +55,10 @@ config:
         -- default: false (disabled)
         noautocmd = bool
 
+	-- a custom function to set the lines of the buffer,
+	-- defaults to `vim.api.nvim_buf_set_lines`
+	set_lines = function
+
         -- table of default keymaps
         keymap = {
             -- nil | string | string[]: key combinations used to press an
