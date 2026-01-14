@@ -174,7 +174,7 @@ local buttons = {
         dashboard.button("e", "  New file", "<cmd>ene<CR>"),
         dashboard.button("SPC f f", "󰈞  Find file"),
         dashboard.button("SPC f g", "󰊄  Live grep"),
-        dashboard.button("c", "  Configuration", "<cmd>cd stdpath('config')<CR>"),
+        dashboard.button("c", "  Configuration", "<cmd>exec 'cd ' . stdpath('config')<CR>"),
         dashboard.button("u", "  Update plugins", "<cmd>Lazy sync<CR>"),
         dashboard.button("q", "󰅚  Quit", "<cmd>qa<CR>"),
     },
