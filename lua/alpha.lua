@@ -3,7 +3,6 @@ local alpha = {}
 -- business logic
 local abs = math.abs
 local concat = table.concat
-local deepcopy = vim.deepcopy
 local if_nil = vim.F.if_nil
 local list_extend = vim.list_extend
 local str_rep = string.rep
@@ -45,10 +44,10 @@ function alpha.press()
 end
 
 local function draw_press(row, col, state)
-    vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
+    vim.api.nvim_set_option_value("modifiable", true, { buf = state.buffer })
     -- todo: represent this in the alpha layout, somehow
     vim.api.nvim_buf_set_text(state.buffer, row - 1, col, row - 1, col + 1, { "*" })
-    vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
+    vim.api.nvim_set_option_value("modifiable", false, { buf = state.buffer })
 end
 
 local function draw_presses(state)
@@ -88,7 +87,7 @@ local function longest_line(tbl)
 end
 
 local function spaces(n)
-    return str_rep(" ", n)
+    return str_rep(" ", math.max(0, n))
 end
 
 ---@param keymaps nil | string | string[]
@@ -140,15 +139,6 @@ function alpha.pad_margin(tbl, state, margin, shrink)
     return padded, left
 end
 
--- function trim(tbl, state)
---     local win_width = vim.api.nvim_win_get_width(state.windows[1])
---     local trimmed = {}
---     for k,v in ipairs(tbl) do
---         trimmed[k] = string.sub(v, 1, win_width)
---     end
---     return trimmed
--- end
-
 function alpha.highlight(state, end_ln, hl, left, el)
     local hl_type = type(hl)
     local hl_tbl = {}
@@ -194,8 +184,8 @@ end
 local layout_element = {}
 
 function alpha.resolve(to, el, opts, state)
-    local new_el = deepcopy(el)
-    new_el.val = el.val()
+    local val = el.val()
+    local new_el = setmetatable({ val = val }, { __index = el })
     return to(new_el, opts, state)
 end
 
@@ -235,7 +225,7 @@ function layout_element.text(el, conf, state)
     else
         local end_ln = state.line + #el.val
         if el_hl then
-            hl = alpha.highlight(state, end_ln, el_hl, padding.left, el)
+            hl = alpha.highlight(state, end_ln-1, el_hl, padding.left, el)
         end
         state.line = end_ln
     end
@@ -477,24 +467,25 @@ local function enable_alpha(conf, state)
         vim.opt.eventignore = 'all'
     end
 
-    vim.opt_local.bufhidden = 'wipe'
-    vim.opt_local.buflisted = false
-    vim.opt_local.matchpairs = ''
-    vim.opt_local.swapfile = false
-    vim.opt_local.buftype = 'nofile'
-    vim.opt_local.filetype = 'alpha'
-    vim.opt_local.synmaxcol = 0
-    vim.opt_local.wrap = false
-    vim.opt_local.colorcolumn = ''
-    vim.opt_local.foldlevel = 999
-    vim.opt_local.foldcolumn = '0'
-    vim.opt_local.cursorcolumn = false
-    vim.opt_local.cursorline = false
-    vim.opt_local.number = false
-    vim.opt_local.relativenumber = false
-    vim.opt_local.list = false
-    vim.opt_local.spell = false
-    vim.opt_local.signcolumn = 'no'
+    local set = function(opt, val) vim.api.nvim_set_option_value(opt, val, { scope = "local" }) end
+    set("bufhidden", "wipe")
+    set("buflisted", false)
+    set("matchpairs", "")
+    set("swapfile", false)
+    set("buftype", "nofile")
+    set("filetype", "alpha")
+    set("synmaxcol", 0)
+    set("wrap", false)
+    set("colorcolumn", "")
+    set("foldlevel", 999)
+    set("foldcolumn", "0")
+    set("cursorcolumn", false)
+    set("cursorline", false)
+    set("number", false)
+    set("relativenumber", false)
+    set("list", false)
+    set("spell", false)
+    set("signcolumn", "no")
 
     if conf.opts.noautocmd then
         vim.opt.eventignore = eventignore
@@ -576,12 +567,11 @@ local function should_skip_alpha()
     local lines = vim.api.nvim_buf_get_lines(0, 0, 2, false)
     if #lines > 1 or (#lines == 1 and lines[1]:len() > 0) then return true end
 
-    -- Skip when there are several listed buffers.
-    for _, buf_id in pairs(vim.api.nvim_list_bufs()) do
-        local bufinfo = vim.fn.getbufinfo(buf_id)
-        if bufinfo.listed == 1 and #bufinfo.windows > 0
-            then return true
-        end
+    -- Skip when there are other listed buffers in windows.
+    local curr_buf = vim.api.nvim_get_current_buf()
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+        local buf = vim.api.nvim_win_get_buf(win)
+        if buf ~= curr_buf and vim.bo[buf].buflisted then return true end
     end
 
     -- Handle nvim -M
@@ -623,11 +613,11 @@ function alpha.draw(conf, state)
     -- when the screen is cleared and then redrawn
     -- so we save the index before that happens
     local ix = cursor_ix
-    vim.api.nvim_buf_set_option(state.buffer, "modifiable", true)
+    vim.api.nvim_set_option_value("modifiable", true, { buf = state.buffer })
     vim.api.nvim_buf_clear_namespace(state.buffer, -1, 0, -1)
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
     layout(conf, state)
-    vim.api.nvim_buf_set_option(state.buffer, "modifiable", false)
+    vim.api.nvim_set_option_value("modifiable", false, { buf = state.buffer })
     local active_win = active_window(state)
     if vim.api.nvim_get_current_win() == active_win then
         if #cursor_jumps ~= 0 then
@@ -672,13 +662,14 @@ end
 -- @param on_vimenter: ?bool optional
 -- @param fon: ?table optional
 function alpha.start(on_vimenter, conf)
+    if on_vimenter and should_skip_alpha() then
+        return
+    end
+
     local window = vim.api.nvim_get_current_win()
 
     local buffer
     if on_vimenter then
-        if should_skip_alpha() then
-            return
-        end
         buffer = vim.api.nvim_get_current_buf()
     else
         if vim.bo.ft ~= "alpha" then
@@ -727,15 +718,10 @@ function alpha.start(on_vimenter, conf)
 end
 
 function alpha.setup(config)
-    if vim.fn.has('nvim-0.11') == 1 then
-        vim.validate("config", config, "table")
-        vim.validate("config.layout", config.layout, "table")
-    else
-        vim.validate({
-            config = { config, "table" },
-            layout = { config.layout, "table" },
-        })
-    end
+    vim.validate({
+        config = { config, "table" },
+        layout = { config.layout, "table" },
+    })
 
     config.opts = vim.tbl_extend(
         "keep",

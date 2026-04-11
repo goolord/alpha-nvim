@@ -1,11 +1,4 @@
--- originally authored by @AdamWhittingham
-
 local utils = require("alpha.utils")
-
-local path_ok, plenary_path = pcall(require, "plenary.path")
-if not path_ok then
-    return
-end
 
 local dashboard = require("alpha.themes.dashboard")
 local if_nil = vim.F.if_nil
@@ -81,9 +74,10 @@ local function mru(start, cwd, items_number, opts)
     items_number = if_nil(items_number, 10)
 
     local found = utils.get_mru(cwd, items_number, opts.ignore)
-
     local target_width = 35
+
     local tbl = {}
+    local plenary_path_ok, plenary_path
     for i, fn in ipairs(found) do
         local short_fn
         if cwd then
@@ -93,9 +87,14 @@ local function mru(start, cwd, items_number, opts)
         end
 
         if #short_fn > target_width then
-            short_fn = plenary_path.new(short_fn):shorten(1, { -2, -1 })
-            if #short_fn > target_width then
-                short_fn = plenary_path.new(short_fn):shorten(1, { -1 })
+            if plenary_path_ok == nil then
+                plenary_path_ok, plenary_path = pcall(require, "plenary.path")
+            end
+            if plenary_path_ok then
+                short_fn = plenary_path.new(short_fn):shorten(1, { -2, -1 })
+                if #short_fn > target_width then
+                    short_fn = plenary_path.new(short_fn):shorten(1, { -1 })
+                end
             end
         end
 
@@ -104,7 +103,6 @@ local function mru(start, cwd, items_number, opts)
         local file_button_el = file_button(fn, shortcut, short_fn, opts.autocd)
         tbl[i] = file_button_el
     end
-
     return {
         type = "group",
         val = tbl,
@@ -160,7 +158,7 @@ local buttons = {
         dashboard.button("e", "  New file", "<cmd>ene<CR>"),
         dashboard.button("SPC f f", "󰈞  Find file"),
         dashboard.button("SPC f g", "󰊄  Live grep"),
-        dashboard.button("c", "  Configuration", "<cmd>exe 'cd' stdpath('config')<CR>"),
+        dashboard.button("c", "  Configuration", "<cmd>cd stdpath('config')<CR>"),
         dashboard.button("u", "  Update plugins", "<cmd>Lazy sync<CR>"),
         dashboard.button("q", "󰅚  Quit", "<cmd>qa<CR>"),
     },

@@ -134,7 +134,6 @@ local function mru(start, cwd, items_number, opts)
         local file_button_el = file_button(fn, tostring(i + start - 1), short_fn, opts.autocd)
         tbl[i] = file_button_el
     end
-
     return {
         type = "group",
         val = tbl,
