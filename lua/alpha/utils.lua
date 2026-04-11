@@ -1,5 +1,50 @@
 local M = {}
 
+M.readable_cache = {}
+M.mru_cache = {}
+
+--- @param path string
+--- @return boolean
+function M.filereadable(path)
+    if M.readable_cache[path] ~= nil then
+        return M.readable_cache[path]
+    end
+    local readable = vim.fn.filereadable(path) == 1
+    M.readable_cache[path] = readable
+    return readable
+end
+
+--- @param cwd string?
+--- @param items_number number
+--- @param ignore_cb function?
+--- @return string[]
+function M.get_mru(cwd, items_number, ignore_cb)
+    local key = cwd or "global"
+    if M.mru_cache[key] and #M.mru_cache[key] >= items_number then
+        return M.mru_cache[key]
+    end
+
+    local all_oldfiles = vim.v.oldfiles
+    local found = {}
+    local max_check = math.min(#all_oldfiles, 200)
+    for i = 1, max_check do
+        local v = all_oldfiles[i]
+        local cwd_cond = not cwd or vim.startswith(v, cwd)
+        local ignore = (ignore_cb and ignore_cb(v, M.get_extension(v))) or false
+        if cwd_cond and not ignore then
+            if M.filereadable(v) then
+                table.insert(found, v)
+                if #found >= items_number then
+                    break
+                end
+            end
+        end
+    end
+
+    M.mru_cache[key] = found
+    return found
+end
+
 --- @param fn string file name or path
 --- @return string
 function M.get_extension(fn)

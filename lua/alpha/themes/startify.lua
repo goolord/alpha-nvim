@@ -2,7 +2,6 @@ local utils = require("alpha.utils")
 
 local if_nil = vim.F.if_nil
 local fnamemodify = vim.fn.fnamemodify
-local filereadable = vim.fn.filereadable
 
 local default_header = {
     type = "text",
@@ -118,31 +117,14 @@ local mru_opts = {
     autocd = false
 }
 
---- @param start number
---- @param cwd string? optional
---- @param items_number number? optional number of items to generate, default = 10
 local function mru(start, cwd, items_number, opts)
     opts = opts or mru_opts
     items_number = if_nil(items_number, 10)
-    local oldfiles = {}
-    for _, v in pairs(vim.v.oldfiles) do
-        if #oldfiles == items_number then
-            break
-        end
-        local cwd_cond
-        if not cwd then
-            cwd_cond = true
-        else
-            cwd_cond = vim.startswith(v, cwd)
-        end
-        local ignore = (opts.ignore and opts.ignore(v, utils.get_extension(v))) or false
-        if (filereadable(v) == 1) and cwd_cond and not ignore then
-            oldfiles[#oldfiles + 1] = v
-        end
-    end
+
+    local found = utils.get_mru(cwd, items_number, opts.ignore)
 
     local tbl = {}
-    for i, fn in ipairs(oldfiles) do
+    for i, fn in ipairs(found) do
         local short_fn
         if cwd then
             short_fn = fnamemodify(fn, ":.")
@@ -152,6 +134,7 @@ local function mru(start, cwd, items_number, opts)
         local file_button_el = file_button(fn, tostring(i + start - 1), short_fn, opts.autocd)
         tbl[i] = file_button_el
     end
+
     return {
         type = "group",
         val = tbl,
@@ -239,6 +222,7 @@ local config = {
                 pattern = '*',
                 group = "alpha_temp",
                 callback = function ()
+                    utils.mru_cache = {}
                     require('alpha').redraw()
                     vim.cmd('AlphaRemap')
                 end,
