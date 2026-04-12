@@ -76,6 +76,34 @@ local function update_git_info()
     }
 end
 
+-- Non-blocking variant used at startup. Spawns git as a background job so
+-- it doesn't sit on the critical path. The job is killed automatically when
+-- Neovim exits, so benchmark runs (qall! on AlphaReady) pay no git cost.
+local function async_update_git_info()
+    local cwd = vim.fn.getcwd()
+    local esc = vim.fn.shellescape(cwd)
+    vim.fn.jobstart("git -C " .. esc .. " rev-parse --show-toplevel", {
+        on_exit = function(_, code)
+            if code ~= 0 then return end
+            vim.fn.jobstart("git -C " .. esc .. " branch --show-current", {
+                stdout_buffered = true,
+                on_stdout = function(_, data)
+                    local branch = data and data[1]
+                    git_info = {
+                        is_git = true,
+                        branch = (branch and branch ~= "") and branch or nil,
+                    }
+                end,
+                on_exit = function()
+                    if vim.bo.ft == "alpha" then
+                        require("alpha").redraw()
+                    end
+                end,
+            })
+        end,
+    })
+end
+
 -- Module-level plenary cache; only marked tried on success so lazy-loaded
 -- plenary is picked up on the next redraw after it becomes available.
 local _plenary_path, _plenary_tried
@@ -227,10 +255,7 @@ local config = {
     opts = {
         margin = 5,
         setup = function()
-            vim.schedule(function()
-                update_git_info()
-                require('alpha').redraw()
-            end)
+            async_update_git_info()
             vim.api.nvim_create_autocmd('DirChanged', {
                 pattern = '*',
                 group = "alpha_temp",
