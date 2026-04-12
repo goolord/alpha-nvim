@@ -227,7 +227,10 @@ local config = {
     opts = {
         margin = 5,
         setup = function()
-            update_git_info()
+            vim.schedule(function()
+                update_git_info()
+                require('alpha').redraw()
+            end)
             vim.api.nvim_create_autocmd('DirChanged', {
                 pattern = '*',
                 group = "alpha_temp",

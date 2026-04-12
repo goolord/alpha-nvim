@@ -184,8 +184,8 @@ local function make_git_title_el(opts)
             val = head .. branch,
             opts = vim.tbl_extend("force", {
                 hl = {
-                    { "SpecialComment", 0, #head },
-                    { "Label", #head, #head + #branch },
+                    { "SpecialComment", 0,     #head },
+                    { "Label",          #head, #head + #branch },
                 },
                 shrink_margin = false,
             }, opts or {}),
@@ -218,7 +218,7 @@ local section = {
         type = "group",
         val = {
             { type = "padding", val = 1 },
-            { type = "text", val = "MRU", opts = { hl = "SpecialComment" } },
+            { type = "text",    val = "MRU", opts = { hl = "SpecialComment" } },
             { type = "padding", val = 1 },
             {
                 type = "group",
@@ -234,7 +234,7 @@ local section = {
             local cwd = vim.fn.getcwd()
             return {
                 { type = "padding", val = 1 },
-                { type = "text", val = "MRU " .. fnamemodify(cwd, ":~"), opts = { hl = "SpecialComment", shrink_margin = false } },
+                { type = "text",    val = "MRU " .. fnamemodify(cwd, ":~"), opts = { hl = "SpecialComment", shrink_margin = false } },
                 { type = "padding", val = 1 },
                 {
                     type = "group",
@@ -301,11 +301,14 @@ local config = {
         margin = 3,
         redraw_on_resize = false,
         setup = function()
-            update_git_info()
+            vim.schedule(function()
+                update_git_info()
+                require('alpha').redraw()
+            end)
             vim.api.nvim_create_autocmd('DirChanged', {
                 pattern = '*',
                 group = "alpha_temp",
-                callback = function ()
+                callback = function()
                     utils.mru_cache = {}
                     update_git_info()
                     require('alpha').redraw()
