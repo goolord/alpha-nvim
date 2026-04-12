@@ -23,9 +23,12 @@ local default_header = {
 local leader = "SPC"
 
 local git_info = { is_git = false, branch = nil }
+local _git_cwd = nil
 
 local function update_git_info()
     local cwd = vim.fn.getcwd()
+    if cwd == _git_cwd then return end
+    _git_cwd = cwd
     local git_root = vim.fn.systemlist(
         "git -C " .. vim.fn.shellescape(cwd) .. " rev-parse --show-toplevel"
     )[1]
@@ -249,6 +252,7 @@ local section = {
     mru_git = {
         type = "group",
         val = function()
+            update_git_info()
             return {
                 { type = "padding", val = 1 },
                 make_git_title_el(),
@@ -308,7 +312,7 @@ local config = {
                 group = "alpha_temp",
                 callback = function()
                     utils.mru_cache = {}
-                    update_git_info()
+                    _git_cwd = nil
                     require('alpha').redraw()
                     vim.cmd('AlphaRemap')
                 end,

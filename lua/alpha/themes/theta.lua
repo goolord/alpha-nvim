@@ -57,9 +57,12 @@ local mru_opts = {
 }
 
 local git_info = { is_git = false, branch = nil }
+local _git_cwd = nil
 
 local function update_git_info()
     local cwd = vim.fn.getcwd()
+    if cwd == _git_cwd then return end
+    _git_cwd = cwd
     local git_root = vim.fn.systemlist(
         "git -C " .. vim.fn.shellescape(cwd) .. " rev-parse --show-toplevel"
     )[1]
@@ -174,32 +177,35 @@ local section_mru = {
 
 local section_mru_git = {
     type = "group",
-    val = {
-        {
-            type = "text",
-            val = function()
-                local branch = git_info.branch
-                if branch then
-                    return "MRU " .. branch
-                else
-                    return "MRU"
-                end
-            end,
-            opts = {
-                hl = "SpecialComment",
-                shrink_margin = false,
-                position = "center",
+    val = function()
+        update_git_info()
+        return {
+            {
+                type = "text",
+                val = function()
+                    local branch = git_info.branch
+                    if branch then
+                        return "MRU " .. branch
+                    else
+                        return "MRU"
+                    end
+                end,
+                opts = {
+                    hl = "SpecialComment",
+                    shrink_margin = false,
+                    position = "center",
+                },
             },
-        },
-        { type = "padding", val = 1 },
-        {
-            type = "group",
-            val = function()
-                return { mru_git(0, vim.fn.getcwd()) }
-            end,
-            opts = { shrink_margin = false },
-        },
-    },
+            { type = "padding", val = 1 },
+            {
+                type = "group",
+                val = function()
+                    return { mru_git(0, vim.fn.getcwd()) }
+                end,
+                opts = { shrink_margin = false },
+            },
+        }
+    end,
 }
 
 local buttons = {
@@ -234,7 +240,7 @@ local config = {
                 group = "alpha_temp",
                 callback = function()
                     utils.mru_cache = {}
-                    update_git_info()
+                    _git_cwd = nil
                     require('alpha').redraw()
                     vim.cmd('AlphaRemap')
                 end,
