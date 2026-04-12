@@ -111,6 +111,50 @@ local function mru(start, cwd, items_number, opts)
     }
 end
 
+--- @param start number
+--- @param cwd string? optional
+--- @param items_number number? optional number of items to generate, default = 10
+local function mru_git(start, cwd, items_number, opts)
+    opts = opts or mru_opts
+    items_number = if_nil(items_number, 10)
+
+    local found = utils.get_git_files(cwd, items_number, opts.ignore)
+    local target_width = 35
+
+    local tbl = {}
+    local plenary_path_ok, plenary_path
+    for i, fn in ipairs(found) do
+        local short_fn
+        if cwd then
+            short_fn = vim.fn.fnamemodify(fn, ":.")
+        else
+            short_fn = vim.fn.fnamemodify(fn, ":~")
+        end
+
+        if #short_fn > target_width then
+            if plenary_path_ok == nil then
+                plenary_path_ok, plenary_path = pcall(require, "plenary.path")
+            end
+            if plenary_path_ok then
+                short_fn = plenary_path.new(short_fn):shorten(1, { -2, -1 })
+                if #short_fn > target_width then
+                    short_fn = plenary_path.new(short_fn):shorten(1, { -1 })
+                end
+            end
+        end
+
+        local shortcut = tostring(i + start - 1)
+
+        local file_button_el = file_button(fn, shortcut, short_fn, opts.autocd)
+        tbl[i] = file_button_el
+    end
+    return {
+        type = "group",
+        val = tbl,
+        opts = {},
+    }
+end
+
 local header = {
     type = "text",
     val = {
@@ -145,6 +189,37 @@ local section_mru = {
             type = "group",
             val = function()
                 return { mru(0, vim.fn.getcwd()) }
+            end,
+            opts = { shrink_margin = false },
+        },
+    },
+}
+
+local function section_mru_git_title()
+    local branch = vim.fn.systemlist("git -C " .. vim.fn.shellescape(vim.fn.getcwd()) .. " branch --show-current")[1]
+    if vim.v.shell_error ~= 0 or not branch or branch == "" then
+        return "MRU"
+    end
+    return "MRU " .. branch
+end
+
+local section_mru_git = {
+    type = "group",
+    val = {
+        {
+            type = "text",
+            val = section_mru_git_title,
+            opts = {
+                hl = "SpecialComment",
+                shrink_margin = false,
+                position = "center",
+            },
+        },
+        { type = "padding", val = 1 },
+        {
+            type = "group",
+            val = function()
+                return { mru_git(0, vim.fn.getcwd()) }
             end,
             opts = { shrink_margin = false },
         },
@@ -195,6 +270,9 @@ return {
     header = header,
     buttons = buttons,
     mru = mru,
+    mru_git = mru_git,
+    section_mru = section_mru,
+    section_mru_git = section_mru_git,
     config = config,
     -- theme specific config
     mru_opts = mru_opts,

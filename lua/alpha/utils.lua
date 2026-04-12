@@ -16,6 +16,51 @@ function M.filereadable(path)
     return readable
 end
 
+--- @param cwd string? working directory, defaults to cwd
+--- @param items_number number max number of items to return
+--- @param ignore_cb function? optional ignore callback(path, ext) -> bool
+--- @return string[]
+function M.get_git_files(cwd, items_number, ignore_cb)
+    local work_dir = cwd or vim.fn.getcwd()
+    local key = "git_" .. work_dir
+    if M.mru_cache[key] and #M.mru_cache[key] >= items_number then
+        return M.mru_cache[key]
+    end
+
+    local git_root_out = vim.fn.systemlist("git -C " .. vim.fn.shellescape(work_dir) .. " rev-parse --show-toplevel")
+    if vim.v.shell_error ~= 0 or not git_root_out[1] then
+        return {}
+    end
+    local git_root = git_root_out[1]
+
+    local esc = vim.fn.shellescape(work_dir)
+    local cmd = table.concat({
+        "git -C " .. esc .. " diff --name-only",
+        "git -C " .. esc .. " diff --cached --name-only",
+        "git -C " .. esc .. " log --pretty=format: --name-only -n 5",
+    }, "; ")
+    local raw = vim.fn.systemlist("{ " .. cmd .. "; } | sort | uniq")
+
+    local seen = {}
+    local found = {}
+    for _, rel_path in ipairs(raw) do
+        if rel_path ~= "" and not seen[rel_path] then
+            seen[rel_path] = true
+            local abs_path = git_root .. "/" .. rel_path
+            local ignore = ignore_cb and ignore_cb(abs_path, M.get_extension(abs_path))
+            if not ignore and M.filereadable(abs_path) then
+                table.insert(found, abs_path)
+                if #found >= items_number then
+                    break
+                end
+            end
+        end
+    end
+
+    M.mru_cache[key] = found
+    return found
+end
+
 --- @param cwd string?
 --- @param items_number number
 --- @param ignore_cb function?

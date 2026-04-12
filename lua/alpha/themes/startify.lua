@@ -22,6 +22,26 @@ local default_header = {
 
 local leader = "SPC"
 
+local git_info = { is_git = false, branch = nil }
+
+local function update_git_info()
+    local cwd = vim.fn.getcwd()
+    local git_root = vim.fn.systemlist(
+        "git -C " .. vim.fn.shellescape(cwd) .. " rev-parse --show-toplevel"
+    )[1]
+    if vim.v.shell_error ~= 0 or not git_root then
+        git_info = { is_git = false, branch = nil }
+        return
+    end
+    local branch = vim.fn.systemlist(
+        "git -C " .. vim.fn.shellescape(cwd) .. " branch --show-current"
+    )[1]
+    git_info = {
+        is_git = true,
+        branch = (branch and branch ~= "") and branch or nil,
+    }
+end
+
 --- @param sc string
 --- @param txt string
 --- @param keybind string? optional
@@ -117,6 +137,30 @@ local mru_opts = {
     autocd = false
 }
 
+local function mru_git(start, cwd, items_number, opts)
+    opts = opts or mru_opts
+    items_number = if_nil(items_number, 10)
+
+    local found = utils.get_git_files(cwd, items_number, opts.ignore)
+
+    local tbl = {}
+    for i, fn in ipairs(found) do
+        local short_fn
+        if cwd then
+            short_fn = fnamemodify(fn, ":.")
+        else
+            short_fn = fnamemodify(fn, ":~")
+        end
+        local file_button_el = file_button(fn, tostring(i + start - 1), short_fn, opts.autocd)
+        tbl[i] = file_button_el
+    end
+    return {
+        type = "group",
+        val = tbl,
+        opts = {},
+    }
+end
+
 local function mru(start, cwd, items_number, opts)
     opts = opts or mru_opts
     items_number = if_nil(items_number, 10)
@@ -141,8 +185,28 @@ local function mru(start, cwd, items_number, opts)
     }
 end
 
-local function mru_title()
-    return "MRU " .. vim.fn.getcwd()
+local function make_git_title_el(opts)
+    local prefix = "MRU "
+    local branch = git_info.branch
+    if branch then
+        return {
+            type = "text",
+            val = prefix .. branch,
+            opts = vim.tbl_extend("force", {
+                hl = {
+                    { "SpecialComment", 0, #prefix },
+                    { "Label", #prefix, #prefix + #branch },
+                },
+                shrink_margin = false,
+            }, opts or {}),
+        }
+    else
+        return {
+            type = "text",
+            val = "MRU",
+            opts = vim.tbl_extend("force", { hl = "SpecialComment", shrink_margin = false }, opts or {}),
+        }
+    end
 end
 
 local section = {
@@ -176,19 +240,49 @@ local section = {
     },
     mru_cwd = {
         type = "group",
-        opts = { position = "v_center" },
-        val = {
-            { type = "padding", val = 1 },
-            { type = "text", val = mru_title, opts = { hl = "SpecialComment", shrink_margin = false } },
-            { type = "padding", val = 1 },
-            {
-                type = "group",
-                val = function()
-                    return { mru(0, vim.fn.getcwd()) }
-                end,
-                opts = { shrink_margin = false },
-            },
-        },
+        val = function()
+            local cwd = vim.fn.getcwd()
+            if git_info.is_git then
+                return {
+                    { type = "padding", val = 1 },
+                    make_git_title_el(),
+                    { type = "padding", val = 1 },
+                    {
+                        type = "group",
+                        val = function() return { mru_git(0, cwd) } end,
+                        opts = { shrink_margin = false },
+                    },
+                }
+            else
+                return {
+                    { type = "padding", val = 1 },
+                    { type = "text", val = "MRU " .. cwd, opts = { hl = "SpecialComment", shrink_margin = false } },
+                    { type = "padding", val = 1 },
+                    {
+                        type = "group",
+                        val = function() return { mru(0, cwd) } end,
+                        opts = { shrink_margin = false },
+                    },
+                }
+            end
+        end,
+    },
+    mru_git = {
+        type = "group",
+        val = function()
+            return {
+                { type = "padding", val = 1 },
+                make_git_title_el(),
+                { type = "padding", val = 1 },
+                {
+                    type = "group",
+                    val = function()
+                        return { mru_git(0, vim.fn.getcwd()) }
+                    end,
+                    opts = { shrink_margin = false },
+                },
+            }
+        end,
     },
     bottom_buttons = {
         type = "group",
@@ -218,11 +312,13 @@ local config = {
         margin = 3,
         redraw_on_resize = false,
         setup = function()
+            update_git_info()
             vim.api.nvim_create_autocmd('DirChanged', {
                 pattern = '*',
                 group = "alpha_temp",
                 callback = function ()
                     utils.mru_cache = {}
+                    update_git_info()
                     require('alpha').redraw()
                     vim.cmd('AlphaRemap')
                 end,
@@ -236,6 +332,7 @@ return {
     button = button,
     file_button = file_button,
     mru = mru,
+    mru_git = mru_git,
     mru_opts = mru_opts,
     section = section,
     config = config,
