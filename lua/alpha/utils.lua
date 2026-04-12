@@ -2,7 +2,63 @@ local M = {}
 
 M.mru_cache = {}
 
+--- cwd -> git toplevel path, or false if not a repo (negative cache).
+M.git_toplevel_cache = {}
+
 local uv = vim.uv or vim.loop
+
+--- @param work_dir string
+--- @param git_args string[]
+--- @return string[]|nil lines, or nil on git failure
+local function git_cmd_lines(work_dir, git_args)
+    local cmd = vim.list_extend({ "git", "-C", work_dir }, git_args)
+    local out = vim.fn.systemlist(cmd)
+    if vim.v.shell_error ~= 0 then
+        return nil
+    end
+    return out
+end
+
+--- Same ordering as `{ ... } | sort | uniq`: sorted unique non-empty lines.
+--- @param lines string[]
+--- @return string[]
+local function sorted_unique_lines(lines)
+    if #lines == 0 then
+        return lines
+    end
+    local sorted = vim.list_extend({}, lines)
+    table.sort(sorted)
+    local out = {}
+    local prev
+    for _, p in ipairs(sorted) do
+        if p ~= "" and p ~= prev then
+            prev = p
+            out[#out + 1] = p
+        end
+    end
+    return out
+end
+
+--- Resolve the git worktree root for cwd, using a small cache (cleared with MRU cache on DirChanged).
+--- @param work_dir string?
+--- @return string|nil
+function M.git_worktree_root(work_dir)
+    work_dir = work_dir or vim.fn.getcwd()
+    local cached = M.git_toplevel_cache[work_dir]
+    if cached == false then
+        return nil
+    end
+    if cached ~= nil then
+        return cached
+    end
+    local top_out = git_cmd_lines(work_dir, { "rev-parse", "--show-toplevel" })
+    if not top_out or not top_out[1] then
+        M.git_toplevel_cache[work_dir] = false
+        return nil
+    end
+    M.git_toplevel_cache[work_dir] = top_out[1]
+    return top_out[1]
+end
 
 local READABLE_CACHE_MAX = 500
 local _readable_cache = {}
@@ -41,38 +97,53 @@ function M.get_git_files(cwd, items_number, ignore_cb)
         return M.mru_cache[key]
     end
 
-    local git_root_out = vim.fn.systemlist("git -C " .. vim.fn.shellescape(work_dir) .. " rev-parse --show-toplevel")
-    if vim.v.shell_error ~= 0 or not git_root_out[1] then
+    local git_root = M.git_worktree_root(work_dir)
+    if not git_root then
         return {}
     end
-    local git_root = git_root_out[1]
 
-    local esc = vim.fn.shellescape(work_dir)
-    local diff_prefix = "git -C " .. esc .. " diff --name-only; git -C " .. esc .. " diff --cached --name-only; "
+    local diff_out = git_cmd_lines(work_dir, { "diff", "--name-only" }) or {}
+    local cached_out = git_cmd_lines(work_dir, { "diff", "--cached", "--name-only" }) or {}
 
     local found = {}
-    local prev_raw_count = -1
-    local n_commits = items_number
-    while #found < items_number and n_commits <= 1024 do
-        local raw = vim.fn.systemlist(
-            "{ " ..
-            diff_prefix ..
-            "git -C " .. esc .. " log --pretty=format: --name-only -n " .. n_commits .. "; } | sort | uniq"
-        )
-        if #raw == prev_raw_count then break end
-        prev_raw_count = #raw
+    local prev_unique_count = -1
+    local n_commits = math.max(50, items_number * 25)
+    local n_max = 2048
 
-        local seen = {}
+    while #found < items_number and n_commits <= n_max do
+        local log_out = git_cmd_lines(work_dir, {
+            "log",
+            "--pretty=format:",
+            "--name-only",
+            "-n",
+            tostring(n_commits),
+        }) or {}
+
+        local combined = {}
+        vim.list_extend(combined, diff_out)
+        vim.list_extend(combined, cached_out)
+        vim.list_extend(combined, log_out)
+
+        local sorted_paths = sorted_unique_lines(combined)
+        if #sorted_paths == prev_unique_count then
+            break
+        end
+        prev_unique_count = #sorted_paths
+
         found = {}
-        for _, rel_path in ipairs(raw) do
-            if rel_path ~= "" and not seen[rel_path] then
-                seen[rel_path] = true
-                local abs_path = git_root .. "/" .. rel_path
-                local ignore = ignore_cb and ignore_cb(abs_path, M.get_extension(abs_path))
-                if not ignore and M.filereadable(abs_path) then
-                    table.insert(found, abs_path)
+        for _, rel_path in ipairs(sorted_paths) do
+            local abs_path = git_root .. "/" .. rel_path
+            local ignore = ignore_cb and ignore_cb(abs_path, M.get_extension(abs_path))
+            if not ignore and M.filereadable(abs_path) then
+                table.insert(found, abs_path)
+                if #found >= items_number then
+                    break
                 end
             end
+        end
+
+        if #found >= items_number then
+            break
         end
         n_commits = n_commits * 2
     end

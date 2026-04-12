@@ -63,16 +63,12 @@ local function update_git_info()
     local cwd = vim.fn.getcwd()
     if cwd == _git_cwd then return end
     _git_cwd = cwd
-    local git_root = vim.fn.systemlist(
-        "git -C " .. vim.fn.shellescape(cwd) .. " rev-parse --show-toplevel"
-    )[1]
-    if vim.v.shell_error ~= 0 or not git_root then
+    local git_root = utils.git_worktree_root(cwd)
+    if not git_root then
         git_info = { is_git = false, branch = nil }
         return
     end
-    local branch = vim.fn.systemlist(
-        "git -C " .. vim.fn.shellescape(cwd) .. " branch --show-current"
-    )[1]
+    local branch = vim.fn.systemlist({ "git", "-C", cwd, "branch", "--show-current" })[1]
     git_info = {
         is_git = true,
         branch = (branch and branch ~= "") and branch or nil,
@@ -240,6 +236,7 @@ local config = {
                 group = "alpha_temp",
                 callback = function()
                     utils.mru_cache = {}
+                    utils.git_toplevel_cache = {}
                     _git_cwd = nil
                     require('alpha').redraw()
                     vim.cmd('AlphaRemap')
