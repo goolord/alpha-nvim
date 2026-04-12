@@ -5,6 +5,8 @@ local abs = math.abs
 local concat = table.concat
 local if_nil = vim.F.if_nil
 local list_extend = vim.list_extend
+local max = math.max
+local min = math.min
 local str_rep = string.rep
 local strdisplaywidth = vim.fn.strdisplaywidth
 
@@ -16,7 +18,6 @@ local cursor_jumps_press_queue = {}
 -- map of buffer -> state
 local alpha_state = {}
 local function head(t)
-    local next,_,_ = pairs(t)
     return t[next(t)]
 end
 
@@ -35,7 +36,7 @@ end
 
 function alpha.press()
     -- only press under the cursor if there's no queue
-    if vim.tbl_count(cursor_jumps_press_queue) == 0 then
+    if next(cursor_jumps_press_queue) == nil then
         cursor_jumps_press[cursor_ix]()
     end
     for queued_cursor_ix, _ in pairs(cursor_jumps_press_queue) do
@@ -71,7 +72,7 @@ function alpha.queue_press(state)
 
         draw_press(row,col,state)
         local height = state.line
-        vim.api.nvim_win_set_cursor(0, { math.min(row + 1, height), col })
+        vim.api.nvim_win_set_cursor(0, { min(row + 1, height), col })
     end
 end
 
@@ -87,7 +88,7 @@ local function longest_line(tbl)
 end
 
 local function spaces(n)
-    return str_rep(" ", math.max(0, n))
+    return str_rep(" ", max(0, n))
 end
 
 ---@param keymaps nil | string | string[]
@@ -260,12 +261,12 @@ function layout_element.button(el, conf, state)
         right = 0,
     }
     local opts = vim.tbl_get(el, 'opts') or {}
-    local shortcut = vim.tbl_get(opts, 'shortcut')
-    local width = vim.tbl_get(opts, 'width')
+    local shortcut = opts.shortcut
+    local width = opts.width
     if shortcut then
         -- this min lets the padding resize when the window gets smaller
         if width then
-            local max_width = math.min(width, state.win_width)
+            local max_width = min(width, state.win_width)
             local shortcut_padding = max_width - (strdisplaywidth(el.val) + strdisplaywidth(shortcut))
             if opts.align_shortcut == "right" then
                 padding.center = shortcut_padding
@@ -283,10 +284,10 @@ function layout_element.button(el, conf, state)
     end
 
     -- margin
-    if vim.tbl_get(conf, 'opts', 'margin') and (vim.tbl_get(opts, 'position') ~= "center") then
+    if vim.tbl_get(conf, 'opts', 'margin') and (opts.position ~= "center") then
         local left
-        val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(vim.tbl_get(opts, 'shrink_margin'), true))
-        if vim.tbl_get(opts, 'align_shortcut') == "right" then
+        val, left = alpha.pad_margin(val, state, conf.opts.margin, if_nil(opts.shrink_margin, true))
+        if opts.align_shortcut == "right" then
             padding.center = padding.center + left
         else
             padding.left = padding.left + left
@@ -294,38 +295,38 @@ function layout_element.button(el, conf, state)
     end
 
     -- center
-    if vim.tbl_get(el, 'opts', 'position') == "center" then
+    if opts.position == "center" then
         local left
         val, left = alpha.align_center(val, state)
-        if el.opts.align_shortcut == "right" then
+        if opts.align_shortcut == "right" then
             padding.center = padding.center + left
         end
         padding.left = padding.left + left
     end
 
     local row = state.line + 1
-    local col = ((el.opts and el.opts.cursor) or 0) + padding.left
+    local col = (opts.cursor or 0) + padding.left
     cursor_jumps[#cursor_jumps + 1] = { row, col }
     cursor_jumps_press[#cursor_jumps_press + 1] = el.on_press
-    if el.opts and el.opts.hl_shortcut then
-        if type(el.opts.hl_shortcut) == "string" then
-            hl = { { el.opts.hl_shortcut, 0, #el.opts.shortcut + 1 } }
+    if opts.hl_shortcut then
+        if type(opts.hl_shortcut) == "string" then
+            hl = { { opts.hl_shortcut, 0, #opts.shortcut + 1 } }
         else
-            hl = el.opts.hl_shortcut
+            hl = opts.hl_shortcut
         end
-        if el.opts.align_shortcut == "right" then
-            hl = alpha.highlight(state, state.line, hl, #el.val + math.max(0,padding.center), el)
+        if opts.align_shortcut == "right" then
+            hl = alpha.highlight(state, state.line, hl, #el.val + max(0, padding.center), el)
         else
             hl = alpha.highlight(state, state.line, hl, padding.left, el)
         end
     end
 
-    if el.opts and el.opts.hl then
+    if opts.hl then
         local left = padding.left
-        if el.opts.align_shortcut == "left" then
-            left = left + #el.opts.shortcut
+        if opts.align_shortcut == "left" then
+            left = left + #opts.shortcut
         end
-        list_extend(hl, alpha.highlight(state, state.line, el.opts.hl, left, el))
+        list_extend(hl, alpha.highlight(state, state.line, opts.hl, left, el))
     end
     state.line = state.line + 1
     return val, hl
@@ -341,6 +342,7 @@ function layout_element.group(el, conf, state)
         local hl_tbl = {}
         local priority = if_nil(vim.tbl_get(el, 'opts', 'priority'), 1)
         local inherit = vim.tbl_get(el, 'opts', 'inherit')
+        local spacing = el.opts and el.opts.spacing
         for _, v in ipairs(el.val) do
             if inherit then
                 if v.opts then
@@ -359,8 +361,8 @@ function layout_element.group(el, conf, state)
             if hl then
                 list_extend(hl_tbl, hl)
             end
-            if el.opts and el.opts.spacing then
-                local padding_el = { type = "padding", val = el.opts.spacing }
+            if spacing then
+                local padding_el = { type = "padding", val = spacing }
                 local text_1, hl_1 = layout_element[padding_el.type](padding_el, conf, state)
                 list_extend(text_tbl, text_1)
                 list_extend(hl_tbl, hl_1)
@@ -382,7 +384,7 @@ local function layout(conf, state)
     end
     vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, text)
     for _, hl_line in ipairs(hl) do
-        vim.api.nvim_buf_add_highlight(hl_line[1], hl_line[2], hl_line[3], hl_line[4], math.max(hl_line[5], 0), hl_line[6])
+        vim.api.nvim_buf_add_highlight(hl_line[1], hl_line[2], hl_line[3], hl_line[4], max(hl_line[5], 0), hl_line[6])
     end
 end
 
@@ -607,7 +609,8 @@ function alpha.draw(conf, state)
 
     cursor_jumps = {}
     cursor_jumps_press = {}
-    state.win_width = vim.api.nvim_win_get_width(active_window(state) or 0)
+    local active_win = active_window(state)
+    state.win_width = vim.api.nvim_win_get_width(active_win or 0)
     state.line = 0
     -- this is for redraws. i guess the cursor 'moves'
     -- when the screen is cleared and then redrawn
@@ -615,10 +618,8 @@ function alpha.draw(conf, state)
     local ix = cursor_ix
     vim.api.nvim_set_option_value("modifiable", true, { buf = state.buffer })
     vim.api.nvim_buf_clear_namespace(state.buffer, -1, 0, -1)
-    vim.api.nvim_buf_set_lines(state.buffer, 0, -1, false, {})
     layout(conf, state)
     vim.api.nvim_set_option_value("modifiable", false, { buf = state.buffer })
-    local active_win = active_window(state)
     if vim.api.nvim_get_current_win() == active_win then
         if #cursor_jumps ~= 0 then
             -- TODO: this is pcalled because a bunch of window events

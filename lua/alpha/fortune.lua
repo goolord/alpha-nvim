@@ -25,7 +25,7 @@ local format_line = function(line, max_width)
     local words = {}
     local target = "%S+"
     for word in line:gmatch(target) do
-        table.insert(words, word)
+        words[#words + 1] = word
     end
 
     local bufstart = " "
@@ -63,7 +63,7 @@ local format_fortune = function(fortune, max_width)
     local formatted_fortune = { " " } -- adds spacing between alpha-menu and footer
     for _, line in ipairs(fortune) do
         local formatted_line = format_line(line, max_width)
-        formatted_fortune = list_extend(formatted_fortune, formatted_line)
+        list_extend(formatted_fortune, formatted_line)
     end
     return formatted_fortune
 end
