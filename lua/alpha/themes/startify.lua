@@ -186,16 +186,17 @@ local function mru(start, cwd, items_number, opts)
 end
 
 local function make_git_title_el(opts)
-    local prefix = "MRU "
+    local cwd_short = fnamemodify(vim.fn.getcwd(), ":~")
     local branch = git_info.branch
     if branch then
+        local head = "MRU " .. cwd_short .. " "
         return {
             type = "text",
-            val = prefix .. branch,
+            val = head .. branch,
             opts = vim.tbl_extend("force", {
                 hl = {
-                    { "SpecialComment", 0, #prefix },
-                    { "Label", #prefix, #prefix + #branch },
+                    { "SpecialComment", 0, #head },
+                    { "Label", #head, #head + #branch },
                 },
                 shrink_margin = false,
             }, opts or {}),
@@ -203,7 +204,7 @@ local function make_git_title_el(opts)
     else
         return {
             type = "text",
-            val = "MRU",
+            val = "MRU " .. cwd_short,
             opts = vim.tbl_extend("force", { hl = "SpecialComment", shrink_margin = false }, opts or {}),
         }
     end

@@ -34,27 +34,31 @@ function M.get_git_files(cwd, items_number, ignore_cb)
     local git_root = git_root_out[1]
 
     local esc = vim.fn.shellescape(work_dir)
-    local cmd = table.concat({
-        "git -C " .. esc .. " diff --name-only",
-        "git -C " .. esc .. " diff --cached --name-only",
-        "git -C " .. esc .. " log --pretty=format: --name-only -n 5",
-    }, "; ")
-    local raw = vim.fn.systemlist("{ " .. cmd .. "; } | sort | uniq")
+    local diff_prefix = "git -C " .. esc .. " diff --name-only; git -C " .. esc .. " diff --cached --name-only; "
 
-    local seen = {}
     local found = {}
-    for _, rel_path in ipairs(raw) do
-        if rel_path ~= "" and not seen[rel_path] then
-            seen[rel_path] = true
-            local abs_path = git_root .. "/" .. rel_path
-            local ignore = ignore_cb and ignore_cb(abs_path, M.get_extension(abs_path))
-            if not ignore and M.filereadable(abs_path) then
-                table.insert(found, abs_path)
-                if #found >= items_number then
-                    break
+    local prev_raw_count = -1
+    local n_commits = items_number
+    while #found < items_number and n_commits <= 1024 do
+        local raw = vim.fn.systemlist(
+            "{ " .. diff_prefix .. "git -C " .. esc .. " log --pretty=format: --name-only -n " .. n_commits .. "; } | sort | uniq"
+        )
+        if #raw == prev_raw_count then break end
+        prev_raw_count = #raw
+
+        local seen = {}
+        found = {}
+        for _, rel_path in ipairs(raw) do
+            if rel_path ~= "" and not seen[rel_path] then
+                seen[rel_path] = true
+                local abs_path = git_root .. "/" .. rel_path
+                local ignore = ignore_cb and ignore_cb(abs_path, M.get_extension(abs_path))
+                if not ignore and M.filereadable(abs_path) then
+                    table.insert(found, abs_path)
                 end
             end
         end
+        n_commits = n_commits * 2
     end
 
     M.mru_cache[key] = found
