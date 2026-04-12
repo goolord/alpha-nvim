@@ -1,18 +1,32 @@
 local M = {}
 
-M.readable_cache = {}
 M.mru_cache = {}
 
 local uv = vim.uv or vim.loop
 
+local READABLE_CACHE_MAX = 500
+local _readable_cache = {}
+local _readable_cache_size = 0
+
+--- Reset the readable cache and its size counter atomically.
+--- Always use this instead of assigning to the table directly.
+function M.clear_readable_cache()
+    _readable_cache = {}
+    _readable_cache_size = 0
+end
+
 --- @param path string
 --- @return boolean
 function M.filereadable(path)
-    if M.readable_cache[path] ~= nil then
-        return M.readable_cache[path]
+    if _readable_cache[path] ~= nil then
+        return _readable_cache[path]
+    end
+    if _readable_cache_size >= READABLE_CACHE_MAX then
+        M.clear_readable_cache()
     end
     local readable = uv.fs_stat(path) ~= nil
-    M.readable_cache[path] = readable
+    _readable_cache[path] = readable
+    _readable_cache_size = _readable_cache_size + 1
     return readable
 end
 
@@ -41,7 +55,9 @@ function M.get_git_files(cwd, items_number, ignore_cb)
     local n_commits = items_number
     while #found < items_number and n_commits <= 1024 do
         local raw = vim.fn.systemlist(
-            "{ " .. diff_prefix .. "git -C " .. esc .. " log --pretty=format: --name-only -n " .. n_commits .. "; } | sort | uniq"
+            "{ " ..
+            diff_prefix ..
+            "git -C " .. esc .. " log --pretty=format: --name-only -n " .. n_commits .. "; } | sort | uniq"
         )
         if #raw == prev_raw_count then break end
         prev_raw_count = #raw
@@ -108,20 +124,30 @@ function M.get_extension(fn)
     return ext
 end
 
+local _devicons, _devicons_tried
 local function devicons_get_icon(fn, ext)
-    local ok, devicons = pcall(require, "nvim-web-devicons")
-    if not ok then return nil, nil end
-    return devicons.get_icon(fn, ext, { default = true })
+    if not _devicons_tried then
+        local ok
+        ok, _devicons = pcall(require, "nvim-web-devicons")
+        if ok then _devicons_tried = true else _devicons = nil end
+    end
+    if not _devicons then return nil, nil end
+    return _devicons.get_icon(fn, ext, { default = true })
 end
 
+local _mini_icons, _mini_tried
 local function mini_get_icon(fn, ext)
-    local ok, mini_icons = pcall(require, "mini.icons")
-    if not ok then return nil, nil end
+    if not _mini_tried then
+        local ok
+        ok, _mini_icons = pcall(require, "mini.icons")
+        if ok then _mini_tried = true else _mini_icons = nil end
+    end
+    if not _mini_icons then return nil, nil end
     if ext ~= "" then
-        local icon, hl, _ = mini_icons.get("extension", ext)
+        local icon, hl, _ = _mini_icons.get("extension", ext)
         return icon, hl
     else
-        local icon, hl, _ = mini_icons.get("file", fn)
+        local icon, hl, _ = _mini_icons.get("file", fn)
         return icon, hl
     end
 end
@@ -144,6 +170,27 @@ function M.get_file_icon(provider, fn)
         return ico or "", hl or ""
     end
     return "", ""
+end
+
+--- Validate the provider, fetch the icon, and mutate file_icons.enabled on failure.
+--- @param file_icons table theme-local file_icons config table (provider, enabled fields)
+--- @param fn string file name or path
+--- @return string, string icon and highlight group
+function M.get_icon(file_icons, fn)
+    if file_icons.provider ~= "devicons" and file_icons.provider ~= "mini" then
+        vim.notify(
+            "Alpha: Invalid file icons provider: " .. file_icons.provider .. ", disable file icons",
+            vim.log.levels.WARN
+        )
+        file_icons.enabled = false
+        return "", ""
+    end
+    local ico, hl = M.get_file_icon(file_icons.provider, fn)
+    if ico == "" then
+        file_icons.enabled = false
+        vim.notify("Alpha: Mini icons or devicons get icon failed, disable file icons", vim.log.levels.WARN)
+    end
+    return ico, hl
 end
 
 --- @param hl (string | number)[][][] highlight

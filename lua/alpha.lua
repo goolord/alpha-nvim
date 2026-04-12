@@ -429,7 +429,7 @@ end
 
 function keymaps_element.group(el, conf, state)
     if type(el.val) == "function" then
-        alpha.resolve(keymaps_element.group, el, conf, state)
+        return alpha.resolve(keymaps_element.group, el, conf, state)
     end
 
     if type(el.val) == "table" then

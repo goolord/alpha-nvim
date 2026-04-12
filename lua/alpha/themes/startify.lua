@@ -85,18 +85,7 @@ local file_icons = {
 }
 
 local function icon(fn)
-    if file_icons.provider ~= "devicons" and file_icons.provider ~= "mini" then
-        vim.notify("Alpha: Invalid file icons provider: " .. file_icons.provider .. ", disable file icons", vim.log.levels.WARN)
-        file_icons.enabled = false
-        return "", ""
-    end
-
-    local ico, hl = utils.get_file_icon(file_icons.provider, fn)
-    if ico == "" then
-        file_icons.enabled = false
-        vim.notify("Alpha: Mini icons or devicons get icon failed, disable file icons", vim.log.levels.WARN)
-    end
-    return ico, hl
+    return utils.get_icon(file_icons, fn)
 end
 
 local function file_button(fn, sc, short_fn, autocd)
