@@ -343,6 +343,11 @@ function layout_element.group(el, conf, state)
         local priority = if_nil(vim.tbl_get(el, 'opts', 'priority'), 1)
         local inherit = vim.tbl_get(el, 'opts', 'inherit')
         local spacing = el.opts and el.opts.spacing
+        local position = vim.tbl_get(el, 'opts', 'position')
+
+        local start_line = state.line
+        local cursor_jumps_start = #cursor_jumps
+
         for _, v in ipairs(el.val) do
             if inherit then
                 if v.opts then
@@ -368,6 +373,27 @@ function layout_element.group(el, conf, state)
                 list_extend(hl_tbl, hl_1)
             end
         end
+
+        if position == "v_center" then
+            local group_height = #text_tbl
+            local shift = max(0, math.floor((state.win_height - group_height) / 2) - start_line)
+            if shift > 0 then
+                local padding = {}
+                for i = 1, shift do
+                    padding[i] = ""
+                end
+                list_extend(padding, text_tbl)
+                text_tbl = padding
+                for _, hl_entry in ipairs(hl_tbl) do
+                    hl_entry[4] = hl_entry[4] + shift
+                end
+                for i = cursor_jumps_start + 1, #cursor_jumps do
+                    cursor_jumps[i][1] = cursor_jumps[i][1] + shift
+                end
+                state.line = state.line + shift
+            end
+        end
+
         return text_tbl, hl_tbl
     end
 end
@@ -611,6 +637,7 @@ function alpha.draw(conf, state)
     cursor_jumps_press = {}
     local active_win = active_window(state)
     state.win_width = vim.api.nvim_win_get_width(active_win or 0)
+    state.win_height = vim.api.nvim_win_get_height(active_win or 0)
     state.line = 0
     -- this is for redraws. i guess the cursor 'moves'
     -- when the screen is cleared and then redrawn

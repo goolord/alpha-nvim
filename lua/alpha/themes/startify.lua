@@ -176,6 +176,7 @@ local section = {
     },
     mru_cwd = {
         type = "group",
+        opts = { position = "v_center" },
         val = {
             { type = "padding", val = 1 },
             { type = "text", val = mru_title, opts = { hl = "SpecialComment", shrink_margin = false } },

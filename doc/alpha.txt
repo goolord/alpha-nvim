@@ -160,6 +160,11 @@ group:
         -- unless the val.[n].opts.priority is >= opts.priority
         inherit = {}
         priority = 1 -- defaults to 1, see above
+        -- vertically center the group within the window.
+        -- padding is automatically added above the group so that the
+        -- group appears centered. if elements already rendered above
+        -- the group push it past the center point, no padding is added.
+        position = "v_center"
     }
  }
 <
