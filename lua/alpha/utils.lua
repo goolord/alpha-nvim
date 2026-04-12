@@ -61,13 +61,13 @@ end
 
 local function devicons_get_icon(fn, ext)
     local ok, devicons = pcall(require, "nvim-web-devicons")
-    if not ok then return "", "" end
+    if not ok then return nil, nil end
     return devicons.get_icon(fn, ext, { default = true })
 end
 
 local function mini_get_icon(fn, ext)
     local ok, mini_icons = pcall(require, "mini.icons")
-    if not ok then return "", "" end
+    if not ok then return nil, nil end
     if ext ~= "" then
         local icon, hl, _ = mini_icons.get("extension", ext)
         return icon, hl
@@ -83,10 +83,16 @@ end
 function M.get_file_icon(provider, fn)
     local ext = M.get_extension(fn)
     if provider == "devicons" then
-        return devicons_get_icon(fn, ext)
+        local ico, hl = devicons_get_icon(fn, ext)
+        -- if devicons is not installed, fallback to mini icons
+        if ico == nil then ico, hl = mini_get_icon(fn, ext) end
+        return ico or "", hl or ""
     end
     if provider == "mini" then
-        return mini_get_icon(fn, ext)
+        local ico, hl = mini_get_icon(fn, ext)
+        -- if mini icons is not installed, fallback to devicons
+        if ico == nil then ico, hl = devicons_get_icon(fn, ext) end
+        return ico or "", hl or ""
     end
     return "", ""
 end
