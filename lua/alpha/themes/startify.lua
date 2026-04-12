@@ -1,5 +1,8 @@
 local utils = require("alpha.utils")
 
+--- Mutable theme table; closures read fields here so user config (e.g. mru_sections) applies.
+local startify = {}
+
 local if_nil = vim.F.if_nil
 local fnamemodify = vim.fn.fnamemodify
 
@@ -275,7 +278,7 @@ local section = {
     },
 }
 
-local mru_sections = { "mru_cwd", "mru" }
+startify.mru_sections = { "mru_cwd", "mru" }
 
 local config = {
     layout = {
@@ -287,7 +290,7 @@ local config = {
             type = "group",
             val = function()
                 local result = {}
-                for _, name in ipairs(mru_sections) do
+                for _, name in ipairs(startify.mru_sections) do
                     if section[name] then
                         table.insert(result, section[name])
                     end
@@ -318,21 +321,17 @@ local config = {
     },
 }
 
-return {
-    icon = icon,
-    button = button,
-    file_button = file_button,
-    mru = mru,
-    mru_git = mru_git,
-    mru_opts = mru_opts,
-    mru_sections = mru_sections,
-    section = section,
-    config = config,
-    -- theme config
-    file_icons = file_icons,
-    -- deprecated
-    nvim_web_devicons = file_icons,
-    leader = leader,
-    -- deprecated
-    opts = config,
-}
+startify.icon = icon
+startify.button = button
+startify.file_button = file_button
+startify.mru = mru
+startify.mru_git = mru_git
+startify.mru_opts = mru_opts
+startify.section = section
+startify.config = config
+startify.file_icons = file_icons
+startify.nvim_web_devicons = file_icons
+startify.leader = leader
+startify.opts = config
+
+return startify
