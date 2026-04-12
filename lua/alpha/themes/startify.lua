@@ -243,29 +243,16 @@ local section = {
         type = "group",
         val = function()
             local cwd = vim.fn.getcwd()
-            if git_info.is_git then
-                return {
-                    { type = "padding", val = 1 },
-                    make_git_title_el(),
-                    { type = "padding", val = 1 },
-                    {
-                        type = "group",
-                        val = function() return { mru_git(0, cwd) } end,
-                        opts = { shrink_margin = false },
-                    },
-                }
-            else
-                return {
-                    { type = "padding", val = 1 },
-                    { type = "text", val = "MRU " .. cwd, opts = { hl = "SpecialComment", shrink_margin = false } },
-                    { type = "padding", val = 1 },
-                    {
-                        type = "group",
-                        val = function() return { mru(0, cwd) } end,
-                        opts = { shrink_margin = false },
-                    },
-                }
-            end
+            return {
+                { type = "padding", val = 1 },
+                { type = "text", val = "MRU " .. fnamemodify(cwd, ":~"), opts = { hl = "SpecialComment", shrink_margin = false } },
+                { type = "padding", val = 1 },
+                {
+                    type = "group",
+                    val = function() return { mru(0, cwd) } end,
+                    opts = { shrink_margin = false },
+                },
+            }
         end,
     },
     mru_git = {
@@ -297,14 +284,26 @@ local section = {
     },
 }
 
+local mru_sections = { "mru_cwd", "mru" }
+
 local config = {
     layout = {
         { type = "padding", val = 1 },
         section.header,
         { type = "padding", val = 2 },
         section.top_buttons,
-        section.mru_cwd,
-        section.mru,
+        {
+            type = "group",
+            val = function()
+                local result = {}
+                for _, name in ipairs(mru_sections) do
+                    if section[name] then
+                        table.insert(result, section[name])
+                    end
+                end
+                return result
+            end,
+        },
         { type = "padding", val = 1 },
         section.bottom_buttons,
         section.footer,
@@ -335,6 +334,7 @@ return {
     mru = mru,
     mru_git = mru_git,
     mru_opts = mru_opts,
+    mru_sections = mru_sections,
     section = section,
     config = config,
     -- theme config
