@@ -42,7 +42,7 @@ local function file_button(fn, sc, short_fn, autocd)
     if fn_start ~= nil then
         table.insert(fb_hl, { "Comment", #ico_txt - 2, #fn_start + #ico_txt })
     end
-    file_button_el.opts.cursor = #ico_txt
+    file_button_el.opts.cursor = vim.fn.strdisplaywidth(ico_txt)
     file_button_el.opts.hl = fb_hl
     return file_button_el
 end
