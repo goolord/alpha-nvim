@@ -11,6 +11,29 @@ local file_icons = {
     provider = "mini",
 }
 
+-- Function to open the relevant config file
+-- Takes into accoutn vim or lua setup 
+local function open_config_local() 
+  local config_path = vim.fn.stdpath("config")
+  vim.api.nvim_set_current_dir(config_path)
+
+  -- Select init.* file base on setup
+  local init_lua = config_path .. "/init.lua"
+  local init_vim = config_path .. "/init.vim"
+
+  if vim.fn.filereadable(init_lua) == 1 then
+    vim.cmd("edit " .. init_lua)
+  elseif vim.fn.filereadable(init_vim) == 1 then
+    vim.cmd("edit " .. init_vim)
+  else
+    print("No init.* file found in " .. config_path)
+    print("Fallback to config path")
+    vim.cmd("cd " .. config_path)
+  end
+end 
+-- Makes function globally available to be used in cmd-button
+_G.open_config = open_config_local
+
 local function icon(fn)
     return utils.get_icon(file_icons, fn)
 end
@@ -212,7 +235,7 @@ local buttons = {
         dashboard.button("e", "  New file", "<cmd>ene<CR>"),
         dashboard.button("SPC f f", "󰈞  Find file"),
         dashboard.button("SPC f g", "󰊄  Live grep"),
-        dashboard.button("c", "  Configuration", "<cmd>cd stdpath('config')<CR>"),
+        dashboard.button("c", "  Configuration", "<cmd>lua open_config()<CR>"),
         dashboard.button("u", "  Update plugins", "<cmd>Lazy sync<CR>"),
         dashboard.button("q", "󰅚  Quit", "<cmd>qa<CR>"),
     },
