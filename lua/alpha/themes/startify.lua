@@ -1,3 +1,4 @@
+local recent_files = require("alpha.themes.mru")
 local utils = require("alpha.utils")
 
 --- Mutable theme table; closures read fields here so user config (e.g. mru_sections) applies.
@@ -25,27 +26,6 @@ local default_header = {
 
 local leader = "SPC"
 
-local git_info = { is_git = false, branch = nil }
-local _git_cwd = nil
-
-local function update_git_info()
-    local cwd = vim.fn.getcwd()
-    if cwd == _git_cwd then return end
-    _git_cwd = cwd
-    local git_root = utils.git_worktree_root(cwd)
-    if not git_root then
-        git_info = { is_git = false, branch = nil }
-        return
-    end
-    local branch = vim.fn.systemlist({ "git", "-C", cwd, "branch", "--show-current" })[1]
-    git_info = {
-        is_git = true,
-        branch = (branch and branch ~= "") and branch or nil,
-    }
-end
-
-
-
 --- @param sc string
 --- @param txt string
 --- @param keybind string? optional
@@ -68,7 +48,7 @@ local function button(sc, txt, keybind, keybind_opts)
     end
 
     local function on_press()
-        local key = vim.api.nvim_replace_termcodes(keybind .. "<Ignore>", true, false, true)
+        local key = vim.api.nvim_replace_termcodes((keybind or sc_) .. "<Ignore>", true, false, true)
         vim.api.nvim_feedkeys(key, "t", false)
     end
 
@@ -88,39 +68,6 @@ local file_icons = {
     provider = "mini",
 }
 
-local function icon(fn)
-    return utils.get_icon(file_icons, fn)
-end
-
-local function file_button(fn, sc, short_fn, autocd)
-    short_fn = if_nil(short_fn, fn)
-    local ico_txt
-    local fb_hl = {}
-    if file_icons.enabled then
-        local ico, hl = icon(fn)
-        local hl_option_type = type(file_icons.highlight)
-        if hl_option_type == "boolean" then
-            if hl and file_icons.highlight then
-                table.insert(fb_hl, { hl, 0, #ico })
-            end
-        end
-        if hl_option_type == "string" then
-            table.insert(fb_hl, { file_icons.highlight, 0, #ico })
-        end
-        ico_txt = ico .. "  "
-    else
-        ico_txt = ""
-    end
-    local cd_cmd = (autocd and " | cd %:p:h" or "")
-    local file_button_el = button(sc, ico_txt .. short_fn, "<cmd>e " .. vim.fn.fnameescape(fn) .. cd_cmd .. " <CR>")
-    local fn_start = short_fn:match(".*[/\\]")
-    if fn_start ~= nil then
-        table.insert(fb_hl, { "Comment", #ico_txt, #fn_start + #ico_txt })
-    end
-    file_button_el.opts.hl = fb_hl
-    return file_button_el
-end
-
 local default_mru_ignore = { "gitcommit" }
 
 local mru_opts = {
@@ -130,77 +77,41 @@ local mru_opts = {
     autocd = false
 }
 
-local function mru_git(start, cwd, items_number, opts)
-    opts = opts or mru_opts
-    items_number = if_nil(items_number, 10)
+local recent = recent_files.new({
+    button = button,
+    file_icons = file_icons,
+    mru_opts = mru_opts,
+})
 
-    local found = utils.get_git_files(cwd, items_number, opts.ignore)
+local mru = recent.mru
+local mru_git = recent.mru_git
 
-    local tbl = {}
-    for i, fn in ipairs(found) do
-        local short_fn
-        if cwd then
-            short_fn = fnamemodify(fn, ":.")
-        else
-            short_fn = fnamemodify(fn, ":~")
-        end
-        local file_button_el = file_button(fn, tostring(i + start - 1), short_fn, opts.autocd)
-        tbl[i] = file_button_el
-    end
-    return {
-        type = "group",
-        val = tbl,
-        opts = {},
-    }
+local function icon(fn)
+    return utils.get_icon(file_icons, fn)
 end
 
-local function mru(start, cwd, items_number, opts)
-    opts = opts or mru_opts
-    items_number = if_nil(items_number, 10)
-
-    local found = utils.get_mru(cwd, items_number, opts.ignore)
-
-    local tbl = {}
-    for i, fn in ipairs(found) do
-        local short_fn
-        if cwd then
-            short_fn = fnamemodify(fn, ":.")
-        else
-            short_fn = fnamemodify(fn, ":~")
-        end
-        local file_button_el = file_button(fn, tostring(i + start - 1), short_fn, opts.autocd)
-        tbl[i] = file_button_el
-    end
-    return {
-        type = "group",
-        val = tbl,
-        opts = {},
-    }
-end
-
-local function make_git_title_el(opts)
+local function make_git_title_el()
     local cwd_short = fnamemodify(vim.fn.getcwd(), ":~")
-    local branch = git_info.branch
-    if branch then
-        local head = "MRU " .. cwd_short .. " "
-        return {
-            type = "text",
-            val = head .. branch,
-            opts = vim.tbl_extend("force", {
-                hl = {
-                    { "SpecialComment", 0,     #head },
-                    { "Label",          #head, #head + #branch },
-                },
-                shrink_margin = false,
-            }, opts or {}),
-        }
-    else
+    local branch = recent_files.git_info.branch
+    if not branch then
         return {
             type = "text",
             val = "MRU " .. cwd_short,
-            opts = vim.tbl_extend("force", { hl = "SpecialComment", shrink_margin = false }, opts or {}),
+            opts = { hl = "SpecialComment", shrink_margin = false },
         }
     end
+    local head = "MRU " .. cwd_short .. " "
+    return {
+        type = "text",
+        val = head .. branch,
+        opts = {
+            hl = {
+                { "SpecialComment", 0,     #head },
+                { "Label",          #head, #head + #branch },
+            },
+            shrink_margin = false,
+        },
+    }
 end
 
 local section = {
@@ -251,7 +162,7 @@ local section = {
     mru_git = {
         type = "group",
         val = function()
-            update_git_info()
+            recent_files.update_git_info()
             return {
                 { type = "padding", val = 1 },
                 make_git_title_el(),
@@ -291,9 +202,7 @@ local config = {
             val = function()
                 local result = {}
                 for _, name in ipairs(startify.mru_sections) do
-                    if section[name] then
-                        table.insert(result, section[name])
-                    end
+                    result[#result + 1] = section[name]
                 end
                 return result
             end,
@@ -305,25 +214,13 @@ local config = {
     opts = {
         margin = 3,
         redraw_on_resize = false,
-        setup = function()
-            vim.api.nvim_create_autocmd('DirChanged', {
-                pattern = '*',
-                group = "alpha_temp",
-                callback = function()
-                    utils.mru_cache = {}
-                    utils.git_toplevel_cache = {}
-                    _git_cwd = nil
-                    require('alpha').redraw()
-                    vim.cmd('AlphaRemap')
-                end,
-            })
-        end,
+        setup = recent_files.on_dir_changed,
     },
 }
 
 startify.icon = icon
 startify.button = button
-startify.file_button = file_button
+startify.file_button = recent.file_button
 startify.mru = mru
 startify.mru_git = mru_git
 startify.mru_opts = mru_opts

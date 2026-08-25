@@ -8,7 +8,10 @@ CONTENTS                                                        *alpha-contents*
     CONFIGURATION .................................. |alpha-configuration|
     AUTOCMD ........................................ |alpha-autocmd|
     COLORS ......................................... |alpha-colors|
+    THEME OPTIONS .................................. |alpha-theme-options|
+    RECENT FILES ................................... |alpha-mru|
     EXAMPLE ........................................ |alpha-example|
+    FAQ ............................................ |alpha-faq|
 
 ==============================================================================
 INTRO                                                              *alpha-intro*
@@ -23,6 +26,15 @@ COMMANDS                                                        *alpha-commands*
     :Alpha
 <
 Open the alpha buffer.
+>
+    :AlphaRedraw
+<
+Redraw the alpha buffer. Button keymaps are refreshed as part of the draw.
+>
+    :AlphaRemap
+<
+Deprecated, an alias for |:AlphaRedraw|. Keymaps used to be applied separately
+from the draw; they are now collected from the layout on every draw.
 
 ==============================================================================
 CONFIGURATION                                              *alpha-configuration*
@@ -44,8 +56,10 @@ config:
         margin = 0
 
         -- theme-specific setup,
-        -- ran once before the first draw
-        setup = function
+        -- ran once before the first draw.
+        -- receives the alpha state, whose 'augroup' field is the augroup id
+        -- alpha cleans up when the buffer is closed
+        setup = function(state)
 
         -- when true,
         -- use 'noautocmd' when setting 'alpha' buffer local options.
@@ -88,6 +102,8 @@ button:
         -- accepts the arguments for 'nvim_set_keymap' as an array
         -- normally pairs with an 'on_press' function that feeds the lhs
         -- keys (see alpha.dashboard.button implementation)
+        -- the keymaps of the drawn layout are applied on every draw. when two
+        -- buttons ask for the same mode and lhs, the one drawn first wins
         keymap = { {mode}, {lhs}, {rhs}, {*opts} }
 
         position = "left" | "center" | "right",
@@ -191,9 +207,31 @@ terminal:
     }
  }
 <
+the terminal window belongs to the alpha buffer that drew it, so two alpha
+buffers sharing an element each get their own window, and closing one closes
+only its own.
+
 
 A theme may supply predefined widgets like buttons, headers, etc that
 you can use to customize the theme by updating its opts table
+
+custom elements:
+
+an element type is a function in `alpha.layout_element`, keyed by the type
+name. it takes `(el, conf, state)` and returns the lines to draw plus their
+highlights, advancing `state.line` by the number of lines it drew:
+>
+ require'alpha'.layout_element.rule = function(el, conf, state)
+     local val = { string.rep(el.val or "-", state.win_width) }
+     state.line = state.line + 1
+     return val, {}
+ end
+<
+that is the only function a custom element needs. button keymaps are collected
+while the layout is drawn, so `alpha.keymaps_element` is deprecated. it still
+works: alpha calls the entry for a custom element type after drawing it, and
+`alpha.keymaps_element.button` / `.group` still register keymaps, so a custom
+container element that walks its own children through them keeps working.
 
 ==============================================================================
 COLORS                                                            *alpha-colors*
@@ -264,6 +302,44 @@ theta/dashboard:
  -- redfine the `dashboard.section.buttons.val` table
  leader = "SPC"
 
+==============================================================================
+RECENT FILES                                                         *alpha-mru*
+
+`alpha.themes.mru` builds the recent-files sections the bundled themes use. it
+takes your button constructor and icon config, so a theme does not have to
+reimplement file buttons, path shortening or the cache invalidation:
+>
+ local recent = require'alpha.themes.mru'.new({
+     -- required: (sc, txt, keybind, keybind_opts) -> button element
+     button = my_theme.button,
+     -- required: see file_icons under |alpha-theme-options|
+     file_icons = my_theme.file_icons,
+     -- required: see mru_opts under |alpha-theme-options|
+     mru_opts = my_theme.mru_opts,
+     -- optional: shorten long paths, needs plenary.nvim
+     shorten_paths = false,
+     -- optional: place the cursor after the file icon
+     icon_cursor = false,
+ })
+
+ -- group element of file buttons, numbered from 'start'
+ -- recent.mru(start, cwd, items_number, opts)
+ -- recent.mru_git(start, cwd, items_number, opts)
+ local section = {
+     type = "group",
+     val = function() return { recent.mru(0, vim.fn.getcwd()) } end,
+ }
+<
+the module also exposes:
+>
+ -- git state of the cwd, for section titles: { is_git = bool, branch = string? }
+ require'alpha.themes.mru'.git_info
+ -- refresh the above. only runs git when the cwd changed
+ require'alpha.themes.mru'.update_git_info()
+ -- drop the cwd-keyed caches and redraw when the directory changes.
+ -- use it as your theme's 'opts.setup'
+ require'alpha.themes.mru'.on_dir_changed(state)
+<
 ==============================================================================
 EXAMPLE                                                          *alpha-example*
 
@@ -363,9 +439,9 @@ How to disable the tabline in alpha buffer?~
 
 How do I make a theme with no buttons?~
 
-    alpha needs to know where to place the cursor, falling back to {1,0}
-    negatively impacted performance, so if you want to use a theme with no
-    buttons, either create an empty button
+    Nothing extra is needed: with no buttons there is nothing to press and
+    alpha leaves the cursor where it is. If you do want a cursor position
+    without a visible button, add an empty one
 >
     { type = "button", val = "" }
 <
@@ -373,7 +449,6 @@ How do I make a theme with no buttons?~
 >
     el.type = "button"
 <
-    as the sole possible cursor position for your theme
 
 ==============================================================================
 

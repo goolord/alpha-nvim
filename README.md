@@ -151,6 +151,23 @@ alpha is really a general purpose neovim ui library with some conveniences for w
 it has a functional, data-oriented api design. themes are expressed entirely as data, which is what makes
 alpha "fully programmable". alpha is also the fastest greeter I've benchmarked (which is why I daily drive it myself!).
 
+## Writing a theme
+a theme is a `layout`: a list of `text`, `padding`, `button` and `group` elements, plus an `opts` table.
+see `:h alpha-configuration` for every element type, and `lua/alpha/themes/dashboard.lua` for a theme
+that fits on one screen.
+
+two things you don't have to write yourself:
+- recent files. `require'alpha.themes.mru'.new{ ... }` gives you `mru` and `mru_git` sections built from
+  your own button constructor, including icons, path shortening and cache invalidation on `DirChanged`.
+  see `:h alpha-mru`.
+- new element types. add a function to `require'alpha'.layout_element` and use its name as an element's
+  `type`. button keymaps are collected while the layout is drawn, so there is nothing else to register.
+
+## Development
+```sh
+make test  # headless test suite, no dependencies
+```
+
 ## Profiling Results
 ![benchmark](https://user-images.githubusercontent.com/24906808/131830001-31523c86-fee2-4f90-b23d-4bd1e152a385.png)
 - using [`lewis6991/impatient.nvim`](https://github.com/lewis6991/impatient.nvim)

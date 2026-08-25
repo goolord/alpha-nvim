@@ -7,6 +7,32 @@ M.git_toplevel_cache = {}
 
 local uv = vim.uv or vim.loop
 
+--- cache key -> true when the cached list is everything its source had, so a
+--- request for more items can still be served from it. Keyed separately from
+--- mru_cache, which is public and cleared wholesale on DirChanged.
+local _cache_exhausted = {}
+
+--- @param key string
+--- @param items_number number
+--- @return string[]|nil
+local function cached_items(key, items_number)
+    local cached = M.mru_cache[key]
+    if cached and (_cache_exhausted[key] or (#cached >= items_number)) then
+        return cached
+    end
+    return nil
+end
+
+--- @param key string
+--- @param found string[]
+--- @param items_number number
+--- @return string[]
+local function cache_items(key, found, items_number)
+    M.mru_cache[key] = found
+    _cache_exhausted[key] = #found < items_number
+    return found
+end
+
 --- @param work_dir string
 --- @param git_args string[]
 --- @return string[]|nil lines, or nil on git failure
@@ -19,20 +45,16 @@ local function git_cmd_lines(work_dir, git_args)
     return out
 end
 
---- Same ordering as `{ ... } | sort | uniq`: sorted unique non-empty lines.
+--- Unique non-empty lines in first-seen order. `git log --name-only` lists the
+--- most recent commit first, so first-seen order is recency order.
 --- @param lines string[]
 --- @return string[]
-local function sorted_unique_lines(lines)
-    if #lines == 0 then
-        return lines
-    end
-    local sorted = vim.list_extend({}, lines)
-    table.sort(sorted)
+local function unique_lines(lines)
     local out = {}
-    local prev
-    for _, p in ipairs(sorted) do
-        if p ~= "" and p ~= prev then
-            prev = p
+    local seen = {}
+    for _, p in ipairs(lines) do
+        if p ~= "" and not seen[p] then
+            seen[p] = true
             out[#out + 1] = p
         end
     end
@@ -45,11 +67,8 @@ end
 function M.git_worktree_root(work_dir)
     work_dir = work_dir or vim.fn.getcwd()
     local cached = M.git_toplevel_cache[work_dir]
-    if cached == false then
-        return nil
-    end
     if cached ~= nil then
-        return cached
+        return cached or nil
     end
     local top_out = git_cmd_lines(work_dir, { "rev-parse", "--show-toplevel" })
     if not top_out or not top_out[1] then
@@ -93,8 +112,9 @@ end
 function M.get_git_files(cwd, items_number, ignore_cb)
     local work_dir = cwd or vim.fn.getcwd()
     local key = "git_" .. work_dir
-    if M.mru_cache[key] and #M.mru_cache[key] >= items_number then
-        return M.mru_cache[key]
+    local cached = cached_items(key, items_number)
+    if cached then
+        return cached
     end
 
     local git_root = M.git_worktree_root(work_dir)
@@ -102,54 +122,32 @@ function M.get_git_files(cwd, items_number, ignore_cb)
         return {}
     end
 
-    local diff_out = git_cmd_lines(work_dir, { "diff", "--name-only" }) or {}
-    local cached_out = git_cmd_lines(work_dir, { "diff", "--cached", "--name-only" }) or {}
+    -- two subprocesses, no matter how many items are asked for: working tree
+    -- changes (staged and unstaged) first, then paths by commit recency
+    local combined = git_cmd_lines(work_dir, { "diff", "--name-only", "HEAD" })
+    if not combined then
+        -- no commits yet, so there is no HEAD to diff against
+        combined = git_cmd_lines(work_dir, { "diff", "--cached", "--name-only" }) or {}
+    end
+    local n_commits = math.max(50, items_number * 25)
+    vim.list_extend(
+        combined,
+        git_cmd_lines(work_dir, { "log", "--pretty=format:", "--name-only", "-n", tostring(n_commits) }) or {}
+    )
 
     local found = {}
-    local prev_unique_count = -1
-    local n_commits = math.max(50, items_number * 25)
-    local n_max = 2048
-
-    while #found < items_number and n_commits <= n_max do
-        local log_out = git_cmd_lines(work_dir, {
-            "log",
-            "--pretty=format:",
-            "--name-only",
-            "-n",
-            tostring(n_commits),
-        }) or {}
-
-        local combined = {}
-        vim.list_extend(combined, diff_out)
-        vim.list_extend(combined, cached_out)
-        vim.list_extend(combined, log_out)
-
-        local sorted_paths = sorted_unique_lines(combined)
-        if #sorted_paths == prev_unique_count then
-            break
-        end
-        prev_unique_count = #sorted_paths
-
-        found = {}
-        for _, rel_path in ipairs(sorted_paths) do
-            local abs_path = git_root .. "/" .. rel_path
-            local ignore = ignore_cb and ignore_cb(abs_path, M.get_extension(abs_path))
-            if not ignore and M.filereadable(abs_path) then
-                table.insert(found, abs_path)
-                if #found >= items_number then
-                    break
-                end
+    for _, rel_path in ipairs(unique_lines(combined)) do
+        local abs_path = git_root .. "/" .. rel_path
+        local ignore = ignore_cb and ignore_cb(abs_path, M.get_extension(abs_path))
+        if not ignore and M.filereadable(abs_path) then
+            found[#found + 1] = abs_path
+            if #found >= items_number then
+                break
             end
         end
-
-        if #found >= items_number then
-            break
-        end
-        n_commits = n_commits * 2
     end
 
-    M.mru_cache[key] = found
-    return found
+    return cache_items(key, found, items_number)
 end
 
 --- @param cwd string?
@@ -158,89 +156,103 @@ end
 --- @return string[]
 function M.get_mru(cwd, items_number, ignore_cb)
     local key = cwd or "global"
-    if M.mru_cache[key] and #M.mru_cache[key] >= items_number then
-        return M.mru_cache[key]
+    local cached = cached_items(key, items_number)
+    if cached then
+        return cached
     end
 
-    local all_oldfiles = vim.v.oldfiles
+    local oldfiles = vim.v.oldfiles
     local found = {}
-    local max_check = math.min(#all_oldfiles, 200)
-    for i = 1, max_check do
-        local v = all_oldfiles[i]
-        local cwd_cond = not cwd or vim.startswith(v, cwd)
-        local ignore = (ignore_cb and ignore_cb(v, M.get_extension(v))) or false
-        if cwd_cond and not ignore then
-            if M.filereadable(v) then
-                table.insert(found, v)
-                if #found >= items_number then
-                    break
-                end
+    for i = 1, math.min(#oldfiles, 200) do
+        local path = oldfiles[i]
+        local in_cwd = not cwd or vim.startswith(path, cwd)
+        local ignore = ignore_cb and ignore_cb(path, M.get_extension(path))
+        if in_cwd and not ignore and M.filereadable(path) then
+            found[#found + 1] = path
+            if #found >= items_number then
+                break
             end
         end
     end
 
-    M.mru_cache[key] = found
-    return found
+    return cache_items(key, found, items_number)
 end
 
 --- @param fn string file name or path
 --- @return string
 function M.get_extension(fn)
-    local basename = vim.fs.basename(fn)
-    local match = basename:match("^.+(%..+)$")
-    local ext = ""
-    if match ~= nil then
-        ext = match:sub(2)
-    end
-    return ext
+    return vim.fs.basename(fn):match("^.+%.(.+)$") or ""
 end
 
-local _devicons, _devicons_tried
+--- name -> the module, `true` if it loaded but is not a table, `false` if it
+--- was not on the runtimepath.
+local _tried = {}
+
+--- Require an optional module, remembering the result. A missing module is
+--- retried only once it shows up in package.loaded, so a lazy loaded plugin is
+--- still picked up on a later redraw without paying for a runtimepath scan on
+--- every call.
+--- @param name string
+--- @return table|nil
+function M.try_require(name)
+    local tried = _tried[name]
+    if type(tried) == "table" then
+        return tried
+    end
+    if tried == true then
+        return nil
+    end
+    if tried == false and package.loaded[name] == nil then
+        return nil
+    end
+    local ok, mod = pcall(require, name)
+    if not ok then
+        _tried[name] = false
+        return nil
+    end
+    if type(mod) ~= "table" then
+        -- loaded, but there is no api table to call into
+        _tried[name] = true
+        return nil
+    end
+    _tried[name] = mod
+    return mod
+end
+
 local function devicons_get_icon(fn, ext)
-    if not _devicons_tried then
-        local ok
-        ok, _devicons = pcall(require, "nvim-web-devicons")
-        if ok then _devicons_tried = true else _devicons = nil end
-    end
-    if not _devicons then return nil, nil end
-    return _devicons.get_icon(fn, ext, { default = true })
+    local devicons = M.try_require("nvim-web-devicons")
+    if not devicons then return nil, nil end
+    return devicons.get_icon(fn, ext, { default = true })
 end
 
-local _mini_icons, _mini_tried
 local function mini_get_icon(fn, ext)
-    if not _mini_tried then
-        local ok
-        ok, _mini_icons = pcall(require, "mini.icons")
-        if ok then _mini_tried = true else _mini_icons = nil end
-    end
-    if not _mini_icons then return nil, nil end
+    local mini_icons = M.try_require("mini.icons")
+    if not mini_icons then return nil, nil end
+    local category, name = "file", fn
     if ext ~= "" then
-        local icon, hl, _ = _mini_icons.get("extension", ext)
-        return icon, hl
-    else
-        local icon, hl, _ = _mini_icons.get("file", fn)
-        return icon, hl
+        category, name = "extension", ext
     end
+    local icon, hl = mini_icons.get(category, name)
+    return icon, hl
 end
 
 --- @param provider string devicons or mini
 --- @param fn string file name or path
 --- @return string, string
 function M.get_file_icon(provider, fn)
-    local ext = M.get_extension(fn)
-    if provider == "devicons" then
-        local ico, hl = devicons_get_icon(fn, ext)
-        -- if devicons is not installed, fallback to mini icons
-        if ico == nil then ico, hl = mini_get_icon(fn, ext) end
-        return ico or "", hl or ""
-    end
+    local preferred, fallback = devicons_get_icon, mini_get_icon
     if provider == "mini" then
-        local ico, hl = mini_get_icon(fn, ext)
-        -- if mini icons is not installed, fallback to devicons
-        if ico == nil then ico, hl = devicons_get_icon(fn, ext) end
-        return ico or "", hl or ""
+        preferred, fallback = mini_get_icon, devicons_get_icon
+    elseif provider ~= "devicons" then
+        return "", ""
     end
-    return "", ""
+    local ext = M.get_extension(fn)
+    local ico, hl = preferred(fn, ext)
+    if ico == nil then
+        -- the preferred provider is not installed
+        ico, hl = fallback(fn, ext)
+    end
+    return ico or "", hl or ""
 end
 
 --- Validate the provider, fetch the icon, and mutate file_icons.enabled on failure.
