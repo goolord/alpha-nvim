@@ -152,6 +152,17 @@ function M.get_git_files(cwd, items_number, ignore_cb)
     return found
 end
 
+--- Check if file is inside given directory.
+---@param fn string
+---@param dir string
+---@return boolean
+local function inside_directory(fn, dir)
+    if not vim.endswith(dir, "/") then
+        dir = dir .. "/"
+    end
+    return vim.startswith(fn, dir)
+end
+
 --- @param cwd string?
 --- @param items_number number
 --- @param ignore_cb function?
@@ -167,7 +178,7 @@ function M.get_mru(cwd, items_number, ignore_cb)
     local max_check = math.min(#all_oldfiles, 200)
     for i = 1, max_check do
         local v = all_oldfiles[i]
-        local cwd_cond = not cwd or vim.startswith(v, cwd)
+        local cwd_cond = not cwd or inside_directory(v, cwd)
         local ignore = (ignore_cb and ignore_cb(v, M.get_extension(v))) or false
         if cwd_cond and not ignore then
             if M.filereadable(v) then
