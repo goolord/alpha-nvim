@@ -152,13 +152,16 @@ function M.get_git_files(cwd, items_number, ignore_cb)
     return found
 end
 
+local is_windows = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
+local sep = (is_windows and not vim.o.shellslash) and "\\" or "/"
+
 --- Check if file is inside given directory.
 ---@param fn string
 ---@param dir string
 ---@return boolean
 local function inside_directory(fn, dir)
-    if not vim.endswith(dir, "/") then
-        dir = dir .. "/"
+    if not vim.endswith(dir, sep) then
+        dir = dir .. sep
     end
     return vim.startswith(fn, dir)
 end
